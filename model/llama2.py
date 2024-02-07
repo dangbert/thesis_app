@@ -1,10 +1,18 @@
 #!/usr/bin/env python3
+################################################################################
 # https://huggingface.co/meta-llama/Llama-2-7b-chat-hf
+#
+# https://medium.com/@nimritakoul01/chat-with-llama-2-7b-from-huggingface-llama-2-7b-chat-hf-d0f5735abfcf
+#
+# TODO: play with connecting langchain https://medium.com/@ankit941208/generating-summaries-for-large-documents-with-llama2-using-hugging-face-and-langchain-f7de567339d2
+################################################################################
 
+import torch
 import os
 import argparse
 import sys
 from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM
+from huggingface_hub import login
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -16,12 +24,50 @@ def main():
     #     type=str,
     #     help="path of folder to output markdown and csv files (e.g. './output')",
     # )
-    # ops = 0  # num operations performed
     # args = parser.parse_args()
 
-    pipe = pipeline("text-generation", model="meta-llama/Llama-2-7b-chat-hf")
-    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-2-7b-chat-hf")
-    model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-2-7b-chat-hf")
+    device = get_device()
+    print(f"using device: '{device}'")
+
+    # ensure authenticated with hugging face hub (for downloading llama2 model)
+    # login()
+
+    # the model will be automatically downloaded and cached (e.g. in ~/.cache/huggingface/)
+    #  for info about cache dir and running offline see:
+    #  https://huggingface.co/docs/datasets/en/cache
+    MODEL_ID = "meta-llama/Llama-2-7b-chat-hf"
+    pipe = pipeline("text-generation", model=MODEL_ID)
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+    tokenizer.use_default_system_prompt = False
+
+    model = AutoModelForCausalLM.from_pretrained(MODEL_ID)
+    model.to(device)
+
+    while True:
+        prompt = input("\nYou: ")
+        input_ids = tokenizer.encode(prompt, return_tensors="pt")
+        input_ids = input_ids.to(device)
+        output = model.generate(
+            input_ids, max_length=256, num_beams=4, no_repeat_ngram_size=2
+        )
+        response = tokenizer.decode(output[0], skip_special_tokens=True)
+        print(f"\nLLama: {response}")
+
+
+def get_device() -> str:
+    """Returns the device for PyTorch to use."""
+    device = "cpu"
+    if torch.cuda.is_available():
+        device = "cuda"
+    # mac MPS support: https://pytorch.org/docs/stable/notes/mps.html
+    elif torch.backends.mps.is_available():
+        if not torch.backends.mps.is_built():
+            print(
+                "MPS not available because the current PyTorch install was not built with MPS enabled."
+            )
+        else:
+            device = "mps"
+    return device
 
 
 if __name__ == "__main__":

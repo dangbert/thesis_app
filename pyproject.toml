@@ -2,12 +2,17 @@
 name = "thesis-app"
 version = "0.1.0"
 description = ""
-authors = ["Daniel Engbert <end1@umbc.edu>"]
+authors = ["Daniel Engbert <d.engbert@student.vu.nl>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.8"
 transformers = "^4.37.2"
+accelerate = "^0.26.1"
+protobuf = "^4.25.2"
+sentencepiece = "^0.1.99"
+torch = "^2.2.0"
+huggingface-hub = "^0.20.3"
 
 
 [tool.poetry.group.dev.dependencies]
