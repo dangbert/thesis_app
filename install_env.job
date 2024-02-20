@@ -1,0 +1,47 @@
+#!/bin/bash
+# sets up project environment on snellius server
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=9
+#SBATCH --gpus=1
+#SBATCH --job-name=install
+#SBATCH --ntasks=1
+#SBATCH --time=04:00:00
+#SBATCH --mem=32000M
+#SBATCH --output=slurm_output__install_%A.out
+
+set -e
+
+echo -e "\npurging modules..."
+module purge
+echo "loading modules..."
+module load 2023
+# for full list run `module spider conda`
+module load Anaconda3/2023.07-02
+
+
+echo -e "\nconda env list:"
+conda env list
+
+ENV_NAME="thesis"
+ENV_FILE="./dl2023_gpu.yml"
+
+# if env already exists, activate it instead of crashing
+if conda env list | grep -q "$ENV_NAME"; then
+  echo -e "updating existing '$ENV_NAME' environment...\n"
+
+  # ensure environment is up to date
+  #   https://stackoverflow.com/q/42352841
+  time conda env update -f "$ENV_FILE" # --prune
+else
+  echo "creating env '$ENV_NAME' from file...\n"
+  time conda env create -f "$ENV_FILE"
+fi
+
+
+echo "activating environment '$ENV_NAME'"
+source activate "$ENV_NAME"
+
+echo "done!"
+
+# conda deactivate
