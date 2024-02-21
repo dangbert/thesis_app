@@ -6,7 +6,7 @@ module load 2023
 module load Anaconda3/2023.07-2
 
 ENV_NAME="thesis"
-ENV_FILE="./thesis.yml"
+ENV_FILE="./environment.yml"
 
 echo "activating environment '$ENV_NAME'"
 source activate "$ENV_NAME"

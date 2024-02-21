@@ -1,23 +1,18 @@
-[tool.poetry]
-name = "thesis-app"
-version = "0.1.0"
-description = ""
-authors = ["Daniel Engbert <d.engbert@student.vu.nl>"]
-readme = "README.md"
+[tool.mypy]
+# Global mypy configurations can be added here
 
-[tool.poetry.dependencies]
-python = "^3.8"
-transformers = "^4.37.2"
-accelerate = "^0.26.1"
-protobuf = "^4.25.2"
-sentencepiece = "^0.1.99"
-torch = "^2.2.0"
-huggingface-hub = "^0.20.3"
+[[tool.mypy.overrides]]
+module = "transformers.*"
+ignore_missing_imports = true
+follow_imports = "skip"
 
+[[tool.mypy.overrides]]
+module = "huggingface_hub.*"
+ignore_missing_imports = true
+follow_imports = "skip"
 
-[tool.poetry.group.dev.dependencies]
-black = "^24.1.1"
+[tool.ruff]
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.ruff.lint]
+# https://docs.astral.sh/ruff/settings/#lint_ignore-init-module-imports
+ignore-init-module-imports = true

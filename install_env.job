@@ -20,15 +20,19 @@ module load 2023
 module load Anaconda3/2023.07-2
 
 
+ENV_NAME="thesis"
+ENV_FILE="./environment.yml"
+
 echo -e "\nconda env list:"
 conda env list
-
-ENV_NAME="thesis"
-ENV_FILE="./thesis.yml"
 
 # if env already exists, activate it instead of crashing
 if conda env list | grep -q "$ENV_NAME"; then
   echo -e "updating existing '$ENV_NAME' environment...\n"
+
+  # use faster conda solver https://www.anaconda.com/blog/a-faster-conda-for-a-growing-community
+  #conda install -n base conda-libmamba-solver
+  conda config --set solver libmamba
 
   # ensure environment is up to date
   #   https://stackoverflow.com/q/42352841

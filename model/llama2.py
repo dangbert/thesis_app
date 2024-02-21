@@ -9,10 +9,7 @@
 
 import torch
 import os
-import argparse
-import sys
 from transformers import (
-    pipeline,
     AutoTokenizer,
     AutoModelForCausalLM,
     BitsAndBytesConfig,
@@ -41,7 +38,7 @@ def main():
     #  for info about cache dir and running offline see:
     #  https://huggingface.co/docs/datasets/en/cache
     MODEL_ID = "meta-llama/Llama-2-7b-chat-hf"
-    pipe = pipeline("text-generation", model=MODEL_ID)
+    # pipe = pipeline("text-generation", model=MODEL_ID)
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
     tokenizer.use_default_system_prompt = False
 
