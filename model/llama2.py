@@ -11,7 +11,12 @@ import torch
 import os
 import argparse
 import sys
-from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM
+from transformers import (
+    pipeline,
+    AutoTokenizer,
+    AutoModelForCausalLM,
+    BitsAndBytesConfig,
+)
 from huggingface_hub import login
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -40,13 +45,21 @@ def main():
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
     tokenizer.use_default_system_prompt = False
 
-    model = AutoModelForCausalLM.from_pretrained(MODEL_ID)
-    model.to(device)
+    # load quantized model (load_in_8_bit is critical to fit in memory)
+    quantization_config = BitsAndBytesConfig(llm_int8_threshold=4.0, load_in_8_bit=True)
+    print("loading model", flush=True)
+    model = AutoModelForCausalLM.from_pretrained(
+        MODEL_ID,
+        quantization_config=quantization_config,
+        device_map="auto",
+    )
+    print("done loading model!")
+    # model.to(device)
 
     while True:
         prompt = input("\nYou: ")
         input_ids = tokenizer.encode(prompt, return_tensors="pt")
-        input_ids = input_ids.to(device)
+        input_ids = input_ids  # .to(device)
         output = model.generate(
             input_ids, max_length=256, num_beams=4, no_repeat_ngram_size=2
         )

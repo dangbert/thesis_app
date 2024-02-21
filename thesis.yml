@@ -13,3 +13,10 @@ dependencies:
     - pytorch-lightning==2.2.0
     - tensorboard==2.16.2
     - transformers==4.37.2
+    - huggingface-hub==0.20.3
+    - bitsandbytes==0.42.0
+    - accelerate==0.27.2
+    # dev tools:
+    - black==24.2.0
+    - mypy==1.8.0
+    - mypy-extensions==1.0.0 
