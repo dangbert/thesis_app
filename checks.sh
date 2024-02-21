@@ -6,9 +6,8 @@ set -e
 
 SCRIPT_DIR="$(realpath "$(dirname "$0")")"
 
-# allow unused imports for now
 RUFF_IGNORES=(
-  --ignore=F401
+  #--ignore=F401 # allow unused imports
 )
 
 function main() {
@@ -53,14 +52,14 @@ function fix() {
 }
 
 function usage() {
-    SCRIPT_NAME="$(basename "$0")"
-    #echo -e "Script for...."
-    echo -e "\nUSAGE:"
-    #echo -e "\tmanage.sh [--export] [--import] [--anki_sync] [--bridge] [--prune] [--renew] [--help]"
-    echo -e "\t$SCRIPT_NAME [-y] [-h]\n"
-    echo -e "\t$SCRIPT_NAME       # report errors in code"
-    echo -e "\t$SCRIPT_NAME -y    # automatically fix errors when possible and reformat code"
-    echo -e "\t$SCRIPT_NAME -h    # print this help message and exit"
+  SCRIPT_NAME="$(basename "$0")"
+  #echo -e "Script for...."
+  echo -e "\nUSAGE:"
+  #echo -e "\tmanage.sh [--export] [--import] [--anki_sync] [--bridge] [--prune] [--renew] [--help]"
+  echo -e "\t$SCRIPT_NAME [-y] [-h]\n"
+  echo -e "\t$SCRIPT_NAME       # report errors in code"
+  echo -e "\t$SCRIPT_NAME -y    # automatically fix errors when possible and reformat code"
+  echo -e "\t$SCRIPT_NAME -h    # print this help message and exit"
 }
 
 

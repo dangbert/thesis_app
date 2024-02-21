@@ -16,6 +16,7 @@ dependencies:
     - huggingface-hub==0.20.3
     - bitsandbytes==0.42.0
     - accelerate==0.27.2
+    - langchain==0.1.8
     # dev tools:
     - black==24.2.0
     - mypy==1.8.0

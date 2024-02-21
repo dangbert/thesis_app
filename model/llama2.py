@@ -13,32 +13,18 @@ from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
     BitsAndBytesConfig,
+    pipeline,
 )
-from huggingface_hub import login
+from langchain.llms import HuggingFacePipeline
+from langchain.prompts import PromptTemplate
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def main():
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument(
-    #     "out_folder",
-    #     type=str,
-    #     help="path of folder to output markdown and csv files (e.g. './output')",
-    # )
-    # args = parser.parse_args()
-
-    device = get_device()
-    print(f"using device: '{device}'")
-
-    # ensure authenticated with hugging face hub (for downloading llama2 model)
-    # login()
-
     # the model will be automatically downloaded and cached (e.g. in ~/.cache/huggingface/)
-    #  for info about cache dir and running offline see:
-    #  https://huggingface.co/docs/datasets/en/cache
+    #  cache dir / running offline info: https://huggingface.co/docs/datasets/en/cache
     MODEL_ID = "meta-llama/Llama-2-7b-chat-hf"
-    # pipe = pipeline("text-generation", model=MODEL_ID)
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
     tokenizer.use_default_system_prompt = False
 
@@ -51,16 +37,27 @@ def main():
         device_map="auto",
     )
     print("done loading model!")
-    # model.to(device)
+
+    # https://python.langchain.com/docs/integrations/llms/huggingface_pipelines
+    print("creating pipline...")
+    pipe = pipeline(
+        "text-generation", model=model, tokenizer=tokenizer, max_new_tokens=1000
+    )
+    hf = HuggingFacePipeline(pipeline=pipe)
+
+    prompt_template = "[INST]{prompt}[/INST]"
+    prompt = PromptTemplate.from_template(prompt_template)
+    chain = prompt | hf
 
     while True:
         prompt = input("\nYou: ")
-        input_ids = tokenizer.encode(prompt, return_tensors="pt")
-        input_ids = input_ids  # .to(device)
-        output = model.generate(
-            input_ids, max_length=256, num_beams=4, no_repeat_ngram_size=2
-        )
-        response = tokenizer.decode(output[0], skip_special_tokens=True)
+        response = chain.invoke({"prompt": prompt})
+        # input_ids = tokenizer.encode(prompt, return_tensors="pt")
+        # input_ids = input_ids
+        # output = model.generate(
+        #     input_ids, max_length=256, num_beams=4, no_repeat_ngram_size=2
+        # )
+        # response = tokenizer.decode(output[0], skip_special_tokens=True)
         print(f"\nLLama: {response}")
 
 

@@ -10,4 +10,4 @@ ENV_FILE="./environment.yml"
 
 echo "activating environment '$ENV_NAME'"
 source activate "$ENV_NAME"
-echo
+echo -e "python3 location: '`which python3`'\n"
