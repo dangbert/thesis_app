@@ -1,0 +1,62 @@
+#!/bin/bash
+################################################################################
+# launches a jupyter notebook server with this repo's conda environment sourced
+# reference:
+#   https://servicedesk.surf.nl/wiki/pages/viewpage.action?pageId=30660252
+################################################################################
+
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:1
+#SBATCH --job-name=Jupyter
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=2
+#SBATCH --time=08:00:00
+#SBATCH --mem=32000M
+#SBATCH --output=jobs/logs/slurm_output_jupyter_%A.out
+
+
+#echo "running install_env.job"
+#bash ./jobs/install_env.job
+#module load IPython/7.25.0-GCCcore-10.3.0
+echo "sourcing source.sh"
+source source.sh
+echo -e "done sourcing!\n"
+
+
+PORT=`shuf -i 5000-5999 -n 1`
+LOGIN_HOST=snellius.surf.nl
+BATCH_HOST=$(hostname)
+
+# port you want to make available on local machine
+#LOCAL_PORT=$PORT
+LOCAL_PORT=5666
+
+echo "To connect to the notebook type the following command from your local terminal:"
+echo "ssh -J ${USER}@${LOGIN_HOST} ${USER}@${BATCH_HOST} -L ${LOCAL_PORT}:localhost:${PORT}"
+echo
+echo "After connection is established in your local browser go to the address:"
+echo -e "http://localhost:${LOCAL_PORT}?token=SEE_OUTPUT_BELOW\n"
+
+echo -e "***** vs code connection to jupyter: *****"
+echo -e "in (local or remote) vscode, use ssh command above on (local or remote) server, and add an existing jupyter connection to the URL above):"
+echo -e "******************************************\n"
+
+function run_cmd() {
+  echo -e "\n***running CMD ***:\n$@\n"
+  time "$@"
+}
+
+# launch notebook
+# (not sure if extra vscode flags are necessary, but doesn't hurt):
+#   https://github.com/microsoft/vscode-jupyter/wiki/Connecting-to-a-remote-Jupyter-server-from-vscode.dev#starting-your-own-server
+source activate_env.sh
+echo "python location: `which python`"
+echo "jupyter location: `which jupyter`"
+
+CMD=(
+    jupyter notebook --no-browser --port $PORT "--NotebookApp.allow_origin_pat=https://.*vscode-cdn\.net"
+)
+run_cmd "${CMD[@]}"
+
+echo "sleeping..."
+sleep infinity
