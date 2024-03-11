@@ -19,6 +19,7 @@ function main() {
   TARGET="PeerRead"
   if ! [ -d "$TARGET" ]; then
     git clone git@github.com:allenai/PeerRead.git "$TARGET"
+    #cd "$TARGET" && ./setup.sh && cd -
   else
     echo -e "$TARGET already downloaded!\n"
   fi

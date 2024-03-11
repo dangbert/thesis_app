@@ -1,5 +1,6 @@
 [tool.mypy]
 # Global mypy configurations can be added here
+exclude = ["repos", "datasets"]
 
 [[tool.mypy.overrides]]
 module = "transformers.*"
@@ -12,6 +13,7 @@ ignore_missing_imports = true
 follow_imports = "skip"
 
 [tool.ruff]
+exclude = ["repos", "datasets"]
 
 [tool.ruff.lint]
 # https://docs.astral.sh/ruff/settings/#lint_ignore-init-module-imports
