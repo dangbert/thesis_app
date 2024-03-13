@@ -9,7 +9,6 @@
 import torch
 import os
 import time
-import json
 from transformers import (
     AutoConfig,
     AutoTokenizer,
@@ -20,12 +19,11 @@ from transformers import (
 from langchain_community.llms import HuggingFacePipeline
 from transformers.models.llama.tokenization_llama_fast import DEFAULT_SYSTEM_PROMPT
 from langchain.prompts import PromptTemplate
-from typing import Dict
 from contextlib import contextmanager
+import pr_utils
+from datasets import Dataset, DatasetDict
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATASETS_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, os.pardir, "datasets"))
-PEER_READ_DIR = os.path.join(DATASETS_DIR, "PeerRead")
 
 
 MODEL_ID = "meta-llama/Llama-2-7b-chat-hf"
@@ -36,7 +34,7 @@ def main():
     play_datasets()
 
 
-def play_datasets():
+def play_datasets(seed: int = 42):
     """
     Note:
     tokenizer is of type:
@@ -44,16 +42,13 @@ def play_datasets():
     see DEFAULT_SYSTEM_PROMPT also in that file^
     """
 
-    cur_dir = os.path.join(PEER_READ_DIR, "data/iclr_2017/train/parsed_pdfs/")
+    pr_dataset: DatasetDict = pr_utils.get_path_dataset("data/iclr_2017")
 
-    fname = os.path.join(cur_dir, "304.pdf.json")
-    assert os.path.exists(fname)
-    print(f"reading {fname}", flush=True)
-    with open(fname, "r") as f:
-        data = json.load(f)
+    train_dataset: Dataset = pr_dataset["train"]
+    # read file contents into "contents_str" feature
+    train_dataset = train_dataset.map(pr_utils.add_contents_feature)
 
-    paper_text = pdf_json_to_text(data)
-
+    paper_text = train_dataset[0]["contents_str"]
     config = AutoConfig.from_pretrained(MODEL_ID)
     MAX_TOKENS = config.max_position_embeddings
     max_new_tokens = 1000
@@ -73,7 +68,7 @@ def play_datasets():
             res.data["input_ids"][:max_tokens], skip_special_tokens=True
         )
 
-    prompt_template = "The text that follows is a student's work on a research assignment. Create a plausible assignment rubric / set of directions that could reflect the assignment/goal the student completed.  Respond only with the assignment directions. The student's work follows:\n{paper_text}"
+    prompt_template = "The text that follows is a student's work on a research assignment. Create a plausible assignment description / set of directions (omitting any definition of point distributions) that could reflect the high level goals of the student's work.  Respond ONLY with the assignment directions to receive a tip. The student's work follows:\n{paper_text}"
     prompt = prompt_template.format(paper_text=paper_text)
     prompt = limit_text_len(prompt, MAX_TOKENS - 1500)
     # tokenizer.use_default_system_prompt = True
@@ -102,12 +97,16 @@ def play_datasets():
 
     messages += [
         {"role": "assistant", "content": rubric},
-        {"role": "user", "content": "Judge the student's work according to the defined rubric. Report a score out of 10 for each aspect."},
+        {
+            "role": "user",
+            "content": "Judge the student's work according to the defined rubric. Report a score out of 10 for each aspect.",
+        },
     ]
     with TaskTimer("grade generation"):
-        grade: str = pipe(tokenizer.apply_chat_template(messages, tokenize=False), return_full_text=False)[0][
-            "generated_text"
-        ].strip()
+        grade: str = pipe(
+            tokenizer.apply_chat_template(messages, tokenize=False),
+            return_full_text=False,
+        )[0]["generated_text"].strip()
     print("\nfinal grade:")
     print(grade)
     breakpoint()
@@ -153,7 +152,9 @@ def get_model(verbose: bool = True):
         # tokenizer.use_default_system_prompt = False
 
         # load quantized model (load_in_8_bit is critical to fit in memory)
-        quantization_config = BitsAndBytesConfig(llm_int8_threshold=4.0, load_in_8_bit=True)
+        quantization_config = BitsAndBytesConfig(
+            llm_int8_threshold=4.0, load_in_8_bit=True
+        )
         model = AutoModelForCausalLM.from_pretrained(
             MODEL_ID,
             quantization_config=quantization_config,
@@ -177,6 +178,7 @@ def get_device() -> str:
             device = "mps"
     return device
 
+
 @contextmanager
 def TaskTimer(task_name: str, verbose: bool = True):
     try:
@@ -187,18 +189,10 @@ def TaskTimer(task_name: str, verbose: bool = True):
     finally:
         end_time = time.perf_counter()
         if verbose:
-            print(f"{task_name} completed in {(end_time - start_time):.2f} secs!", flush=True)
-
-
-
-def pdf_json_to_text(data: Dict):
-    """Convert PeerRead json object to a single string."""
-    combined = ""
-    for section in data["metadata"]["sections"]:
-        heading, text = section["heading"], section["text"]
-        combined += f"\n{heading}\n{text}"
-
-    return combined.strip()
+            print(
+                f"{task_name} completed in {(end_time - start_time):.2f} secs!",
+                flush=True,
+            )
 
 
 if __name__ == "__main__":
