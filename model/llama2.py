@@ -15,13 +15,16 @@ from transformers import (
     AutoModelForCausalLM,
     BitsAndBytesConfig,
     pipeline,
+    DataCollatorWithPadding,
 )
+from tqdm import tqdm
 from langchain_community.llms import HuggingFacePipeline
 from transformers.models.llama.tokenization_llama_fast import DEFAULT_SYSTEM_PROMPT
 from langchain.prompts import PromptTemplate
 from contextlib import contextmanager
 import pr_utils
 from datasets import Dataset, DatasetDict
+from typing import Dict
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -34,7 +37,7 @@ def main():
     play_datasets()
 
 
-def play_datasets(seed: int = 42):
+def play_datasets(seed: int = 42, max_samples: int = 25):
     """
     Note:
     tokenizer is of type:
@@ -44,11 +47,14 @@ def play_datasets(seed: int = 42):
 
     pr_dataset: DatasetDict = pr_utils.get_path_dataset("data/iclr_2017")
 
-    train_dataset: Dataset = pr_dataset["train"]
+    train_subset: Dataset = pr_dataset["train"]
     # read file contents into "contents_str" feature
-    train_dataset = train_dataset.map(pr_utils.add_contents_feature)
+    train_subset = train_subset.map(pr_utils.add_contents_feature)
 
-    paper_text = train_dataset[0]["contents_str"]
+    # get sample of dataset
+    train_subset = train_subset.shuffle(seed=seed).select(range(max_samples))
+
+    # paper_text = train_subset[0]["contents_str"]
     config = AutoConfig.from_pretrained(MODEL_ID)
     MAX_TOKENS = config.max_position_embeddings
     max_new_tokens = 1000
@@ -68,17 +74,22 @@ def play_datasets(seed: int = 42):
             res.data["input_ids"][:max_tokens], skip_special_tokens=True
         )
 
-    prompt_template = "The text that follows is a student's work on a research assignment. Create a plausible assignment description / set of directions (omitting any definition of point distributions) that could reflect the high level goals of the student's work.  Respond ONLY with the assignment directions to receive a tip. The student's work follows:\n{paper_text}"
-    prompt = prompt_template.format(paper_text=paper_text)
-    prompt = limit_text_len(prompt, MAX_TOKENS - 1500)
-    # tokenizer.use_default_system_prompt = True
-    messages = [
-        {"role": "system", "content": DEFAULT_SYSTEM_PROMPT},
-        {"role": "user", "content": prompt},
-    ]
-    # the pipeline is supposed to automatically call apply_chat_template if passed messages, but I don't see this behavior
-    # https://huggingface.co/docs/transformers/main/en/chat_templating#is-there-an-automated-pipeline-for-chat
-    final_prompt: str = tokenizer.apply_chat_template(messages, tokenize=False)
+    def add_rubric_prompt(sample: Dict) -> Dict:
+        prompt_template = "The text that follows is a student's work on a particular research assignment. Create a plausible assignment description / set of directions (omit any mentions of points, focus on content) that could reflect the high level goals of the student's work.  Respond ONLY with the assignment directions to receive a tip. The student's work follows:\n{paper_text}"
+        prompt = prompt_template.format(paper_text=sample["contents_str"])
+        prompt = limit_text_len(prompt, MAX_TOKENS - 1500)
+        # tokenizer.use_default_system_prompt = True
+        messages = [
+            {"role": "system", "content": DEFAULT_SYSTEM_PROMPT},
+            {"role": "user", "content": prompt},
+        ]
+        # the pipeline is supposed to automatically call apply_chat_template if passed messages, but I don't see this behavior
+        # https://huggingface.co/docs/transformers/main/en/chat_templating#is-there-an-automated-pipeline-for-chat
+        rubric_prompt: str = tokenizer.apply_chat_template(messages, tokenize=False)
+        sample["rubric_prompt"] = rubric_prompt
+        return sample
+
+    train_subset = train_subset.map(add_rubric_prompt)
     # tokenized_chat = tokenizer.apply_chat_template(messages, tokenize=True, return_tensors="pt", **tokenizer_kwargs).to(model.device)
 
     pipe = pipeline(
@@ -87,14 +98,16 @@ def play_datasets(seed: int = 42):
         tokenizer=tokenizer,
         max_new_tokens=max_new_tokens,
     )
-    # get response (omitting the input prompt)
     with TaskTimer("rubric generation"):
-        rubric: str = pipe(final_prompt, return_full_text=False)[0][
-            "generated_text"
-        ].strip()
-    print("\nfinal output:")
-    print(rubric)
+        BATCH_SIZE = 8
+        for i in tqdm(range(0, len(train_subset), BATCH_SIZE)):
+            batch = train_subset["rubric_prompt"][i:(i + BATCH_SIZE)]
+            responses = pipe(batch, return_full_text=False)
+            for k, res in enumerate(responses):
+                # TODO: Dataset objects are immutable, this doesn't persist:
+                train_subset[i+k]["rubric"] = res[0]["generated_text"].strip()
 
+    breakpoint()
     messages += [
         {"role": "assistant", "content": rubric},
         {
@@ -145,7 +158,7 @@ def interactive():
 
 
 def get_model(verbose: bool = True):
-    with TaskTimer("loading model", verbose=verbose):
+    with TaskTimer("model load", verbose=verbose):
         # the model will be automatically downloaded and cached (e.g. in ~/.cache/huggingface/)
         #  cache dir / running offline info: https://huggingface.co/docs/datasets/en/cache
         tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
@@ -179,20 +192,21 @@ def get_device() -> str:
     return device
 
 
-@contextmanager
-def TaskTimer(task_name: str, verbose: bool = True):
-    try:
-        start_time = time.perf_counter()
-        if verbose:
-            print(f"\nstarting {task_name}...", flush=True)
-        yield  # This is where your block of code will execute
-    finally:
-        end_time = time.perf_counter()
-        if verbose:
-            print(
-                f"{task_name} completed in {(end_time - start_time):.2f} secs!",
-                flush=True,
-            )
+@contextmanager                                                                                     
+def TaskTimer(task_name: str, verbose: bool = True):                                                                                                                                 
+    """Reports the time a given section of code takes to run."""
+    try:                                                                                            
+        start_time = time.perf_counter()                                                            
+        if verbose:                                                                                 
+            print(f"\nstarting '{task_name}'...", flush=True)                                         
+        yield  # This is where your block of code will execute                                      
+    finally:                                                                                        
+        dur = time.perf_counter() - start_time
+        dur_str = f"{(dur):.2f} secs"
+        if dur > 60:
+            dur_str = f"{(dur/60):.2f} min"
+        if verbose:                                                                                 
+            print(f"'{task_name}' complete in {dur_str}!", flush=True)
 
 
 if __name__ == "__main__":
