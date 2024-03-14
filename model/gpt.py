@@ -1,7 +1,8 @@
 import os
 from openai import OpenAI
-from AbstractModel import AbstractModel, IPrompt, IChatOutput
-from typing import List, Optional
+from openai.types.chat.chat_completion import ChatCompletion
+from AbstractModel import AbstractModel, IPrompt
+from typing import List, Tuple, Optional
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ENV_PATH = os.path.join(SCRIPT_DIR, ".env")
@@ -28,13 +29,12 @@ class GPTModel(AbstractModel):
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         # assert model_name in PRICES.keys()
 
-    # TODO: change output type hint
     def __call__(
         self,
         prompts: List[IPrompt],
         max_tokens: Optional[int] = None,
         json_mode: bool = False,
-    ) -> List[IChatOutput]:
+    ) -> Tuple[List[str], List[ChatCompletion]]:
         assert isinstance(prompts, list)
         extra_args = dict()
         if json_mode:
@@ -44,6 +44,7 @@ class GPTModel(AbstractModel):
             extra_args["max_tokens"] = max_tokens
 
         completions = []
+        raw_outputs = []
         for prompt in prompts:
             if isinstance(prompt, str):
                 prompt = self.to_conversation(prompt)
@@ -55,5 +56,21 @@ class GPTModel(AbstractModel):
                 messages=prompt,
                 **extra_args,
             )
+            raw_outputs.append(completion.choices[0].message.content)
             completions.append(completion)
-        return completions
+        return raw_outputs, completions
+
+    @staticmethod
+    def compute_price(completions: ChatCompletion | List[ChatCompletion]) -> float:
+        """Compute USD price of give API request(s)."""
+        if not isinstance(completions, list):
+            completions = [completions]
+
+        total_price = 0.0
+        for c in completions:
+            prompt_price, completion_price = PRICES[c.model]
+            total_price += (
+                prompt_price * c.usage.prompt_tokens
+                + completion_price * c.usage.completion_tokens
+            )
+        return total_price

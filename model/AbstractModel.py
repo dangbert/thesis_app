@@ -1,18 +1,17 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional
+from typing import Dict, List, Any, Optional, Tuple
 
 
 IConversation = List[Dict]
 IPrompt = str | IConversation
-IChatOutput = List[str]
 
 
 class AbstractModel(ABC):
     @abstractmethod
     def __call__(
         self, prompts: List[IPrompt], max_tokens: Optional[int]
-    ) -> List[IChatOutput]:
-        """Given batch of prompts, return list of string outputs from a given LLM."""
+    ) -> Tuple[List[str], Any]:
+        """Given batch of prompts, return list of string outputs from a given LLM, and possible meta info about outputs."""
         pass
 
     @staticmethod
