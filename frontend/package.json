@@ -1,7 +1,7 @@
 {
   "name": "@frontend/source",
   "version": "0.0.0",
-  "license": "MIT",
+  "license": "GPL-3.0",
   "scripts": {},
   "private": true,
   "dependencies": {
