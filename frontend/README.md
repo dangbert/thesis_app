@@ -14,6 +14,8 @@ comes with a LSP for Vim users.
 
 Run `npx nx serve frontend` to start the development server, then visit http://localhost:4200
 
+Note: to edit proxy settings for the dev server see [./apps/frontend/rspack.config.js](./apps/frontend/rspack.config.js).
+
 ## Build for production
 
 Run `npx nx build frontend` to build the application. The build artifacts are stored in the output directory (e.g. `dist/` or `build/`), ready to be deployed.
