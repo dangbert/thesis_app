@@ -8,9 +8,11 @@ import CssBaseline from '@mui/material/CssBaseline';
 import INITIAL_THEME, {
   CustomThemeContext,
   ICustomThemeProviderContext,
-} from './theme';
+} from '../theme';
 import Typography from '@mui/material/Typography';
+
 import Onboard from './Onboard';
+import HomePage from './HomePage';
 
 const StyledApp = styled.div`
   // Your style here
@@ -34,14 +36,7 @@ export function App() {
         <ThemeProvider theme={customThemeCtx.theme}>
           <CssBaseline enableColorScheme={true} />
           <Routes>
-            <Route
-              path="/"
-              element={
-                <Typography variant="h1" gutterBottom>
-                  Welcome Home
-                </Typography>
-              }
-            />
+            <Route path="/" element={<HomePage />} />
             <Route path="/join" element={<Onboard />} />
             <Route
               path="/test"

@@ -9,12 +9,13 @@ function Onboard() {
     'Project moderne ontwikkelingen in de farmaceutische wetenschappen';
   const instructors = ['Danny', 'Fanny'];
   const message = 'Login with your VU email to join!';
+  const role = 'student';
 
   return (
     <Card sx={{ maxWidth: 400, m: 'auto', mt: 5 }}>
       <CardContent>
         <Typography variant="h5" component="div">
-          You're invited to join a course as a student
+          You're invited to join as a {role}.
         </Typography>
         <Typography sx={{ mt: 2 }}>Course: {courseName}</Typography>
         <Typography>

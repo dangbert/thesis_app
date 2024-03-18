@@ -1,7 +1,7 @@
 name: frontend-test
 
 on:
-  pull_request:
+  push:
     paths:
       - "frontend/**"
 
