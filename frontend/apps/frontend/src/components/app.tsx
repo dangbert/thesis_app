@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import styled from '@emotion/styled';
 
 import { ThemeProvider, Theme } from '@mui/material/styles';
@@ -30,35 +30,37 @@ export function App() {
   };
 
   return (
-    <StyledApp>
-      <CustomThemeContext.Provider value={customThemeCtx}>
-        {/* still using ThemeProvider for the sake of mui's components */}
-        <ThemeProvider theme={customThemeCtx.theme}>
-          <CssBaseline enableColorScheme={true} />
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/join" element={<Onboard />} />
-            <Route
-              path="/test"
-              element={
-                <Typography variant="h2" gutterBottom>
-                  Testing
-                </Typography>
-              }
-            />
+    <BrowserRouter>
+      <StyledApp>
+        <CustomThemeContext.Provider value={customThemeCtx}>
+          {/* still using ThemeProvider for the sake of mui's components */}
+          <ThemeProvider theme={customThemeCtx.theme}>
+            <CssBaseline enableColorScheme={true} />
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/join" element={<Onboard />} />
+              <Route
+                path="/test"
+                element={
+                  <Typography variant="h2" gutterBottom>
+                    Testing
+                  </Typography>
+                }
+              />
 
-            <Route
-              path="*"
-              element={
-                <Typography variant="h1" gutterBottom>
-                  Fallback page
-                </Typography>
-              }
-            />
-          </Routes>
-        </ThemeProvider>
-      </CustomThemeContext.Provider>
-    </StyledApp>
+              <Route
+                path="*"
+                element={
+                  <Typography variant="h1" gutterBottom>
+                    Fallback page
+                  </Typography>
+                }
+              />
+            </Routes>
+          </ThemeProvider>
+        </CustomThemeContext.Provider>
+      </StyledApp>
+    </BrowserRouter>
   );
 }
 
