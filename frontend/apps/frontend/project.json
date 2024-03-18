@@ -1,0 +1,44 @@
+{
+  "name": "frontend",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/frontend/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/rspack:rspack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "target": "web",
+        "outputPath": "dist/apps/frontend",
+        "main": "apps/frontend/src/main.tsx",
+        "tsConfig": "apps/frontend/tsconfig.app.json",
+        "rspackConfig": "apps/frontend/rspack.config.js",
+        "assets": ["apps/frontend/src/favicon.ico", "apps/frontend/src/assets"]
+      },
+      "configurations": {
+        "development": {
+          "mode": "development"
+        },
+        "production": {
+          "mode": "production",
+          "optimization": true,
+          "sourceMap": false
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/rspack:dev-server",
+      "options": {
+        "buildTarget": "frontend:build:development"
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "buildTarget": "frontend:build:production"
+        }
+      }
+    }
+  }
+}
