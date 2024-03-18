@@ -1,0 +1,21 @@
+version: "3.8"
+name: thesis
+
+services:
+  nginx:
+    platform: ${PROD_PLATFORM}
+    build:
+      context: ../frontend
+      # (relative to context):
+      dockerfile: ./nginx/Dockerfile
+      target: nginx_prod
+    ports:
+      - "443:443"
+      - "80:80"
+    environment:
+      - SERVER_NAME=${SERVER_NAME}
+    volumes:
+      # keys for HTTPS:
+      - /etc/letsencrypt/:/etc/letsencrypt/
+
+    command: nginx -g 'daemon off;'
