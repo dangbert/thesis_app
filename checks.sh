@@ -44,11 +44,11 @@ function check() {
 }
 
 function fix() {
-  echo "running ruff --fix"
-  ruff --fix "${RUFF_IGNORES[@]}"
-
   echo -e "\n\nrunning ruff format"
   ruff format
+
+  echo -e "\nrunning ruff --fix"
+  ruff --fix "${RUFF_IGNORES[@]}"
 }
 
 function usage() {

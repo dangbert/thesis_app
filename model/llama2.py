@@ -15,7 +15,6 @@ from transformers import (
     AutoModelForCausalLM,
     BitsAndBytesConfig,
     pipeline,
-    DataCollatorWithPadding,
 )
 from tqdm import tqdm
 from langchain_community.llms import HuggingFacePipeline
@@ -101,11 +100,11 @@ def play_datasets(seed: int = 42, max_samples: int = 25):
     with TaskTimer("rubric generation"):
         BATCH_SIZE = 8
         for i in tqdm(range(0, len(train_subset), BATCH_SIZE)):
-            batch = train_subset["rubric_prompt"][i:(i + BATCH_SIZE)]
+            batch = train_subset["rubric_prompt"][i : (i + BATCH_SIZE)]
             responses = pipe(batch, return_full_text=False)
             for k, res in enumerate(responses):
                 # TODO: Dataset objects are immutable, this doesn't persist:
-                train_subset[i+k]["rubric"] = res[0]["generated_text"].strip()
+                train_subset[i + k]["rubric"] = res[0]["generated_text"].strip()
 
     breakpoint()
     messages += [
@@ -192,20 +191,20 @@ def get_device() -> str:
     return device
 
 
-@contextmanager                                                                                     
-def TaskTimer(task_name: str, verbose: bool = True):                                                                                                                                 
+@contextmanager
+def TaskTimer(task_name: str, verbose: bool = True):
     """Reports the time a given section of code takes to run."""
-    try:                                                                                            
-        start_time = time.perf_counter()                                                            
-        if verbose:                                                                                 
-            print(f"\nstarting '{task_name}'...", flush=True)                                         
-        yield  # This is where your block of code will execute                                      
-    finally:                                                                                        
+    try:
+        start_time = time.perf_counter()
+        if verbose:
+            print(f"\nstarting '{task_name}'...", flush=True)
+        yield  # This is where your block of code will execute
+    finally:
         dur = time.perf_counter() - start_time
         dur_str = f"{(dur):.2f} secs"
         if dur > 60:
             dur_str = f"{(dur/60):.2f} min"
-        if verbose:                                                                                 
+        if verbose:
             print(f"'{task_name}' complete in {dur_str}!", flush=True)
 
 

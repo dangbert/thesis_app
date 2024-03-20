@@ -34,7 +34,13 @@ class GPTModel(AbstractModel):
         prompts: List[IPrompt],
         max_tokens: Optional[int] = None,
         json_mode: bool = False,
+        temperature: Optional[float] = 1,
+        top_p: Optional[float] = None,
     ) -> Tuple[List[str], List[ChatCompletion]]:
+        """
+        https://platform.openai.com/docs/api-reference/chat/create#chat-create-temperature
+        https://community.openai.com/t/cheat-sheet-mastering-temperature-and-top-p-in-chatgpt-api/172683
+        """
         assert isinstance(prompts, list)
         extra_args = dict()
         if json_mode:
@@ -42,6 +48,10 @@ class GPTModel(AbstractModel):
             extra_args["response_format"] = {"type": "json_object"}
         if max_tokens is not None:
             extra_args["max_tokens"] = max_tokens
+        if temperature is not None:
+            extra_args["temperature"] = temperature
+        if top_p is not None:
+            extra_args["top_p"] = top_p
 
         completions = []
         raw_outputs = []
