@@ -57,7 +57,7 @@ Time-bound: "during my video pitch and literature presentation"
 
 And Analyzing the sample action plan we see it specifically indicates which steps are taken in preparation ("don't literally memorise", "make video recordings and check if people are looking into the camera", and "by asking feedback from group members after a live presentation"). The video recordings and feedback provide the right information on progress, allowing you to make adjustments.
 
-In your case the goal you're writing should focus on a skill such as '{skill}' (for example {skill_description}) and may make use of a tone like '{tone}'.
+In your case the goal you're writing should focus on a skill such as '{skill}' (for example {skill_description}) and may write your goal/plan using a tone of voice such as '{tone}'.
 {extra}
 Now respond only with a SMART goal written from your perspective as a student as well as an appropriate action plan in json format like the example. You do not have to adhere to the particular wording structure using in the example, just the json format.
 """.strip()
@@ -71,7 +71,7 @@ SKILLS = {
     "pitch and intonation": "using different pitches and intonation to make the presentation more engaging and understandable. Intonations can also be used to place emphasis on a specific part of a sentence to better guide the audience through the story.",
     "voice volume": "ability to use the voice in such a way that everyone can hear the presentation clearly.",
     "non-verbal communication": "eye contact: the ability to make contact with the audience and involve them in the story by consciously looking at them (e.g. looking into the camera) and distributing attention evenly across the audience",
-    "facial expression: ability to use facial expressions to give an accessible presentation (e.g., friendly smile) and to emphasize what is being said (e.g., by using facial expressions).": " ",
+    "facial expression": "ability to use facial expressions to give an accessible presentation (e.g., friendly smile) and to emphasize what is being said (e.g., by using facial expressions).",
     # TODO: "[see also the knowledge clip about hand gestures and body language]":
     "hand gestures": "ability to use hand gestures that support and thereby reinforce the spoken message. Consider, for example, counting with the hands when 3 main points are mentioned, or emphasizing the 'one' versus the 'other' side of the matter, etc. !.",
 }
@@ -89,4 +89,69 @@ TONES = [
     "inspirational",
     "motivating",
     "conversational",
+    "sarcastic",
+    "cynical",
+    "playful",
+    "sympathetic",
+    "empathetic",
+    "sincere",
+    "objective",
+    "subjective",
+    "critical",
+    "analytical",
+    "persuasive",
+    "descriptive",
+]
+
+# ~50 words related to education, learning, and goals
+EDUCATION_WORDS = [
+    "education",
+    "learning",
+    "goals",
+    "knowledge",
+    "understanding",
+    "study",
+    "teaching",
+    "training",
+    "development",
+    "curriculum",
+    "pedagogy",
+    "literacy",
+    "numeracy",
+    "skill",
+    "mastery",
+    "achievement",
+    "progress",
+    "advancement",
+    "enlightenment",
+    "discipline",
+    "research",
+    "theory",
+    "practice",
+    "application",
+    "analysis",
+    "comprehension",
+    "retention",
+    "recall",
+    "insight",
+    "innovation",
+    "creativity",
+    "critical",
+    "thinking",
+    "problem-solving",
+    "communication",
+    "collaboration",
+    "motivation",
+    "inspiration",
+    "aspiration",
+    "success",
+    "effort",
+    "perseverance",
+    "dedication",
+    "discipline",
+    "focus",
+    "guidance",
+    "feedback",
+    "evaluation",
+    "improvement",
 ]
