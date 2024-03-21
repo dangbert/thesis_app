@@ -1,0 +1,5 @@
+auth0_provider = {
+  domain        = "CHANGE_ME.eu.auth0.com"
+  client_id     = "CHANGE_ME"
+  client_secret = "CHANGE_ME"
+}

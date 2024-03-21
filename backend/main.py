@@ -1,9 +1,21 @@
 from fastapi import FastAPI, HTTPException
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Request
 from typing import Annotated
+import time
 
 app = FastAPI()
 
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    """
+    Handy middleware for tracking how long it takes to process every request.
+    https://fastapi.tiangolo.com/tutorial/middleware/
+    """
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    response.headers["x-process-time-secs"] = str(process_time)
+    return response
 
 @app.get("/")
 async def root():
