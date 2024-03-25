@@ -22,11 +22,12 @@ Furthermore, an "action plan" for a SMART goal should:
 """.strip()
 
 
+# NOTE: don't use this one as its own fstring
 SMART_EXAMPLE = """
-{{
+{
     "smart": "Make eye contact with the audience during my video pitch and literature presentation to better engage the viewer with my story. In the video pitch, I do this by looking closely into the camera most of the time and in the literature presentation by alternately looking at the different people in the audience, both my fellow students and teachers.",
     "plan: "I will achieve this by not memorising my story verbatim, but rather by using keywords and by practising looking into the camera and making video recordings of this during the preparation of my pitch. I also practise my literature presentation dry where my group mates sit on opposite sides of the room. In the video recordings and feedback from my group mates afterwards, I will check whether I indeed make good eye contact"
-}}
+}
 
 If we analyse this learning objective as an example with the aforementioned criteria: we see that it is indeed SMART in its formulation:
 Specifics: Making eye contact with the audience
