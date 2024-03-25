@@ -1,38 +1,17 @@
-PROMPT_PRINCIPLES = """
-You are a peer reviewer, tasked with giving a student feedback about an assignment.
-
-Your feedback should adhere to the following principles:
-* Feedback shall be geared to providing information about progress and achievement, not towards providing a summative grade or pass/fail assessment.
-* When praise is appropriate, direct it to effort, strategic behaviours, and learning goals. Avoid praising ability or intelligence.
-* Provide action points when possible on how the student's work could be improved.
-* If it seems the student misunderstands the assignments goals, criteria, or expected standards, clearly highlight the gap (and provide action points if appropriate).
-
-
-""".strip()
-
-
-# prompt format:
-# * feedback principles
-# * specific format of response (e.g. chain of thought followed by json)
-# * assignment specific info + rubric (+ possibly exemplars)
-# * student's draft
+import re
+import json
+from pydantic import BaseModel, conint, Field
+from typing import Annotated
 
 SMART = ["specific", "measurable", "action-oriented", "relevant", "time-bound"]
 
-PROMPT_SYTHNETIC_SMART = """
-You're a student taking a course where you're tasked with writing a SMART goal defining your perosonal learning objective for the course.
+SMART_RUBRIC = """
 A SMART learning goal must be Specific, Measurable, Action-oriented, Relevant, and Time-bound as described further below:
-
 Specific: Concrete and unambiguous definition of the goal: is it clear what you want to achieve?
-
 Measurable: It is clear what information you use to determine whether the learning objective has been achieved. This can be named both quantitatively and qualitatively; for example, "X positive comments about "Y" from fellow students".
-
 Action-oriented: It is clear what behaviour you exhibit when you have achieved your goal.
-
 Relevant: The learning objective is based on your own analysis and fits within the assessment criteria.
-
 Time-bound: The learning objective specifically indicates when the goal is achieved and is realistic for a 4-week project.
-
 
 Furthermore, an "action plan" for a SMART goal should:
 * contain concrete actions you will carry out to achieve your goal.
@@ -40,7 +19,12 @@ Furthermore, an "action plan" for a SMART goal should:
 * Be clear and follow logically from the formulated learning objective  .
 * Be achievable within the stipulated time.
 * Allow for interim evaluation and adjustment.
+""".strip()
 
+
+PROMPT_SYNTHETIC_SMART = """
+You're a student taking a course where you're tasked with writing a SMART goal defining your personal learning objective for the course.
+{SMART_RUBRIC}
 
 Your response should contain a SMART goal written from your perspective as a student, as well as an appropriate action plan, formatted like the example response below (simple json object contaiing plain text data with no markdown formatting).
 {{
@@ -155,3 +139,70 @@ EDUCATION_WORDS = [
     "evaluation",
     "improvement",
 ]
+
+### peer reviewing:
+FEEDBACK_PRINCIPLES = """
+You are a peer reviewer, tasked with giving a student feedback about an assignment.
+
+Your feedback must adhere to the following principles:
+* Feedback shall be geared to providing information about progress and achievement, not towards providing a summative grade or pass/fail assessment.
+* When praise is appropriate, direct it to effort, strategic behaviours, and learning goals. Avoid praising ability or intelligence.
+* Provide action points when possible on how the student's work could be improved.
+* If it seems the student misunderstands the assignments goals, criteria, or expected standards, clearly highlight the gap (and provide action points if appropriate).
+""".strip()
+
+PROMPT_SMART_FEEDBACK = """
+{PROMPT_PRINCIPLES}
+
+The rubric for the assignment follows (delimited by =====):
+=====
+{SMART_RUBRIC}
+=====
+
+The student's draft follows:
+=====
+{student_draft}
+=====
+
+Now analyze/discuss the student's work in the context of how well it fits the assignment, use this discussion as a private reflection on their work. Then end your rreponse with a json object containing your final evaluation to be seen by the student. The json object should contain the following keys:
+
+Your response should contain a SMART goal written from your perspective as a student, as well as an appropriate action plan, formatted like the example response below (simple json object containing plain text data with no markdown formatting).
+{{
+    "smart": "Make eye contact with the audience during my video pitch and literature presentation to better engage the viewer with my story. In the video pitch, I do this by looking closely into the camera most of the time and in the literature presentation by alternately looking at the different people in the audience, both my fellow students and teachers.",
+    "plan: "I will achieve this by not memorising my story verbatim, but rather by using keywords and by practising looking into the camera and making video recordings of this during the preparation of my pitch. I also practise my literature presentation dry where my group mates sit on opposite sides of the room. In the video recordings and feedback from my group mates afterwards, I will check whether I indeed make good eye contact"
+}}
+"""
+
+
+# prompt format:
+# * feedback principles
+# * specific format of response (e.g. chain of thought followed by json)
+# * assignment specific info + rubric (+ possibly exemplars)
+# * student's draft
+
+
+class FeedbackAttr(BaseModel):
+    score: Annotated[int, conint(ge=1, le=10)] = Field(
+        default=None, title="Score in the range [1,10] inclusive.", ge=1, le=10
+    )
+    feedback: str
+
+
+class SMARTFeedback(BaseModel):
+    specific: FeedbackAttr
+    measurable: FeedbackAttr
+    action_oriented: FeedbackAttr
+    relevant: FeedbackAttr
+    time_bound: FeedbackAttr
+    overall_feedback: str
+
+
+def parseSMARTFeedback(response: str):
+    """
+    Attempt to find the JSON substring in the response and parse it into a SMARTFeedback object.
+    Raises jsonDecodeError or ValidationError on failure.
+    """
+    json_str = re.search(r"{.*}", response, re.DOTALL).group()
+    data = json.loads(json_str)
+    feedback = SMARTFeedback(**data)
+    return feedback

@@ -33,8 +33,8 @@ def main():
         "-o",
         type=str,
         required=True,
-        default="synthetic_smart_v2.csv",
-        help="Output file name (csv) e.g. 'synthetic_smart_.csv'.",
+        default="synthetic_smart.csv",
+        help="Output file name (csv) e.g. 'synthetic_smart.csv'.",
     )
     parser.add_argument(
         "--model",
@@ -90,8 +90,12 @@ def create_prompts(args):
             smart_errors = random.sample(promptlib.SMART, num_errors)
             extra += f"Also intentionally formulate your SMART goal/plan such that the following attributes are NOT adherent to the SMART formulation: {', '.join(smart_errors)}."
 
-        prompt = promptlib.PROMPT_SYTHNETIC_SMART.format(
-            skill=skill, skill_description=skill_description, tone=tone, extra=extra
+        prompt = promptlib.PROMPT_SYNTHETIC_SMART.format(
+            SMART_RUBRIC=promptlib.SMART_RUBRIC,
+            skill=skill,
+            skill_description=skill_description,
+            tone=tone,
+            extra=extra,
         )
         data["skill"].append(skill)
         data["tone"].append(tone)

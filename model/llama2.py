@@ -107,7 +107,7 @@ def play_datasets(seed: int = 42, max_samples: int = 25):
                 train_subset[i + k]["rubric"] = res[0]["generated_text"].strip()
 
     breakpoint()
-    messages += [
+    """ messages += [
         {"role": "assistant", "content": rubric},
         {
             "role": "user",
@@ -123,6 +123,7 @@ def play_datasets(seed: int = 42, max_samples: int = 25):
     print(grade)
     breakpoint()
     print()
+    """
 
 
 def interactive():

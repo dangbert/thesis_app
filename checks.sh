@@ -39,6 +39,9 @@ function check() {
   echo -e "running ruff check..."
   ruff check . "${RUFF_IGNORES[@]}"
 
+  echo -e "\nrunning unit tests..."
+  pytest -v
+
   echo -e "\n\nrunning mypy..."
   mypy .
 }
@@ -48,7 +51,7 @@ function fix() {
   ruff format
 
   echo -e "\nrunning ruff --fix"
-  ruff --fix "${RUFF_IGNORES[@]}"
+  ruff check --fix "${RUFF_IGNORES[@]}"
 }
 
 function usage() {
