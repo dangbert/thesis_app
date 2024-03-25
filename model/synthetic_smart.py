@@ -102,7 +102,8 @@ def create_prompts(args):
         data["tone"].append(tone)
         data["prompt"].append(prompt)
         smart_errors.sort(key=lambda x: promptlib.SMART.index(x))
-        data["errors"].append(smart_errors)
+        # delimit by semicolon instead of storing as list
+        data["errors"].append(";".join(smart_errors))
 
     df = pd.DataFrame(data)
     # sort by len(errors) and reindex

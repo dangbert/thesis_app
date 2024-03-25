@@ -173,8 +173,8 @@ Now the student's draft follows:
 =====
 
 Now analyze/discuss the student's work in the context of how well it fits the assignment, discuss as your private reflection on their work. Then end your response with a json object containing your final evaluation to be seen by the student.
-For scores, use a scale from 1 to 10, where 1 is the lowest and 10 is the highest, and for "feedback" be sure to adhere to the aforementioned feedback principles (don't discuss the score in the feedback as its private).
-The json object should conform to this json schema:
+For scores, use a scale from 1 to 10 inclusive, where 1 is the worst and 10 is the best (null is an unacceptable score), and for "feedback" be sure to adhere to the aforementioned feedback principles (don't discuss the score in the feedback as its private).
+The json object MUST use double quotes for keys/values and should conform to this json schema:
 {json_schema}
 """
 
@@ -207,12 +207,23 @@ class SMARTFeedback(BaseModel):
     overall_feedback: str
 
 
-def parseSMARTFeedback(response: str):
+def parseSMARTFeedback(response: str, retry: bool = False):
     """
     Attempt to find the JSON substring in the response and parse it into a SMARTFeedback object.
     Raises jsonDecodeError or ValidationError on failure.
     """
     json_str = re.search(r"{.*}", response, re.DOTALL).group()
-    data = json.loads(json_str)
+
+    try:
+        data = json.loads(json_str)
+    except json.JSONDecodeError as e:
+        if not retry or "Expecting property name enclosed in double quotes" not in str(
+            e
+        ):
+            raise e
+        # hacky fix for single quotes (better to avoid this in the first place)
+        tmp = response.replace("'", '"')
+        return parseSMARTFeedback(tmp, retry=False)
+
     feedback = SMARTFeedback(**data)
     return feedback
