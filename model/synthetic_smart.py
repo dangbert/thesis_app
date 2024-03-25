@@ -92,6 +92,7 @@ def create_prompts(args):
 
         prompt = promptlib.PROMPT_SYNTHETIC_SMART.format(
             SMART_RUBRIC=promptlib.SMART_RUBRIC,
+            SMART_EXAMPLE=promptlib.SMART_EXAMPLE,
             skill=skill,
             skill_description=skill_description,
             tone=tone,

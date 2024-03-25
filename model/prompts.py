@@ -22,11 +22,7 @@ Furthermore, an "action plan" for a SMART goal should:
 """.strip()
 
 
-PROMPT_SYNTHETIC_SMART = """
-You're a student taking a course where you're tasked with writing a SMART goal defining your personal learning objective for the course.
-{SMART_RUBRIC}
-
-Your response should contain a SMART goal written from your perspective as a student, as well as an appropriate action plan, formatted like the example response below (simple json object contaiing plain text data with no markdown formatting).
+SMART_EXAMPLE = """
 {{
     "smart": "Make eye contact with the audience during my video pitch and literature presentation to better engage the viewer with my story. In the video pitch, I do this by looking closely into the camera most of the time and in the literature presentation by alternately looking at the different people in the audience, both my fellow students and teachers.",
     "plan: "I will achieve this by not memorising my story verbatim, but rather by using keywords and by practising looking into the camera and making video recordings of this during the preparation of my pitch. I also practise my literature presentation dry where my group mates sit on opposite sides of the room. In the video recordings and feedback from my group mates afterwards, I will check whether I indeed make good eye contact"
@@ -40,6 +36,14 @@ Relevant: "Making eye contact" fits within the assessment criterion "non-verbal 
 Time-bound: "during my video pitch and literature presentation"
 
 And Analyzing the sample action plan we see it specifically indicates which steps are taken in preparation ("don't literally memorise", "make video recordings and check if people are looking into the camera", and "by asking feedback from group members after a live presentation"). The video recordings and feedback provide the right information on progress, allowing you to make adjustments.
+""".strip()
+
+PROMPT_SYNTHETIC_SMART = """
+You're a student taking a course where you're tasked with writing a SMART goal defining your personal learning objective for the course.
+{SMART_RUBRIC}
+
+Your response should contain a SMART goal written from your perspective as a student, as well as an appropriate action plan, formatted like the example response below (simple json object contaiing plain text data with no markdown formatting).
+{SMART_EXAMPLE}
 
 In your case the goal you're writing should focus on a skill such as '{skill}' (for example {skill_description}) and may write your goal/plan using a tone of voice such as '{tone}'.
 {extra}
@@ -142,8 +146,6 @@ EDUCATION_WORDS = [
 
 ### peer reviewing:
 FEEDBACK_PRINCIPLES = """
-You are a peer reviewer, tasked with giving a student feedback about an assignment.
-
 Your feedback must adhere to the following principles:
 * Feedback shall be geared to providing information about progress and achievement, not towards providing a summative grade or pass/fail assessment.
 * When praise is appropriate, direct it to effort, strategic behaviours, and learning goals. Avoid praising ability or intelligence.
@@ -152,25 +154,28 @@ Your feedback must adhere to the following principles:
 """.strip()
 
 PROMPT_SMART_FEEDBACK = """
-{PROMPT_PRINCIPLES}
+You are a peer reviewer, tasked with giving a student feedback about an assignment.
+{FEEDBACK_PRINCIPLES}
 
 The rubric for the assignment follows (delimited by =====):
 =====
 {SMART_RUBRIC}
 =====
 
-The student's draft follows:
+An example of a SMART goal and action plan follows:
+=====
+{SMART_EXAMPLE}
+=====
+
+Now the student's draft follows:
 =====
 {student_draft}
 =====
 
-Now analyze/discuss the student's work in the context of how well it fits the assignment, use this discussion as a private reflection on their work. Then end your rreponse with a json object containing your final evaluation to be seen by the student. The json object should contain the following keys:
-
-Your response should contain a SMART goal written from your perspective as a student, as well as an appropriate action plan, formatted like the example response below (simple json object containing plain text data with no markdown formatting).
-{{
-    "smart": "Make eye contact with the audience during my video pitch and literature presentation to better engage the viewer with my story. In the video pitch, I do this by looking closely into the camera most of the time and in the literature presentation by alternately looking at the different people in the audience, both my fellow students and teachers.",
-    "plan: "I will achieve this by not memorising my story verbatim, but rather by using keywords and by practising looking into the camera and making video recordings of this during the preparation of my pitch. I also practise my literature presentation dry where my group mates sit on opposite sides of the room. In the video recordings and feedback from my group mates afterwards, I will check whether I indeed make good eye contact"
-}}
+Now analyze/discuss the student's work in the context of how well it fits the assignment, discuss as your private reflection on their work. Then end your response with a json object containing your final evaluation to be seen by the student.
+For scores, use a scale from 1 to 10, where 1 is the lowest and 10 is the highest, and for "feedback" be sure to adhere to the aforementioned feedback principles (don't discuss the score in the feedback as its private).
+The json object should conform to this json schema:
+{json_schema}
 """
 
 
@@ -179,6 +184,11 @@ Your response should contain a SMART goal written from your perspective as a stu
 # * specific format of response (e.g. chain of thought followed by json)
 # * assignment specific info + rubric (+ possibly exemplars)
 # * student's draft
+
+
+class SMARTResponse(BaseModel):
+    smart: str
+    plan: str
 
 
 class FeedbackAttr(BaseModel):

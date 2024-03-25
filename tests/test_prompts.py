@@ -1,6 +1,5 @@
 import pytest
 import json
-import re
 import model.prompts as promptlib
 from pydantic import ValidationError
 
@@ -34,9 +33,7 @@ def test_SMARTFeedback_parse():
     """
 
     # shouldn't raise an error
-    # Extract JSON substring using regular expressions
-    json_str = re.search(r"{.*}", response, re.DOTALL).group()
-    obj = promptlib.parseSMARTFeedback(response)
+    _ = promptlib.parseSMARTFeedback(response)
 
     with pytest.raises(json.JSONDecodeError):
         promptlib.parseSMARTFeedback(response[:-20])
