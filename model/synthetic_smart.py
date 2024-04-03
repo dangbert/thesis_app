@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
+"""Generates synethetic SMART goals using a GPT model, writing them to a csv."""
+
 import argparse
 import json
 import random
 import pandas as pd
+import os
+import time
 
 import config
 import gpt
@@ -16,10 +20,16 @@ def main():
     )
     parser.add_argument(
         "--sample-size",
-        "-s",
+        "-n",
         type=int,
         default=50,
         help="Number of samples to generate.",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed",
     )
     parser.add_argument(
         "--top-p",
@@ -32,9 +42,10 @@ def main():
         "--output",
         "-o",
         type=str,
-        required=True,
-        default="synthetic_smart.csv",
-        help="Output file name (csv) e.g. 'synthetic_smart.csv'.",
+        default=os.path.join(
+            config.DATASETS_DIR, "synthetic_smart", "synthetic_smart.csv"
+        ),
+        help="Output file name (csv) e.g. 'synthetic_smart.csv' or folder.",
     )
     parser.add_argument(
         "--model",
@@ -44,17 +55,31 @@ def main():
         help="Name of OpenAI model to use (see gpt.py).",
     )
     args = parser.parse_args()
+    config.set_seed(args.seed)
     config.source_dot_env()  # read api key
 
     assert args.sample_size > 0
+    if os.path.isdir(args.output):
+        args.output = os.path.join(args.output, "synthetic_smart.csv")
+    assert not os.path.isfile(args.output), f"refusing to overwrite '{args.output}'"
     assert args.output.lower().endswith(".csv")
 
+    print(f"\ncreating {args.sample_size} prompts... ", flush=True)
     df = create_prompts(args)
     df.to_csv(args.output, index=False)  # verify save works before running model
+    config.args_to_dict(args, fname=args.output + ".config.json")  # document config
 
+    print(f"\ngenerating {args.sample_size} outputs... ", flush=True)
+    time.sleep(5)  # last chance to abort
     model = gpt.GPTModel(args.model)
     outputs, meta = model(list(df["prompt"]), top_p=args.top_p, json_mode=True)
     print(f"price = ${model.compute_price(meta):.3f}")
+
+    print("\npost processing... ", flush=True)
+    # in case json doesn't parse below lets backup these responses
+    bkp_name = args.output + ".output.json.bkp"
+    with open(bkp_name, "w") as f:
+        json.dump(outputs, f, indent=2)
 
     smart, plan = [], []
     for output in outputs:
@@ -66,6 +91,7 @@ def main():
     df = df.assign(smart=smart, plan=plan)
     df.to_csv(args.output, index=False)
     print(f"saved to '{args.output}'")
+    # os.remove(bkp_name)
 
 
 def create_prompts(args):

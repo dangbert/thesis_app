@@ -43,12 +43,12 @@ PROMPT_SYNTHETIC_SMART = """
 You're a student taking a course where you're tasked with writing a SMART goal defining your personal learning objective for the course.
 {SMART_RUBRIC}
 
-Your response should contain a SMART goal written from your perspective as a student, as well as an appropriate action plan, formatted like the example response below (simple json object contaiing plain text data with no markdown formatting).
+Your response should contain a SMART goal written from your perspective as a student, as well as an appropriate action plan, formatted like the example response below (simple json object containing plain text data with no markdown formatting).
 {SMART_EXAMPLE}
 
-In your case the goal you're writing should focus on a skill such as '{skill}' (for example {skill_description}) and may write your goal/plan using a tone of voice such as '{tone}'.
+In your case the goal you're writing should focus on a skill such as '{skill}' (for example {skill_description}) and you shall write your goal/plan using a tone of voice such as '{tone}'.
 {extra}
-Now respond only with a SMART goal written from your perspective as a student as well as an appropriate action plan in json format like the example. You do not have to adhere to the particular wording structure using in the example, just the json format.
+Now respond only with a SMART goal written from your perspective as a student as well as an appropriate action plan in json format like the example. You do not have to adhere to the particular wording structure used in the example, just the json format.
 """.strip()
 
 # List of sub-skills for presenting to inspire you in setting your personal learning goal:
