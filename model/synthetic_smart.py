@@ -87,7 +87,6 @@ def main():
         smart.append(obj["smart"])
         plan.append(obj["plan"])
 
-    df = df.assign(errors=df["errors"].apply(lambda x: ", ".join(x)))  # list -> string
     df = df.assign(smart=smart, plan=plan)
     df.to_csv(args.output, index=False)
     print(f"saved to '{args.output}'")
