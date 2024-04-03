@@ -208,7 +208,7 @@ class SMARTFeedback(BaseModel):
     overall_feedback: str
 
 
-def parseSMARTFeedback(response: str, retry: bool = False):
+def parseSMARTFeedback(response: str, retry: bool = False) -> SMARTFeedback:
     """
     Attempt to find the JSON substring in the response and parse it into a SMARTFeedback object.
     Raises jsonDecodeError or ValidationError on failure.
