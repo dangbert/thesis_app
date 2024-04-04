@@ -133,13 +133,12 @@ def get_feedback(
                 print(e)
                 feedback = None
 
-            # TODO: consider reprompting with context (up to 1 additional time per invalid response)
+            # TODO: consider including error context in reprompt
+            retry += 1
             print(f"retry {retry} for row {i} ...")
-            # breakpoint()
-            new_output, new_meta = model(list(df["feedback_prompt"][i]))
+            new_output, new_meta = model([df["feedback_prompt"][i]])
             total_price += model.compute_price(new_meta)
             response = new_output[0]
-            retry += 1
         total_retries += retry
         feedback_objs.append(feedback)
 
