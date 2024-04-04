@@ -1,0 +1,12 @@
+{
+  "cmd": "./synthetic_smart.py -o ../datasets/synthetic_smart/v3/ -m gpt-4-0125-preview",
+  "args": {
+    "sample_size": 50,
+    "seed": 42,
+    "top_p": 0.65,
+    "output": "../datasets/synthetic_smart/v3/synthetic_smart.csv",
+    "model": "gpt-4-0125-preview"
+  },
+  "git_hash": "ad694ec",
+  "notes": "price = $0.763, runtime ~8min"
+}

@@ -223,6 +223,8 @@ def parseSMARTFeedback(response: str, retry: bool = False) -> SMARTFeedback:
     except json.JSONDecodeError as e:
         is_quote_error = "Expecting property name enclosed in double quotes" in str(e)
         if not retry or not is_quote_error:
+            print("bad json_str:")
+            print(json_str)
             raise e
         if is_quote_error:
             logger.warning(f"retrying with quote replacement: {response}")

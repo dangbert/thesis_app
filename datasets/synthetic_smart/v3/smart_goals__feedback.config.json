@@ -1,0 +1,9 @@
+{
+  "cmd": "./feedback.py -i ../datasets/synthetic_smart/v3/ -m gpt-4-0125-preview",
+  "args": {
+    "input": "../datasets/synthetic_smart/v3/smart_goals.csv",
+    "model": "gpt-4-0125-preview",
+    "max_retries": 2
+  },
+  "git_hash": "56563da"
+}

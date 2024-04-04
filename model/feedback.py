@@ -33,6 +33,13 @@ def main():
         default="gpt-3.5-turbo-0125",
         help="Name of OpenAI model to use (see gpt.py).",
     )
+    parser.add_argument(
+        "--max-retries",
+        "-r",
+        type=int,
+        default=2,
+        help="Max number of feedback generation retries per invalid response.",
+    )
 
     args = parser.parse_args()
     if os.path.isdir(args.input):
@@ -44,12 +51,18 @@ def main():
     base_path = args.input[:-4] + "__feedback"
     feedback_path = base_path + ".csv"
     scores_path = base_path + "__scores.csv"
+    bkp_path = args.input + ".output.json.bkp"
 
     if not os.path.isfile(feedback_path):
-        # df = df[-4:] # for now
+        outputs = None
+        if os.path.isfile(bkp_path):
+            print("reloading older feedback outputs")  # e.g. to handle parse error
+            with open(bkp_path, "r") as f:
+                outputs = json.load(f)
+
         config.args_to_dict(args, fname=base_path + ".config.json")
         # generate feedback, extending df
-        full_df, scores_df = get_feedback(df, args)
+        full_df, scores_df = get_feedback(df, args, outputs=outputs)
 
         full_df.to_csv(feedback_path, index=False)
         print(f"wrote '{feedback_path}'")
@@ -86,36 +99,55 @@ def clean_attr(attr: str) -> str:
 
 
 def get_feedback(
-    df: pd.DataFrame, args: argparse.Namespace
+    df: pd.DataFrame, args: argparse.Namespace, outputs: Optional[list[str]] = None
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     df["feedback_prompt"] = df.apply(add_feedback_prompt, axis=1)
     df["errors"] = df["errors"].fillna("").astype(str)
-
-    # generate feedback for ALL rows
     config.source_dot_env()  # read api key
-    model = gpt.GPTModel()
-    outputs, meta = model(list(df["feedback_prompt"]))
-    print(f"price = ${model.compute_price(meta):.3f}")
+    model = gpt.GPTModel(args.model)
+
+    total_price = 0.0
+    if outputs is not None:  # we reuse prior outputs
+        assert len(df) == len(outputs)
+    else:
+        # generate feedback for ALL rows
+        outputs, meta = model(list(df["feedback_prompt"]))
+        total_price = model.compute_price(meta)
+        print(f"price = ${total_price:.3f}")
 
     # in case json doesn't parse below lets backup these responses
-    bkp_name = args.input + ".output.json.bkp"
-    with open(bkp_name, "w") as f:
+    bkp_path = args.input + ".output.json.bkp"
+    with open(bkp_path, "w") as f:
         json.dump(outputs, f, indent=2)
 
     # post process outputs
     feedback_objs: list[promptlib.SMARTFeedback] = []
+    total_retries = 0
     for i, response in enumerate(outputs):
-        try:
-            feedback = promptlib.parseSMARTFeedback(response, retry=True)
-        except (json.JSONDecodeError, ValidationError) as e:
-            print(e)
+        retry = 0
+        while retry < args.max_retries:
+            try:
+                feedback = promptlib.parseSMARTFeedback(response, retry=True)
+                break
+            except (json.JSONDecodeError, ValidationError) as e:
+                print(e)
+                feedback = None
+
             # TODO: consider reprompting with context (up to 1 additional time per invalid response)
-            feedback = None
+            print(f"retry {retry} for row {i} ...")
+            # breakpoint()
+            new_output, new_meta = model(list(df["feedback_prompt"][i]))
+            total_price += model.compute_price(new_meta)
+            response = new_output[0]
+            retry += 1
+        total_retries += retry
         feedback_objs.append(feedback)
 
     error_indices = [i for i, x in enumerate(feedback_objs) if x is None]
-    print(f"\nparse errors: {len(error_indices)}")
-    print("error_indices: ", error_indices)
+    print("\nfeedback generation summary:")
+    print(f"total retries: {total_retries}")
+    print(f"final parse errors: {len(error_indices)}, error_indices: {error_indices}")
+    print(f"total price: ${total_price:.3f}")
     assert len(error_indices) == 0
 
     # extract numerical scores
