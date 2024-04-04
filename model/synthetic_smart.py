@@ -42,10 +42,8 @@ def main():
         "--output",
         "-o",
         type=str,
-        default=os.path.join(
-            config.DATASETS_DIR, "synthetic_smart", "synthetic_smart.csv"
-        ),
-        help="Output file name (csv) e.g. 'synthetic_smart.csv' or folder.",
+        default=os.path.join(config.DATASETS_DIR, "synthetic_smart", "smart_goals.csv"),
+        help="Output file name (csv) e.g. 'smart_goals.csv' or folder.",
     )
     parser.add_argument(
         "--model",
@@ -60,14 +58,15 @@ def main():
 
     assert args.sample_size > 0
     if os.path.isdir(args.output):
-        args.output = os.path.join(args.output, "synthetic_smart.csv")
+        args.output = os.path.join(args.output, "smart_goals.csv")
     assert not os.path.isfile(args.output), f"refusing to overwrite '{args.output}'"
-    assert args.output.lower().endswith(".csv")
+    assert args.output.endswith(".csv")
+    base_path = args.input[:-4]
 
     print(f"\ncreating {args.sample_size} prompts... ", flush=True)
     df = create_prompts(args)
     df.to_csv(args.output, index=False)  # verify save works before running model
-    config.args_to_dict(args, fname=args.output + ".config.json")  # document config
+    config.args_to_dict(args, fname=base_path + ".config.json")  # document config
 
     print(f"\ngenerating {args.sample_size} outputs... ", flush=True)
     time.sleep(5)  # last chance to abort
@@ -133,6 +132,12 @@ def create_prompts(args):
     df = pd.DataFrame(data)
     # sort by len(errors) and reindex
     df = df.sort_values(by="errors").reset_index(drop=True)
+    return add_ids(df)
+
+
+def add_ids(df: pd.DataFrame) -> pd.DataFrame:
+    assert "ID" not in df.columns
+    df.insert(0, "ID", range(1, 1 + len(df)))
     return df
 
 
