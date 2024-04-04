@@ -10,6 +10,7 @@ import config
 import gpt
 import prompts as promptlib
 from typing import Tuple, Optional
+from pydantic import ValidationError
 from synthetic_smart import add_ids
 
 
@@ -57,12 +58,27 @@ def main():
     else:
         print("reloading existing feedback!")
         full_df = pd.read_csv(feedback_path)
+        full_df["errors"] = full_df["errors"].fillna("").astype(str)
         scores_df = pd.read_csv(scores_path)
 
     plot_scores_path = base_path + "__scores.pdf"
     plot_comparison_path = base_path + "__comparison.pdf"
     plot_scores(scores_df, fname=plot_scores_path)
     plot_comparisons(full_df, fname=plot_comparison_path)
+
+
+def add_feedback_prompt(row: pd.Series) -> str:
+    """Given row with smart goal and plan, construct prompt for feedback generation."""
+    json_schema = promptlib.SMARTFeedback.model_json_schema()
+    draft = promptlib.SMARTResponse(smart=row["smart"], plan=row["plan"])
+    prompt = promptlib.PROMPT_SMART_FEEDBACK.format(
+        FEEDBACK_PRINCIPLES=promptlib.FEEDBACK_PRINCIPLES,
+        SMART_RUBRIC=promptlib.SMART_RUBRIC,
+        SMART_EXAMPLE=promptlib.SMART_EXAMPLE,
+        student_draft=draft.model_dump_json(indent=2),
+        json_schema=json_schema,
+    )
+    return prompt
 
 
 def clean_attr(attr: str) -> str:
@@ -88,17 +104,17 @@ def get_feedback(
 
     # post process outputs
     feedback_objs: list[promptlib.SMARTFeedback] = []
-    error_indices = []
     for i, response in enumerate(outputs):
         try:
             feedback = promptlib.parseSMARTFeedback(response, retry=True)
-        except Exception:
+        except (json.JSONDecodeError, ValidationError) as e:
+            print(e)
             # TODO: consider reprompting with context (up to 1 additional time per invalid response)
             feedback = None
         feedback_objs.append(feedback)
 
     error_indices = [i for i, x in enumerate(feedback_objs) if x is None]
-    print(f"parse errors: {len(error_indices)}")
+    print(f"\nparse errors: {len(error_indices)}")
     print("error_indices: ", error_indices)
     assert len(error_indices) == 0
 
@@ -124,6 +140,7 @@ def plot_comparisons(full_df: pd.DataFrame, fname: Optional[str] = None):
     # compare scores on basis of intentional errors in smart goal / plan
     with_err = {}
     without_err = {}
+    plt.clf()
     fig, axs = plt.subplots(
         1, len(promptlib.SMART), figsize=(len(promptlib.SMART) * 5, 5)
     )  # Adjust figsize for better visibility
@@ -131,8 +148,8 @@ def plot_comparisons(full_df: pd.DataFrame, fname: Optional[str] = None):
         has_error = full_df["errors"].str.contains(attr)
         attr = clean_attr(attr)
         key = f"score_{attr}"
-        with_err[attr] = full_df.loc[has_error, key].tolist()
-        without_err[attr] = full_df.loc[has_error, key].tolist()
+        with_err[attr] = full_df.loc[has_error == True, key].tolist()
+        without_err[attr] = full_df.loc[has_error == False, key].tolist()
         assert len(with_err[attr]) + len(without_err[attr]) == len(full_df)
 
         axs[i].boxplot([without_err[attr], with_err[attr]], positions=[0.9, 1.1])
@@ -158,31 +175,18 @@ def plot_comparisons(full_df: pd.DataFrame, fname: Optional[str] = None):
 
 def plot_scores(scores_df: pd.DataFrame, fname: Optional[str] = None):
     plt.clf()
-    scores_df.boxplot()
+    scores_df.drop("ID", axis=1).boxplot()
     # set y-axis to 0-10, tickmarks every 0.5
     plt.yticks(range(0, 11), [f"{x:.1f}" for x in range(0, 11)])
     plt.title(f"SMART Feedback Scores (n={len(scores_df)} responses)")
     print("\nsummary of scores:")
-    print(scores_df.describe())
+    # create copy without ID column
+    print(scores_df.drop("ID", axis=1).describe())
     if fname is not None:
         plt.savefig(fname)
         print(f"wrote '{fname}'")
     else:
         plt.show()
-
-
-def add_feedback_prompt(row: pd.Series) -> str:
-    """Given row with smart goal and plan, construct prompt for feedback generation."""
-    json_schema = promptlib.SMARTFeedback.model_json_schema()
-    draft = promptlib.SMARTResponse(smart=row["smart"], plan=row["plan"])
-    prompt = promptlib.PROMPT_SMART_FEEDBACK.format(
-        FEEDBACK_PRINCIPLES=promptlib.FEEDBACK_PRINCIPLES,
-        SMART_RUBRIC=promptlib.SMART_RUBRIC,
-        SMART_EXAMPLE=promptlib.SMART_EXAMPLE,
-        student_draft=draft.model_dump_json(indent=2),
-        json_schema=json_schema,
-    )
-    return prompt
 
 
 if __name__ == "__main__":

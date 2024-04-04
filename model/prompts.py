@@ -1,7 +1,10 @@
 import re
 import json
-from pydantic import BaseModel, conint, Field
+from pydantic import BaseModel, conint, Field, ValidationError
 from typing import Annotated
+import logging
+
+logger = logging.getLogger(__name__)
 
 SMART = ["specific", "measurable", "action-oriented", "relevant", "time-bound"]
 
@@ -174,7 +177,7 @@ Now the student's draft follows:
 =====
 
 Now analyze/discuss the student's work in the context of how well it fits the assignment, discuss as your private reflection on their work. Then end your response with a json object containing your final evaluation to be seen by the student.
-For scores, use a scale from 1 to 10 inclusive, where 1 is the worst and 10 is the best (null is an unacceptable score), and for "feedback" be sure to adhere to the aforementioned feedback principles (don't discuss the score in the feedback as its private).
+For scores, use a scale from 1 to 10 inclusive, where 1 is the worst and 10 is the best (do NOT use null), and for "feedback" be sure to adhere to the aforementioned feedback principles (don't discuss the score in the feedback as its private).
 The json object MUST use double quotes for keys/values and should conform to this json schema:
 {json_schema}
 """
@@ -218,13 +221,17 @@ def parseSMARTFeedback(response: str, retry: bool = False) -> SMARTFeedback:
     try:
         data = json.loads(json_str)
     except json.JSONDecodeError as e:
-        if not retry or "Expecting property name enclosed in double quotes" not in str(
-            e
-        ):
+        is_quote_error = "Expecting property name enclosed in double quotes" in str(e)
+        if not retry or not is_quote_error:
             raise e
-        # hacky fix for single quotes (better to avoid this in the first place)
-        tmp = response.replace("'", '"')
-        return parseSMARTFeedback(tmp, retry=False)
+        if is_quote_error:
+            logger.warning(f"retrying with quote replacement: {response}")
+            # hacky fix for single quotes (better to avoid this in the first place)
+            tmp = response.replace("'", '"')
+            return parseSMARTFeedback(tmp, retry=False)
+    except ValidationError as e:
+        logger.error(f"validation error: {e}")
+        raise e
 
     feedback = SMARTFeedback(**data)
     return feedback

@@ -56,3 +56,5 @@ exclude = ["repos", "datasets"]
 [tool.ruff.lint]
 # https://docs.astral.sh/ruff/settings/#lint_ignore-init-module-imports
 ignore-init-module-imports = true
+# bad for pandas https://github.com/astral-sh/ruff/issues/1852
+ignore = ["E712"]
