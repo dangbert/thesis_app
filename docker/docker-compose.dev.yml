@@ -1,11 +1,12 @@
 version: "3.8"
-name: thesis
+name: thesis_dev
 
 services:
   backend:
     platform: ${LOCAL_PLATFORM}
     build:
       target: dev
+    command: 'sleep infinity'
 
   nginx:
     platform: ${LOCAL_PLATFORM}
@@ -15,7 +16,9 @@ services:
       - DEV_HOST_PORT=${DEV_HOST_PORT}
     ports:
       - 127.0.0.1:${DEV_HOST_PORT}:$DEV_HOST_PORT
-    command: 'yarn && yarn start'
+    volumes:
+      - ../frontend/:/frontend/
+    command: 'sleep infinity'
 
   db:
     platform: ${LOCAL_PLATFORM}

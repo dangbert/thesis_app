@@ -14,7 +14,7 @@
         "outputPath": "dist/apps/frontend",
         "main": "apps/frontend/src/main.tsx",
         "tsConfig": "apps/frontend/tsconfig.app.json",
-        "rspackConfig": "apps/frontend/rspack.config.js",
+        "rspackConfig": "apps/frontend/rspack.config.ts",
         "assets": ["apps/frontend/src/favicon.ico", "apps/frontend/src/assets"]
       },
       "configurations": {
