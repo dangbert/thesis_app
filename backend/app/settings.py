@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     db_host: str = "db"
     db_port: int = 5432
 
+    auto_migrate: bool = True  # auto migrate database on startup
+
     @property
     def db_uri(self):
         return self._db_uri(omit_pass=False)

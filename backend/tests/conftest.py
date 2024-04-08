@@ -49,17 +49,17 @@ def run_around_tests():
     print("\n\nBEFORE TEST")
     # do imports now that env args are set
     from app.database import (
-        createDb,
-        createAllTables,
-        deleteAllTables,
-        deleteAllTables,
+        create_db,
+        create_all_tables,
+        delete_all_tables,
+        delete_all_tables,
     )
     from app.database import settings, engine, SessionFactory
 
     assert settings.env == "TEST"  # seat belt
-    createDb()  # ensure test database exists
-    deleteAllTables()
-    createAllTables()
+    create_db()  # ensure test database exists
+    delete_all_tables()
+    create_all_tables()
 
     yield
 

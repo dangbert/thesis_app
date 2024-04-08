@@ -1,4 +1,7 @@
+"""Utilities for database operations (initial creation, etc)."""
+
 from sqlalchemy.orm import registry, sessionmaker
+import sqlalchemy
 from sqlalchemy import create_engine, Column, Integer, DateTime, func
 from sqlalchemy.exc import ProgrammingError, OperationalError
 from app.settings import Settings
@@ -19,17 +22,17 @@ metadata = Base.metadata
 SessionFactory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-def dbExists(awaitConnection: bool = True):
+def db_exists(await_conn: bool = True) -> bool:
     """
     return true if DB exists (for environment's config).
     If DB connection isn't available, waits up to 8-10 seconds before raising an error.
     """
-    tmpEngine = create_engine(settings.db_uri)
-    maxTries = 5 if awaitConnection else 1
+    tmp_engine = create_engine(settings.db_uri)
+    maxTries = 5 if await_conn else 1
     for n in range(maxTries):
         try:
-            with tmpEngine.connect() as conn:
-                conn.execute("commit")
+            with tmp_engine.connect() as conn:
+                conn.execute(sqlalchemy.text("commit"))
             return True
         except OperationalError as err:
             msg = f'database "{settings.db_name}" does not exist'
@@ -45,13 +48,14 @@ def dbExists(awaitConnection: bool = True):
             time.sleep(2)
 
 
-def createDb():
+def create_db(verbose: bool = True) -> bool:
     """create initial database (supresses error if already exists)."""
-    print(f"creating database '{settings.db_name}'...", end=" ")
 
-    # https://stackoverflow.com/a/66361547/5500073
-    # have to use form of URI that doesn't contain DB name (when it doesn't exist)
-    tmpEngine = create_engine(settings._db_uri(omit_pass=False, include_db_name=False))
+    def maybe_print(msg: str, **kwargs):
+        if verbose:
+            print(msg, **kwargs)
+
+        maybe_print(f"creating database '{settings.db_name}'...", end=" ")
 
     db_params = {
         "host": settings.db_host,
@@ -60,7 +64,7 @@ def createDb():
         "password": settings.db_pass,
     }
 
-    print(f"\nAttempting creation of database '{settings.db_name}'...")
+    maybe_print(f"\nAttempting creation of database '{settings.db_name}'...")
 
     # Connect to the PostgreSQL server using the existing 'master' user
     conn = psycopg2.connect(**db_params, database="postgres")
@@ -69,27 +73,32 @@ def createDb():
 
     # Create the database
     create_cmd = sql.SQL("CREATE DATABASE {};").format(sql.Identifier(settings.db_name))
+    created = False
     try:
         cursor.execute(create_cmd)
+        created = True
         # TODO: run  CREATE EXTENSION "uuid-ossp";
     except psycopg2.errors.DuplicateDatabase:
         print("(database already exists)", end=" ")
     finally:
         cursor.close()
         conn.close()
+    if created:
+        maybe_print("DB created!")
+    return created
 
 
-def deleteDb():
+def delete_db():
     """delete entire database (destructive)."""
     print(f"deleting database '{settings.db_name}'...", end=" ")
-    tmpEngine = create_engine(settings.db_uri)
-    with tmpEngine.connect() as conn:
+    tmp_engine = create_engine(settings.db_uri)
+    with tmp_engine.connect() as conn:
         conn.execute("commit")
         conn.execute(f"DROP DATABASE {settings.db_name}")
     print("DONE!")
 
 
-def createAllTables():
+def create_all_tables():
     """create all tables in database (for defined models)"""
     print(f"creating all tables in database '{settings.db_name}'...", end=" ")
     metadata.create_all(engine)
@@ -97,7 +106,7 @@ def createAllTables():
     print("DONE!")
 
 
-def deleteAllTables():
+def delete_all_tables():
     """delete all tables in database"""
     print(
         f"deleting all tables in database '{settings.db_name}'...",
