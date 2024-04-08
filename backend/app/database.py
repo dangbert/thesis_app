@@ -12,7 +12,7 @@ settings = Settings()
 
 engine = create_engine(settings.db_uri, echo=False)
 mapper_registry = Base.registry
-meta = Base.metadata
+metadata = Base.metadata
 
 # database Session factory
 # TODO: look into these params:
@@ -92,8 +92,8 @@ def deleteDb():
 def createAllTables():
     """create all tables in database (for defined models)"""
     print(f"creating all tables in database '{settings.db_name}'...", end=" ")
-    meta.create_all(engine)
-    print("table list: {}", meta.sorted_tables)
+    metadata.create_all(engine)
+    print("table list: {}", metadata.sorted_tables)
     print("DONE!")
 
 
@@ -106,5 +106,5 @@ def deleteAllTables():
     )
 
     # delete tables
-    meta.drop_all(engine)
+    metadata.drop_all(engine)
     print("DONE!")
