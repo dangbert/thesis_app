@@ -18,11 +18,13 @@ TEST_DIR = os.path.abspath(os.path.dirname(__file__))
 #         with app.app_context():
 #             yield client
 
+
 @pytest.fixture
 def session() -> Session:
     from app.database import SessionFactory
 
     return SessionFactory()
+
 
 def pytest_sessionstart():
     """Runs before all tests start https://stackoverflow.com/a/35394239"""
@@ -30,8 +32,14 @@ def pytest_sessionstart():
         raise Exception("failed to load dotenv")
     settings = Settings()
     import app.database as database
-    assert settings.env == "TEST", f"double check dotenv loaded correctly (settings.ENV='{settings.ENV}')"
-    assert database.settings.env == "TEST", f"double check dotenv loaded correctly (settings.ENV='{settings.ENV}')"
+
+    assert (
+        settings.env == "TEST"
+    ), f"double check dotenv loaded correctly (settings.ENV='{settings.ENV}')"
+    assert (
+        database.settings.env == "TEST"
+    ), f"double check dotenv loaded correctly (settings.ENV='{settings.ENV}')"
+
 
 @pytest.fixture(autouse=True)
 def run_around_tests():
@@ -48,8 +56,7 @@ def run_around_tests():
     )
     from app.database import settings, engine, SessionFactory
 
-    # deleteDb(TestingConfig)
-    assert settings.env == "TEST" # seat belt
+    assert settings.env == "TEST"  # seat belt
     createDb()  # ensure test database exists
     deleteAllTables()
     createAllTables()
@@ -57,7 +64,5 @@ def run_around_tests():
     yield
 
     # code that will run after a given test:
-    print("AFTER TEST", flush=True)
     close_all_sessions()  # prevents pytest from hanging
-    deleteAllTables()
-    print("finished test cleanup", flush=True)
+    # deleteAllTables() # leave around for debugging schema

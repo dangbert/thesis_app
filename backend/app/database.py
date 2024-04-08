@@ -5,16 +5,19 @@ from app.settings import Settings
 import psycopg2
 from psycopg2 import sql
 import time
+import app.models as models
+from app.models.Base import Base
 
 settings = Settings()
 
 engine = create_engine(settings.db_uri)
-mapper_registry = registry()
-meta = mapper_registry.metadata
+mapper_registry = Base.registry
+meta = Base.metadata
 
 # database Session factory
 # TODO: look into these params:
 SessionFactory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 
 def dbExists(awaitConnection: bool = True):
     """
@@ -50,7 +53,6 @@ def createDb():
     # have to use form of URI that doesn't contain DB name (when it doesn't exist)
     tmpEngine = create_engine(settings._db_uri(omit_pass=False, include_db_name=False))
 
-
     db_params = {
         "host": settings.db_host,
         "port": settings.db_port,
@@ -66,9 +68,10 @@ def createDb():
     cursor = conn.cursor()
 
     # Create the database
-    create_cmd = sql.SQL('CREATE DATABASE {};').format(sql.Identifier(settings.db_name))
+    create_cmd = sql.SQL("CREATE DATABASE {};").format(sql.Identifier(settings.db_name))
     try:
         cursor.execute(create_cmd)
+        # TODO: run  CREATE EXTENSION "uuid-ossp";
     except psycopg2.errors.DuplicateDatabase:
         print("(database already exists)", end=" ")
     finally:
