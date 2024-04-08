@@ -10,7 +10,7 @@ from app.models.Base import Base
 
 settings = Settings()
 
-engine = create_engine(settings.db_uri)
+engine = create_engine(settings.db_uri, echo=False)
 mapper_registry = Base.registry
 meta = Base.metadata
 

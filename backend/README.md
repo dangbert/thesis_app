@@ -25,3 +25,7 @@ Start dev server, then vist http://localhost:8000
 # start dev server
 uvicorn main:app --reload
 ````
+
+### Best Practices
+
+When defining models, see these notes on [SqlAlchemy 2.0](https://docs.sqlalchemy.org/en/20/changelog/whatsnew_20.html#orm-declarative-models) (particularly on the use of `Mapped` and `mapped_column`).
