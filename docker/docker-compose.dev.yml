@@ -6,6 +6,10 @@ services:
     platform: ${LOCAL_PLATFORM}
     build:
       target: dev
+    volumes:
+      - ../backend/:/backend/
+    environment:
+      - env=DEV
     command: 'sleep infinity'
 
   nginx:
