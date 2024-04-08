@@ -1,0 +1,23 @@
+version: "3.8"
+name: thesis
+
+services:
+  backend:
+    platform: ${LOCAL_PLATFORM}
+    build:
+      target: dev
+
+  nginx:
+    platform: ${LOCAL_PLATFORM}
+    build:
+      target: react_dev
+    environment:
+      - DEV_HOST_PORT=${DEV_HOST_PORT}
+    ports:
+      - 127.0.0.1:${DEV_HOST_PORT}:$DEV_HOST_PORT
+    command: 'yarn && yarn start'
+
+  db:
+    platform: ${LOCAL_PLATFORM}
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASS}

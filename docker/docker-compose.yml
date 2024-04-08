@@ -2,20 +2,37 @@ version: "3.8"
 name: thesis
 
 services:
+  backend:
+    platform: ${PROD_PLATFORM}
+    build:
+      context: ../backend
+      dockerfile: ./Dockerfile
+      target: prod
+
   nginx:
     platform: ${PROD_PLATFORM}
     build:
       context: ../frontend
-      # (relative to context):
-      dockerfile: ./nginx/Dockerfile
+      dockerfile: ./Dockerfile
       target: nginx_prod
     ports:
-      - "443:443"
-      - "80:80"
+      - "127.0.0.1:443:443"
+      - "127.0.0.1:80:80"
     environment:
       - SERVER_NAME=${SERVER_NAME}
     volumes:
-      # keys for HTTPS:
       - /etc/letsencrypt/:/etc/letsencrypt/
 
     command: nginx -g 'daemon off;'
+
+  db:
+    platform: ${PROD_PLATFORM}
+    image: postgres:14
+    ports:
+      # using "local loopback interface" so UFW rules are respected
+      - 127.0.0.1:5400:5432
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASS}
+    volumes:
+      - ${VOLUMES_DIR}/db:/var/lib/postgresql/data
+      - ${VOLUMES_DIR}/backups:/backups
