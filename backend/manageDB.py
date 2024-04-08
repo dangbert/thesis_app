@@ -95,7 +95,6 @@ def destroy():
         return
 
     close_all_sessions()
-    database.delete_all_tables()
     database.delete_db()  # fails if any sessions are connected
 
 

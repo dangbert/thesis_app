@@ -48,54 +48,54 @@ def db_exists(await_conn: bool = True) -> bool:
             time.sleep(2)
 
 
-def create_db(verbose: bool = True) -> bool:
-    """create initial database (supresses error if already exists)."""
-
-    def maybe_print(msg: str, **kwargs):
-        if verbose:
-            print(msg, **kwargs)
-
-        maybe_print(f"creating database '{settings.db_name}'...", end=" ")
-
-    db_params = {
+def settings_to_db_params(settings: Settings) -> dict:
+    return {
         "host": settings.db_host,
         "port": settings.db_port,
         "user": settings.db_user,
         "password": settings.db_pass,
     }
 
-    maybe_print(f"\nAttempting creation of database '{settings.db_name}'...")
 
-    # Connect to the PostgreSQL server using the existing 'master' user
-    conn = psycopg2.connect(**db_params, database="postgres")
+def create_db() -> bool:
+    """create initial database (supresses error if already exists)."""
+
+    print(f"creating database '{settings.db_name}'...", end=" ")
+    print(f"\nAttempting creation of database '{settings.db_name}'...")
+    conn = psycopg2.connect(**settings_to_db_params(settings), database="postgres")
     conn.autocommit = True
     cursor = conn.cursor()
 
-    # Create the database
     create_cmd = sql.SQL("CREATE DATABASE {};").format(sql.Identifier(settings.db_name))
-    created = False
     try:
         cursor.execute(create_cmd)
-        created = True
-        # TODO: run  CREATE EXTENSION "uuid-ossp";
+        print("DB created!")
+        cursor.execute(sql.SQL('CREATE EXTENSION if not exists "uuid-ossp";'))
+        print("uuid-ossp extension created!")
+        return True
     except psycopg2.errors.DuplicateDatabase:
         print("(database already exists)", end=" ")
     finally:
         cursor.close()
         conn.close()
-    if created:
-        maybe_print("DB created!")
-    return created
+    return False
 
 
 def delete_db():
     """delete entire database (destructive)."""
+
     print(f"deleting database '{settings.db_name}'...", end=" ")
-    tmp_engine = create_engine(settings.db_uri)
-    with tmp_engine.connect() as conn:
-        conn.execute("commit")
-        conn.execute(f"DROP DATABASE {settings.db_name}")
-    print("DONE!")
+    conn = psycopg2.connect(**settings_to_db_params(settings), database="postgres")
+    conn.autocommit = True
+    cursor = conn.cursor()
+
+    del_cmd = sql.SQL("DROP DATABASE {};").format(sql.Identifier(settings.db_name))
+    try:
+        cursor.execute(del_cmd)
+        print("DB deleted!")
+    finally:
+        cursor.close()
+        conn.close()
 
 
 def create_all_tables():
