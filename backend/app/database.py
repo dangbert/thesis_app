@@ -13,6 +13,7 @@ from app.models.Base import Base
 
 settings = Settings()
 
+# TODO: this engine in global scope probably prevents delete_db() from working
 engine = create_engine(settings.db_uri, echo=False)
 mapper_registry = Base.registry
 metadata = Base.metadata
@@ -69,15 +70,17 @@ def create_db() -> bool:
     create_cmd = sql.SQL("CREATE DATABASE {};").format(sql.Identifier(settings.db_name))
     try:
         cursor.execute(create_cmd)
-        print("DB created!")
-        cursor.execute(sql.SQL('CREATE EXTENSION if not exists "uuid-ossp";'))
-        print("uuid-ossp extension created!")
-        return True
     except psycopg2.errors.DuplicateDatabase:
         print("(database already exists)", end=" ")
     finally:
         cursor.close()
         conn.close()
+
+    print(f"db_uri = {settings.db_uri_print_safe}")
+    with create_engine(settings.db_uri).connect() as conn:
+        conn.autocommit = True
+        conn.execute(sqlalchemy.text('CREATE EXTENSION if not exists "uuid-ossp"'))
+        print("uuid-ossp extension created!")
     return False
 
 
