@@ -4,6 +4,6 @@ __pycache__/
 .venv/
 node_modules/
 *.env*
-*.csv
+.csv
 .terraform/
 terraform.tfvars
