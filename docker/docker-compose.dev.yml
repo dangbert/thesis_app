@@ -1,0 +1,30 @@
+version: "3.8"
+name: thesis_dev
+
+services:
+  backend:
+    platform: ${LOCAL_PLATFORM}
+    build:
+      target: dev
+    volumes:
+      - ../backend/:/backend/
+    environment:
+      - env=DEV
+    command: 'sleep infinity'
+
+  nginx:
+    platform: ${LOCAL_PLATFORM}
+    build:
+      target: react_dev
+    environment:
+      - DEV_HOST_PORT=${DEV_HOST_PORT}
+    ports:
+      - 127.0.0.1:${DEV_HOST_PORT}:$DEV_HOST_PORT
+    volumes:
+      - ../frontend/:/frontend/
+    command: 'sleep infinity'
+
+  db:
+    platform: ${LOCAL_PLATFORM}
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASS}

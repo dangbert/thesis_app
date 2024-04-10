@@ -2,7 +2,9 @@
   "name": "@frontend/source",
   "version": "0.0.0",
   "license": "GPL-3.0",
-  "scripts": {},
+  "scripts": {
+    "start": "nx serve frontend"
+  },
   "private": true,
   "dependencies": {
     "@emotion/react": "11.11.1",

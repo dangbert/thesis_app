@@ -2,10 +2,10 @@ FROM node:20.11-alpine as react_common
 WORKDIR /frontend
 RUN yarn global add nx@latest 
 COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile --network-timeout 1000000 # 1000 secs
+RUN yarn install --frozen-lockfile --network-timeout $((10 * 60 * 1000))
 COPY ./ ./
 
-# FROM react_common as react_dev
+FROM react_common as react_dev
 
 
 FROM react_common as react_build
