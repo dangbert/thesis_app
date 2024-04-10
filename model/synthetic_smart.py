@@ -132,13 +132,13 @@ def create_prompts(args):
     df = pd.DataFrame(data)
     # sort by len(errors) and reindex
     df = df.sort_values(by="errors").reset_index(drop=True)
-    return add_ids(df)
+    return add_ids(df, "goal_id")
 
 
-def add_ids(df: pd.DataFrame) -> pd.DataFrame:
-    assert "goal_id" not in df.columns
+def add_ids(df: pd.DataFrame, name: str) -> pd.DataFrame:
+    assert name not in df.columns
     goal_ids = [config.create_id() for i in range(len(df))]
-    df.insert(0, "goal_id", goal_ids)
+    df.insert(0, name, goal_ids)
     return df
 
 

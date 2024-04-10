@@ -25,7 +25,7 @@ For example:
 default_attributes = ["utility"]
 
 
-def build_judgement_prompt(
+def build_judge_prompt(
     question: str,
     answer: str,
     other_attributes: dict[str, str] = dict(),

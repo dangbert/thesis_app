@@ -49,7 +49,7 @@ def main():
 
     assert os.path.isdir(args.input_dir)
     fname = os.path.join(args.input_dir, "smart_goals.csv")
-    df = pd.read_csv(fname)
+    goals_df = pd.read_csv(fname)
 
     base_path = args.input_dir + f"feedback_{args.model}"
     feedback_path = base_path + ".csv"
@@ -62,24 +62,35 @@ def main():
             with open(bkp_path, "r") as f:
                 outputs = json.load(f)
 
-        config.args_to_dict(args, fname=base_dot_path + "config.json")
+        config.args_to_dict(args, fname=base_dot_path + ".config.json")
         # generate feedback, extending df
         # df = df[-4:]  # TODO for now
         # breakpoint()
-        feedback_df = get_feedback(df, args, outputs=outputs, bkp_path=bkp_path)
+        feedback_df = get_feedback(goals_df, args, outputs=outputs, bkp_path=bkp_path)
         feedback_df.to_csv(feedback_path, index=False)
         print(f"wrote '{feedback_path}'")
-        exit(0)
     else:
         print("reloading existing feedback!")
-        full_df = pd.read_csv(feedback_path)
-        full_df["errors"] = full_df["errors"].fillna("").astype(str)
-        scores_df = pd.read_csv(scores_path)
+        feedback_df = pd.read_csv(feedback_path)
+        # feedback_df.to_csv(feedback_path)
+
+        # feedback_df["errors"] = feedback_df["errors"].fillna("").astype(str)
+        # scores_df = pd.read_csv(scores_path)
+    exit(0)
+
+    # join feedback_df with goals_df on goal_id
+    # TOOD: get plot_scores working again
+    full_df = pd.merge(goals_df, feedback_df, on="goal_id")
+    if len(full_df) < len(goals_df):
+        logger.warning(
+            f"lost {len(goals_df) - len(full_df)} rows merging feedback onto goals"
+        )
+    breakpoint()
 
     plot_scores_path = base_path + "__scores.pdf"
     plot_comparison_path = base_path + "__comparison.pdf"
     plot_scores(scores_df, fname=plot_scores_path)
-    plot_comparisons(full_df, fname=plot_comparison_path)
+    plot_comparisons(feedback_df, fname=plot_comparison_path)
 
 
 def add_feedback_prompt(row: pd.Series) -> str:
@@ -152,7 +163,7 @@ def get_feedback(
     print(f"total price: ${total_price:.3f}")
     # assert len(error_indices) == 0
     data["response"] = outputs
-    return pd.DataFrame(data)
+    return add_ids(pd.DataFrame(data), "feedback_id")
 
 
 def extract_scores_df(df: pd.DataFrame) -> pd.DataFrame:

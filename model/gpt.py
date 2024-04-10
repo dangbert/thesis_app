@@ -103,13 +103,14 @@ def auto_reprompt(
     So in the worst case, one "retry" could mean the model is prompted twice with batch size len(prompts).
     """
     assert isinstance(max_retries, int)
+    assert isinstance(prompts, list)
 
     outputs, meta = model(prompts, **kwargs)
     total_price = model.compute_price(meta)
     total_calls = len(outputs)
     # orig_outputs = outputs.copy()
 
-    # map indices to {new_prompt, new_response}
+    # map indices to {new_prompt}
     bad = {}
     for i, response in enumerate(outputs):
         if not validator(response):
@@ -121,6 +122,7 @@ def auto_reprompt(
         return outputs, total_price, total_calls
 
     new_prompts = [v["new_prompt"] for v in bad.values()]
+    logger.debug(f"reprompting {len(new_prompts)} prompts ({max_retries=})")
     new_outputs, new_price, new_calls = auto_reprompt(
         validator, max_retries, model, new_prompts, **kwargs
     )

@@ -150,7 +150,6 @@ EDUCATION_WORDS = [
 
 ### peer reviewing:
 FEEDBACK_PRINCIPLES = """
-Your feedback must adhere to the following principles:
 * Feedback shall be geared to providing information about progress and achievement, not towards providing a summative grade or pass/fail assessment.
 * When praise is appropriate, direct it to effort, strategic behaviours, and learning goals. Avoid praising ability or intelligence.
 * Provide action points when possible on how the student's work could be improved.
@@ -159,6 +158,7 @@ Your feedback must adhere to the following principles:
 
 PROMPT_SMART_FEEDBACK = """
 You are a peer reviewer, tasked with giving a student feedback about an assignment.
+Your feedback must adhere to the following principles:
 {FEEDBACK_PRINCIPLES}
 
 The rubric for the assignment follows (delimited by =====):
@@ -188,6 +188,8 @@ The json object MUST use double quotes for keys/values and should conform to thi
 # * specific format of response (e.g. chain of thought followed by json)
 # * assignment specific info + rubric (+ possibly exemplars)
 # * student's draft
+
+### MARK: Utilities
 
 
 class SMARTResponse(BaseModel):
