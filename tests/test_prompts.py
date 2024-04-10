@@ -1,6 +1,7 @@
 import pytest
 import json
 import model.prompts as promptlib
+from model.prompts import SMARTFeedback
 import model.benchmark as benchmark
 from pydantic import ValidationError, BaseModel
 
@@ -63,6 +64,53 @@ def test_SMARTFeedback_parse():
 
     # hacky workaround test
     _ = promptlib.parseSMARTFeedback(single_quote_res, retry=True)
+
+
+def test_parse_pydantic():
+    response = """
+    asdfdafs lk adsfaf
+    {
+    "specific": {
+        "score": 10,
+        "feedback": "lorum ipsum"
+    },
+    "measurable": {
+        "score": 10,
+        "feedback": "lorum ipsum"
+    },
+    "action_oriented": {
+        "score": 10,
+        "feedback": "lorum ipsum"
+    },
+    "relevant": {
+        "score": 10,
+        "feedback": "lorum ipsum"
+    },
+    "time_bound": {
+        "score": 10,
+        "feedback": "lorum ipsum"
+    },
+    "overall_feedback": "lorum ipsum"
+    }
+    """
+
+    def expect_error(res, expect: bool):
+        if expect:
+            assert isinstance(res, str)
+        else:
+            assert issubclass(type(res), BaseModel)
+
+    # shouldn't give error
+    expect_error(promptlib.parse_pydantic(response, SMARTFeedback), False)
+
+    # give errors
+    expect_error(promptlib.parse_pydantic(response[:-20], SMARTFeedback), True)
+    expect_error(
+        promptlib.parse_pydantic(response.replace("10", '"hi"'), SMARTFeedback), True
+    )
+    expect_error(
+        promptlib.parse_pydantic(response.replace("10", "11"), SMARTFeedback), True
+    )
 
 
 def test_build_judgement_prompt():

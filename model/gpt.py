@@ -96,7 +96,7 @@ def auto_reprompt(
     model: GPTModel,
     prompts: List[IPrompt],
     **kwargs,
-):
+) -> Tuple[List[str], float, int]:
     """
     Keep prompting model until validator function is happy or a depth of max_retries iterations are reached.
     max_retries is the max number of retry iterations e.g. one retry would be: 3 failures in first batch -> second batch of length 3 which all validate
@@ -106,6 +106,7 @@ def auto_reprompt(
 
     outputs, meta = model(prompts, **kwargs)
     total_price = model.compute_price(meta)
+    total_calls = len(outputs)
     # orig_outputs = outputs.copy()
 
     # map indices to {new_prompt, new_response}
@@ -117,12 +118,13 @@ def auto_reprompt(
 
     max_retries -= 1
     if len(bad) == 0 or max_retries < 0:
-        return outputs, total_price
+        return outputs, total_price, total_calls
 
     new_prompts = [v["new_prompt"] for v in bad.values()]
-    new_outputs, new_price = auto_reprompt(
+    new_outputs, new_price, new_calls = auto_reprompt(
         validator, max_retries, model, new_prompts, **kwargs
     )
+    total_calls += new_calls
 
     cur = 0
     for i in range(len(outputs)):
@@ -131,4 +133,4 @@ def auto_reprompt(
             cur += 1
 
     total_price += new_price
-    return outputs, total_price
+    return outputs, total_price, total_calls

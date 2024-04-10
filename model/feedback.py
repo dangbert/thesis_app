@@ -24,7 +24,7 @@ def main():
         "-i",
         type=str,
         required=True,
-        help="Input file name (csv) e.g. './smart_goals.csv'",
+        help="Input file directory (should contain 'smart_goals.csv' file)",
     )
     parser.add_argument(
         "--model",
@@ -42,17 +42,16 @@ def main():
     )
 
     args = parser.parse_args()
-    if os.path.isdir(args.input):
-        args.input = os.path.join(args.input, "smart_goals.csv")
     config.source_dot_env()  # read api key
 
-    df = pd.read_csv(args.input)
-    assert args.input.endswith(".csv")
-    base_path = args.input[:-4] + "__feedback"
-    feedback_path = base_path + ".csv"
-    scores_path = base_path + "__scores.csv"
-    bkp_path = args.input + ".output.json.bkp"
+    assert os.path.isdir(args.input)
+    fname = os.path.join(args.input_dir, "smart_goals.csv")
+    df = pd.read_csv(fname)
 
+    base_path = args.input_dir + f"feedback_{args.model}"
+    feedback_path = base_path + ".csv"
+    base_dot_path = args.input_dir + f".feedback_{args.model}"
+    bkp_path = base_dot_path + ".output.json.bkp"
     if not os.path.isfile(feedback_path):
         outputs = None
         if os.path.isfile(bkp_path):
@@ -60,14 +59,12 @@ def main():
             with open(bkp_path, "r") as f:
                 outputs = json.load(f)
 
-        config.args_to_dict(args, fname=base_path + ".config.json")
+        config.args_to_dict(args, fname=base_dot_path + "config.json")
         # generate feedback, extending df
-        full_df, scores_df = get_feedback(df, args, outputs=outputs)
+        full_df, scores_df = get_feedback(df, args, outputs=outputs, bkp_path=bkp_path)
 
         full_df.to_csv(feedback_path, index=False)
         print(f"wrote '{feedback_path}'")
-        scores_df.to_csv(scores_path, index=False)
-        print(f"wrote '{scores_path}'")
     else:
         print("reloading existing feedback!")
         full_df = pd.read_csv(feedback_path)
@@ -99,26 +96,33 @@ def clean_attr(attr: str) -> str:
 
 
 def get_feedback(
-    df: pd.DataFrame, args: argparse.Namespace, outputs: Optional[list[str]] = None
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    df["feedback_prompt"] = df.apply(add_feedback_prompt, axis=1)
-    df["errors"] = df["errors"].fillna("").astype(str)
-    config.source_dot_env()  # read api key
+    df: pd.DataFrame,
+    args: argparse.Namespace,
+    outputs: Optional[list[str]] = None,
+    bkp_path: Optional[str] = None,
+) -> pd.DataFrame:
+    """
+    Generates feedback for dataframe of smart goals and plans, returning a new dataframe with the feedback.
+    Returned dataframe has columns ["goal_id", "prompt", "response"].
+    """
+
+    # feedback data
+    data = {
+        "goal_id": df["goal_id"].to_list(),
+        "prompt": df.apply(add_feedback_prompt, axis=1).to_list(),
+    }
+
     model = gpt.GPTModel(args.model)
-
     total_price = 0.0
-    if outputs is not None:  # we reuse prior outputs
-        assert len(df) == len(outputs)
-    else:
-        # generate feedback for ALL rows
-        outputs, meta = model(list(df["feedback_prompt"]))
-        total_price = model.compute_price(meta)
-        print(f"price = ${total_price:.3f}")
+    # generate feedback for ALL rows
+    outputs, meta = model(data["prompt"])
+    total_price = model.compute_price(meta)
+    print(f"price = ${total_price:.3f}")
 
-    # in case json doesn't parse below lets backup these responses
-    bkp_path = args.input + ".output.json.bkp"
-    with open(bkp_path, "w") as f:
-        json.dump(outputs, f, indent=2)
+    if bkp_path is not None:
+        # in case json doesn't parse below lets backup these responses
+        with open(bkp_path, "w") as f:
+            json.dump(outputs, f, indent=2)
 
     # post process outputs
     feedback_objs: list[promptlib.SMARTFeedback] = []
@@ -149,6 +153,11 @@ def get_feedback(
     print(f"total price: ${total_price:.3f}")
     assert len(error_indices) == 0
 
+    data["response"] = outputs
+    return pd.DataFrame(data)
+
+
+def extract_scores_df(df: pd.DataFrame) -> pd.DataFrame:
     # extract numerical scores
     scores_data = {}
     fdata = {}  # feedback data
