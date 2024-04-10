@@ -2,7 +2,10 @@ import os
 from openai import OpenAI
 from openai.types.chat.chat_completion import ChatCompletion
 from AbstractModel import AbstractModel, IPrompt
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Callable
+import config
+
+logger = config.get_logger(__name__)
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ENV_PATH = os.path.join(SCRIPT_DIR, ".env")
@@ -53,6 +56,7 @@ class GPTModel(AbstractModel):
         if top_p is not None:
             extra_args["top_p"] = top_p
 
+        logger.debug(f"prompting {self.model_name} with {len(prompts)} prompts")
         completions = []
         raw_outputs = []
         for prompt in prompts:
@@ -84,3 +88,47 @@ class GPTModel(AbstractModel):
                 + completion_price * c.usage.completion_tokens
             )
         return total_price
+
+
+def auto_reprompt(
+    validator: Callable,
+    max_retries: int,
+    model: GPTModel,
+    prompts: List[IPrompt],
+    **kwargs,
+):
+    """
+    Keep prompting model until validator function is happy or a depth of max_retries iterations are reached.
+    max_retries is the max number of retry iterations e.g. one retry would be: 3 failures in first batch -> second batch of length 3 which all validate
+    So in the worst case, one "retry" could mean the model is prompted twice with batch size len(prompts).
+    """
+    assert isinstance(max_retries, int)
+
+    outputs, meta = model(prompts, **kwargs)
+    total_price = model.compute_price(meta)
+    # orig_outputs = outputs.copy()
+
+    # map indices to {new_prompt, new_response}
+    bad = {}
+    for i, response in enumerate(outputs):
+        if not validator(response):
+            bad[i] = {"new_prompt": prompts[i]}
+            outputs[i] = None
+
+    max_retries -= 1
+    if len(bad) == 0 or max_retries < 0:
+        return outputs, total_price
+
+    new_prompts = [v["new_prompt"] for v in bad.values()]
+    new_outputs, new_price = auto_reprompt(
+        validator, max_retries, model, new_prompts, **kwargs
+    )
+
+    cur = 0
+    for i in range(len(outputs)):
+        if i in bad:
+            outputs[i] = new_outputs[cur]
+            cur += 1
+
+    total_price += new_price
+    return outputs, total_price

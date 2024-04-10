@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import argparse
 import subprocess
 from typing import Optional
+import logging
 import json
 from haikunator import Haikunator
 
@@ -11,6 +12,40 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, os.pardir))
 DATASETS_DIR = os.path.join(ROOT_DIR, "datasets")
 ENV_PATH = os.path.join(ROOT_DIR, ".env")
+
+
+def get_logger(name: str, level: Optional[str] = None):
+    # Configure the formatter
+    formatter = logging.Formatter(
+        "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s"
+    )
+
+    log_levels = {
+        "DEBUG": logging.DEBUG,
+        "INFO": logging.INFO,
+        "WARNING": logging.WARNING,
+        "ERROR": logging.ERROR,
+        "CRITICAL": logging.CRITICAL,
+    }
+    # Get the LOG_LEVEL from environment, default to 'INFO' if not found
+
+    # Set the logging level
+    if level is None:
+        level = os.environ.get("LOG_LEVEL", "INFO").upper()
+        try:
+            level = log_levels[level]
+        except KeyError:
+            raise ValueError(f"Invalid log level: {level}")
+
+    # Configure the handler and set the formatter
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+
+    # Get the package's logger (replace 'my_package' with the actual package name)
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    logger.addHandler(handler)
+    return logger
 
 
 def source_dot_env(dotenv_path: str = ENV_PATH):
