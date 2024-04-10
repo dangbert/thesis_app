@@ -115,7 +115,7 @@ def run_cmd(
         print(cmd)
         print("output:")
         print(output)
-        print(f"\n*******************************************")
+        print("\n*******************************************")
         if exitOnFail:
             exit(exitCode)
     return exitCode, output

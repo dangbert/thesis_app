@@ -40,10 +40,12 @@ function check() {
   ruff check . "${RUFF_IGNORES[@]}"
 
   echo -e "\nrunning unit tests..."
-  pytest -v
+  pytest -v tests
 
   echo -e "\n\nrunning mypy..."
   mypy .
+  # TODO: consider running as
+  # mypy . --explicit-package-bases
 }
 
 function fix() {

@@ -52,7 +52,6 @@ def run_around_tests():
         create_db,
         create_all_tables,
         delete_all_tables,
-        delete_all_tables,
     )
     from app.database import settings, engine, SessionFactory
 

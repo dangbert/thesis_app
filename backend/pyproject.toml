@@ -24,3 +24,7 @@ types-psycopg2 = "^2.9.21.20240311"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff.lint]
+ignore-init-module-imports = true
+ignore = ["E712", "F401"]
