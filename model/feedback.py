@@ -9,9 +9,12 @@ import matplotlib.pyplot as plt
 import config
 import gpt
 import prompts as promptlib
+from prompts import SMARTFeedback, SMARTResponse
 from typing import Tuple, Optional
 from pydantic import ValidationError
 from synthetic_smart import add_ids
+
+logger = config.get_logger(__name__)
 
 
 def main():
@@ -20,7 +23,7 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        "--input",
+        "--input-dir",
         "-i",
         type=str,
         required=True,
@@ -38,13 +41,13 @@ def main():
         "-r",
         type=int,
         default=2,
-        help="Max number of feedback generation retries per invalid response.",
+        help="Max number of feedback generation iterations (given invalid response formats).",
     )
 
     args = parser.parse_args()
     config.source_dot_env()  # read api key
 
-    assert os.path.isdir(args.input)
+    assert os.path.isdir(args.input_dir)
     fname = os.path.join(args.input_dir, "smart_goals.csv")
     df = pd.read_csv(fname)
 
@@ -61,10 +64,12 @@ def main():
 
         config.args_to_dict(args, fname=base_dot_path + "config.json")
         # generate feedback, extending df
-        full_df, scores_df = get_feedback(df, args, outputs=outputs, bkp_path=bkp_path)
-
-        full_df.to_csv(feedback_path, index=False)
+        # df = df[-4:]  # TODO for now
+        # breakpoint()
+        feedback_df = get_feedback(df, args, outputs=outputs, bkp_path=bkp_path)
+        feedback_df.to_csv(feedback_path, index=False)
         print(f"wrote '{feedback_path}'")
+        exit(0)
     else:
         print("reloading existing feedback!")
         full_df = pd.read_csv(feedback_path)
@@ -79,8 +84,8 @@ def main():
 
 def add_feedback_prompt(row: pd.Series) -> str:
     """Given row with smart goal and plan, construct prompt for feedback generation."""
-    json_schema = promptlib.SMARTFeedback.model_json_schema()
-    draft = promptlib.SMARTResponse(smart=row["smart"], plan=row["plan"])
+    json_schema = SMARTFeedback.model_json_schema()
+    draft = SMARTResponse(smart=row["smart"], plan=row["plan"])
     prompt = promptlib.PROMPT_SMART_FEEDBACK.format(
         FEEDBACK_PRINCIPLES=promptlib.FEEDBACK_PRINCIPLES,
         SMART_RUBRIC=promptlib.SMART_RUBRIC,
@@ -112,47 +117,40 @@ def get_feedback(
         "prompt": df.apply(add_feedback_prompt, axis=1).to_list(),
     }
 
+    def validator(text: str):
+        res = promptlib.parse_pydantic(text, SMARTFeedback)
+        return isinstance(res, SMARTFeedback)
+
     model = gpt.GPTModel(args.model)
+    outputs, total_price, total_calls = gpt.auto_reprompt(
+        validator, args.max_retries, model, data["prompt"]
+    )
+
+    if bkp_path is not None:  # backup just in case
+        with open(bkp_path, "w") as f:
+            json.dump(outputs, f, indent=2)
+
+    if total_calls > len(data["prompt"]):
+        logger.warning(
+            f"{total_calls - len(data['prompt'])} extra generation calls needed while processing {len(data['prompt'])} prompts"
+        )
+
+    error_indices = [i for i, x in enumerate(outputs) if x is None]
+    bad_count = len(error_indices)
+    if bad_count > 0:
+        logger.error(f"{len(error_indices)} outputs failed to parse")
+
     total_price = 0.0
     # generate feedback for ALL rows
     outputs, meta = model(data["prompt"])
     total_price = model.compute_price(meta)
     print(f"price = ${total_price:.3f}")
 
-    if bkp_path is not None:
-        # in case json doesn't parse below lets backup these responses
-        with open(bkp_path, "w") as f:
-            json.dump(outputs, f, indent=2)
-
-    # post process outputs
-    feedback_objs: list[promptlib.SMARTFeedback] = []
-    total_retries = 0
-    for i, response in enumerate(outputs):
-        retry = 0
-        while retry < args.max_retries:
-            try:
-                feedback = promptlib.parseSMARTFeedback(response, retry=True)
-                break
-            except (json.JSONDecodeError, ValidationError) as e:
-                print(e)
-                feedback = None
-
-            # TODO: consider including error context in reprompt
-            retry += 1
-            print(f"retry {retry} for row {i} ...")
-            new_output, new_meta = model([df["feedback_prompt"][i]])
-            total_price += model.compute_price(new_meta)
-            response = new_output[0]
-        total_retries += retry
-        feedback_objs.append(feedback)
-
-    error_indices = [i for i, x in enumerate(feedback_objs) if x is None]
     print("\nfeedback generation summary:")
-    print(f"total retries: {total_retries}")
+    print(f"total generation calls: {total_calls}")
     print(f"final parse errors: {len(error_indices)}, error_indices: {error_indices}")
     print(f"total price: ${total_price:.3f}")
-    assert len(error_indices) == 0
-
+    # assert len(error_indices) == 0
     data["response"] = outputs
     return pd.DataFrame(data)
 

@@ -2,8 +2,7 @@ import re
 import json
 from pydantic import BaseModel, conint, Field, ValidationError
 from typing import Annotated, Union, Any
-import logging
-import model.config as config
+import config
 
 logger = config.get_logger(__name__)
 
