@@ -136,8 +136,9 @@ def create_prompts(args):
 
 
 def add_ids(df: pd.DataFrame) -> pd.DataFrame:
-    assert "ID" not in df.columns
-    df.insert(0, "ID", range(1, 1 + len(df)))
+    assert "goal_id" not in df.columns
+    goal_ids = [config.create_id() for i in range(len(df))]
+    df.insert(0, "goal_id", goal_ids)
     return df
 
 

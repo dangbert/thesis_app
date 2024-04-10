@@ -5,6 +5,7 @@ import argparse
 import subprocess
 from typing import Optional
 import json
+from haikunator import Haikunator
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, os.pardir))
@@ -60,3 +61,8 @@ def get_git_hash():
         .decode("utf-8")
         .strip()
     )
+
+
+def create_id(token_length: int = 2):
+    """Create a humany-friendly UUID."""
+    return Haikunator().haikunate(token_length=token_length)

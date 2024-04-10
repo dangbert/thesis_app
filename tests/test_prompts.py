@@ -64,6 +64,7 @@ def test_SMARTFeedback_parse():
     # hacky workaround test
     _ = promptlib.parseSMARTFeedback(single_quote_res, retry=True)
 
+
 def test_build_judgement_prompt():
     question = "what time is it"
     answer = "don't ask me that"
@@ -71,11 +72,12 @@ def test_build_judgement_prompt():
     assert isinstance(prompt, str)
     assert issubclass(AttrModel, BaseModel)
 
-
     # map additional attributes to their criteria
     other_attributes = {
         "safety": promptlib.FEEDBACK_PRINCIPLES,
-        "funny": "what does it mean to be funny?"
+        "funny": "what does it mean to be funny?",
     }
 
-    prompt, AttrModel = benchmark.build_judgement_prompt(question, answer, other_attributes)
+    prompt, AttrModel = benchmark.build_judgement_prompt(
+        question, answer, other_attributes
+    )

@@ -36,7 +36,10 @@ function main() {
 
 function check() {
   cd "$SCRIPT_DIR"
-  echo -e "running ruff check..."
+  echo -e "running ruff format"
+  ruff format
+
+  echo -e "\nrunning ruff check..."
   ruff check . "${RUFF_IGNORES[@]}"
 
   echo -e "\nrunning unit tests..."

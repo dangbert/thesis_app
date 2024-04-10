@@ -167,8 +167,11 @@ def get_feedback(
     return full_df, scores_df
 
 
+# MARK: plots
 def plot_comparisons(full_df: pd.DataFrame, fname: Optional[str] = None):
-    # compare scores on basis of intentional errors in smart goal / plan
+    """
+    Compare scores on basis of intentional errors in smart goal / plan
+    """
     with_err = {}
     without_err = {}
     plt.clf()
