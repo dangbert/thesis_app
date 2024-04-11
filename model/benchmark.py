@@ -5,20 +5,20 @@ from pydantic import BaseModel, create_model, conint, Field
 judgement_template = """
 [System]
 Please act as an impartial judge and evaluate the quality of the response provided by an assistant to the user question displayed below.
-Your evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, creativity, and level of detail of the response, with these factors collectively forming a "utility" score.
+[Question]
+{question}
+[End of Question]
+[Start of Assistant's Answer]
+{answer}
+[End of Assistant's Answer]
+
+Now conduct your evaluation of the assistants answer to the question observed above. Consider factors such as the helpfulness, relevance, accuracy, depth, creativity, and level of detail of the response, with these factors collectively forming a "utility" score.
 {additional_attributes}
 Begin your evaluation by providing a short explanation. Be as objective as possible. After providing your explanation, please rate the response on scores on a scale of 1 to 10 by strictly following this json schema:
 {format_schema}
 For example:
 {format_example}
 
-[Question]
-{question}
-[End of Question]
-
-[Start of Assistant's Answer]
-{answer}
-[End of Assistant's Answer]
 """.strip()
 
 # list of default attributes baked into judgement_prompt
