@@ -1,6 +1,11 @@
+import os
 import json
 from typing import Annotated, Tuple
 from pydantic import BaseModel, create_model, conint, Field
+import argparse
+import pandas as pd
+import prompts as promptlib
+
 
 judgement_template = """
 [System]
@@ -60,3 +65,67 @@ def build_judge_prompt(
         format_example=format_example,
     )
     return prompt, AttrModel
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Create a synthetic dataset of SMART goals and plans.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "--input-goals",
+        "-ig",
+        type=str,
+        required=True,
+        help="smart_goals.csv",
+    )
+    parser.add_argument(
+        "--input3",
+        "-i3",
+        type=str,
+        required=True,
+        help="judgements from GPT3",
+    )
+    parser.add_argument(
+        "--input4",
+        "-i4",
+        type=str,
+        required=True,
+        help="judgements from GPT4",
+    )
+    args = parser.parse_args()
+
+    assert os.path.exists(args.input_goals) and args.input_goals.endswith(".csv")
+    assert os.path.exists(args.input3) and args.input3.endswith(".csv")
+    assert os.path.exists(args.input4) and args.input4.endswith(".csv")
+
+    # hardcoded for now to get ScoreModel
+    feedback_path = "/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/datasets/synthetic_smart/v3/feedback_gpt-3.5-turbo-0125.csv"
+    feedback_df = pd.read_csv(feedback_path)
+    _, ScoreModel = build_judge_prompt(question=feedback_df["prompt"][0], answer=feedback_df["response"][0], other_attributes=other_attributes)
+
+    goals_df = pd.read_csv(args.input_goals)
+    def parse_df(judge_fname: str):
+        print(judge_fname)
+        judge_df = pd.read_csv(judge_fname)
+        objs = []
+        for i, row in judge_df.iterrows():
+            # print(row["response"])
+            obj = promptlib.parse_pydantic(row["response"], ScoreModel)
+            assert not isinstance(obj, str)
+            print(obj.dict())
+            objs.append(obj)
+        return objs
+    
+    judges = {
+        "judge3": parse_df(args.input3),
+        "judge4": parse_df(args.input4),
+    }
+
+    attrs = ["utility", "safety"]
+    data = {}
+    for judge, objs in judges.items():
+        for atrr in attrs:
+            data[judge + "_" + atrr] = [getattr(obj, atrr) for obj in objs]
+
+if __name__ == "__main__":
+    main()
