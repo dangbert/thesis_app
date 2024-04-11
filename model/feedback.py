@@ -57,16 +57,16 @@ def main():
     bkp_path = base_dot_path + ".output.json.bkp"
     if not os.path.isfile(feedback_path):
         outputs = None
-        if os.path.isfile(bkp_path):
-            print("reloading older feedback outputs")  # e.g. to handle parse error
-            with open(bkp_path, "r") as f:
-                outputs = json.load(f)
+        # if os.path.isfile(bkp_path):
+        #     print("reloading older feedback outputs")  # e.g. to handle parse error
+        #     with open(bkp_path, "r") as f:
+        #         outputs = json.load(f)
 
         config.args_to_dict(args, fname=base_dot_path + ".config.json")
         # generate feedback, extending df
         # df = df[-4:]  # TODO for now
         # breakpoint()
-        feedback_df = get_feedback(goals_df, args, outputs=outputs, bkp_path=bkp_path)
+        feedback_df = get_feedback(goals_df, args, bkp_path=bkp_path)
         feedback_df.to_csv(feedback_path, index=False)
         print(f"wrote '{feedback_path}'")
     else:
@@ -114,7 +114,6 @@ def clean_attr(attr: str) -> str:
 def get_feedback(
     df: pd.DataFrame,
     args: argparse.Namespace,
-    outputs: Optional[list[str]] = None,
     bkp_path: Optional[str] = None,
 ) -> pd.DataFrame:
     """
@@ -150,12 +149,6 @@ def get_feedback(
     bad_count = len(error_indices)
     if bad_count > 0:
         logger.error(f"{len(error_indices)} outputs failed to parse")
-
-    total_price = 0.0
-    # generate feedback for ALL rows
-    outputs, meta = model(data["prompt"])
-    total_price = model.compute_price(meta)
-    print(f"price = ${total_price:.3f}")
 
     print("\nfeedback generation summary:")
     print(f"total generation calls: {total_calls}")

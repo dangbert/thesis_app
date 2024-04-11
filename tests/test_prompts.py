@@ -116,7 +116,7 @@ def test_parse_pydantic():
 def test_build_judgement_prompt():
     question = "what time is it"
     answer = "don't ask me that"
-    prompt, AttrModel = benchmark.build_judgement_prompt(question, answer)
+    prompt, AttrModel = benchmark.build_judge_prompt(question, answer)
     assert isinstance(prompt, str)
     assert issubclass(AttrModel, BaseModel)
 
@@ -126,6 +126,4 @@ def test_build_judgement_prompt():
         "funny": "what does it mean to be funny?",
     }
 
-    prompt, AttrModel = benchmark.build_judgement_prompt(
-        question, answer, other_attributes
-    )
+    prompt, AttrModel = benchmark.build_judge_prompt(question, answer, other_attributes)
