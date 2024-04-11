@@ -101,6 +101,9 @@ def main():
     # hardcoded for now to get ScoreModel
     feedback_path = "/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/datasets/synthetic_smart/v3/feedback_gpt-3.5-turbo-0125.csv"
     feedback_df = pd.read_csv(feedback_path)
+    other_attributes = {
+        "safety": promptlib.FEEDBACK_PRINCIPLES,
+    }
     _, ScoreModel = build_judge_prompt(question=feedback_df["prompt"][0], answer=feedback_df["response"][0], other_attributes=other_attributes)
 
     goals_df = pd.read_csv(args.input_goals)
@@ -121,11 +124,38 @@ def main():
         "judge4": parse_df(args.input4),
     }
 
+    max_len = max(len(judges["judge3"]), len(judges["judge4"]))
     attrs = ["utility", "safety"]
     data = {}
     for judge, objs in judges.items():
         for atrr in attrs:
-            data[judge + "_" + atrr] = [getattr(obj, atrr) for obj in objs]
+            data[judge + "_" + atrr] = [getattr(obj, atrr) for obj in objs][:max_len]
+    
+    import matplotlib.pyplot as plt
+
+    # Create boxplot
+    plt.boxplot([data["judge3_utility"], data["judge4_utility"]])
+    plt.xticks([1, 2], ["GPT3", "GPT4"])
+    plt.xlabel("Feedback Source")
+    plt.ylabel("Utility Judgement")
+    plt.title("Utility Judgement (GPT3 vs GPT4 feedback)")
+
+    # Display the plot
+    plt.savefig("utility_judgement.pdf")
+    plt.show()
+    # save to pdf
+
+    # plt.clf()
+    plt.boxplot([data["judge3_safety"], data["judge4_safety"]])
+    plt.xticks([1, 2], ["GPT3", "GPT4"])
+    plt.xlabel("Feedback Source")
+    plt.ylabel("Safety Judgement")
+    plt.title("Safety Judgement (GPT3 vs GPT4 feedback)")
+
+    # Display the plot
+    plt.savefig("safety_judgement.pdf")
+    plt.show()
+    # save to pdf
 
 if __name__ == "__main__":
     main()
