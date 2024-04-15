@@ -5,13 +5,13 @@ import json
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 import config
 import gpt
 import prompts as promptlib
 from prompts import SMARTFeedback, SMARTResponse
-from typing import Tuple, Optional
-from pydantic import ValidationError
+from typing import Optional
 from synthetic_smart import add_ids
 
 logger = config.get_logger(__name__)
@@ -56,41 +56,25 @@ def main():
     base_dot_path = args.input_dir + f".feedback_{args.model}"
     bkp_path = base_dot_path + ".output.json.bkp"
     if not os.path.isfile(feedback_path):
-        outputs = None
-        # if os.path.isfile(bkp_path):
-        #     print("reloading older feedback outputs")  # e.g. to handle parse error
-        #     with open(bkp_path, "r") as f:
-        #         outputs = json.load(f)
-
         config.args_to_dict(args, fname=base_dot_path + ".config.json")
-        # generate feedback, extending df
-        # df = df[-4:]  # TODO for now
-        # breakpoint()
         feedback_df = get_feedback(goals_df, args, bkp_path=bkp_path)
         feedback_df.to_csv(feedback_path, index=False)
-        print(f"wrote '{feedback_path}'")
+        print(f"\nwrote '{feedback_path}'")
+
+        feedback_df = extend_outputs(feedback_df)
+        feedback_df.to_csv(feedback_path, index=False)
     else:
         print("reloading existing feedback!")
         feedback_df = pd.read_csv(feedback_path)
-        # feedback_df.to_csv(feedback_path)
 
-        # feedback_df["errors"] = feedback_df["errors"].fillna("").astype(str)
-        # scores_df = pd.read_csv(scores_path)
-    exit(0)
+    plot_scores(feedback_df, base_path=base_path)
 
-    # join feedback_df with goals_df on goal_id
-    # TOOD: get plot_scores working again
+    goals_path = os.path.join(args.input_dir, "smart_goals.csv")
+    goals_df = pd.read_csv(goals_path)
     full_df = pd.merge(goals_df, feedback_df, on="goal_id")
-    if len(full_df) < len(goals_df):
-        logger.warning(
-            f"lost {len(goals_df) - len(full_df)} rows merging feedback onto goals"
-        )
-    breakpoint()
 
-    plot_scores_path = base_path + "__scores.pdf"
-    plot_comparison_path = base_path + "__comparison.pdf"
-    plot_scores(scores_df, fname=plot_scores_path)
-    plot_comparisons(feedback_df, fname=plot_comparison_path)
+    # plot feedback scores with vs without intentional errors
+    plot_comparisons(full_df, fname=base_path + "__comparison.pdf")
 
 
 def add_feedback_prompt(row: pd.Series) -> str:
@@ -159,26 +143,69 @@ def get_feedback(
     return add_ids(pd.DataFrame(data), "feedback_id")
 
 
-def extract_scores_df(df: pd.DataFrame) -> pd.DataFrame:
-    # extract numerical scores
-    scores_data = {}
+def extend_outputs(feedback_df: pd.DataFrame) -> pd.DataFrame:
+    """Parse the 'response' column, splitting out into separate columns for each SMART attribute."""
+    if "overall_feedback" in feedback_df.columns:
+        logger.info("feedback_df already has extended columns, skipping regeneration")
+        return feedback_df
+
+    feedback_objs = [
+        promptlib.parse_pydantic(text, SMARTFeedback)
+        for text in feedback_df["response"]
+    ]
     fdata = {}  # feedback data
-    fdata["feedback_raw"] = outputs
     for attr in promptlib.SMART:
         attr = clean_attr(attr)
-        scores_data[attr] = [getattr(obj, attr).score for obj in feedback_objs]
         fdata["overall_feedback"] = [obj.overall_feedback for obj in feedback_objs]
         fdata[f"feedback_{attr}"] = [
             getattr(obj, attr).feedback for obj in feedback_objs
         ]
         fdata[f"score_{attr}"] = [getattr(obj, attr).score for obj in feedback_objs]
-    scores_df = add_ids(pd.DataFrame(scores_data))
-
-    full_df = pd.concat([df, pd.DataFrame(fdata)], axis=1)
-    return full_df, scores_df
+    full_df = pd.concat([feedback_df, pd.DataFrame(fdata)], axis=1)
+    return full_df
 
 
 # MARK: plots
+def plot_scores(feedback_df: pd.DataFrame, base_path: Optional[str] = None):
+    """Plot distribution of each SMART attribute's score + correlation matrix."""
+    feedback_objs = [
+        promptlib.parse_pydantic(text, SMARTFeedback)
+        for text in feedback_df["response"]
+    ]
+    scores_data = {}
+    for attr in promptlib.SMART:
+        attr = clean_attr(attr)
+        scores_data[attr] = [getattr(obj, attr).score for obj in feedback_objs]
+    scores_df = pd.DataFrame(scores_data)
+
+    plt.clf()
+    scores_df.boxplot()
+    # set y-axis to 0-10, tickmarks every 0.5
+    plt.yticks(range(0, 11), [f"{x:.1f}" for x in range(0, 11)])
+    plt.title(f"SMART Feedback Scores (n={len(scores_df)} responses)")
+    print("\nsummary of scores:")
+    # create copy without ID column
+    print(scores_df.describe())
+    if base_path is not None:
+        fname = base_path + "__scores.pdf"
+        plt.savefig(fname)
+        print(f"\nwrote '{fname}'")
+    else:
+        plt.show()
+
+    correlations = scores_df.corr(method="pearson")
+    plt.clf()
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(correlations, annot=True, cmap="coolwarm")
+    plt.title("Correlations Between SMART Feedback Scores")
+    if base_path is not None:
+        fname = base_path + "__corr.pdf"
+        plt.savefig(fname)
+        print(f"\nwrote '{fname}'")
+    else:
+        plt.show()
+
+
 def plot_comparisons(full_df: pd.DataFrame, fname: Optional[str] = None):
     """
     Compare scores on basis of intentional errors in smart goal / plan
@@ -213,23 +240,7 @@ def plot_comparisons(full_df: pd.DataFrame, fname: Optional[str] = None):
     plt.tight_layout()
     if fname is not None:
         plt.savefig(fname)
-        print(f"wrote '{fname}'")
-    else:
-        plt.show()
-
-
-def plot_scores(scores_df: pd.DataFrame, fname: Optional[str] = None):
-    plt.clf()
-    scores_df.drop("ID", axis=1).boxplot()
-    # set y-axis to 0-10, tickmarks every 0.5
-    plt.yticks(range(0, 11), [f"{x:.1f}" for x in range(0, 11)])
-    plt.title(f"SMART Feedback Scores (n={len(scores_df)} responses)")
-    print("\nsummary of scores:")
-    # create copy without ID column
-    print(scores_df.drop("ID", axis=1).describe())
-    if fname is not None:
-        plt.savefig(fname)
-        print(f"wrote '{fname}'")
+        print(f"\nwrote '{fname}'")
     else:
         plt.show()
 

@@ -25,12 +25,12 @@ def main():
         default=50,
         help="Number of samples to generate.",
     )
-    parser.add_argument(
-        "--seed",
-        type=int,
-        default=42,
-        help="Random seed",
-    )
+    # parser.add_argument(
+    #     "--seed",
+    #     type=int,
+    #     default=42,
+    #     help="Random seed",
+    # )
     parser.add_argument(
         "--top-p",
         "-p",
@@ -43,7 +43,7 @@ def main():
         "-o",
         type=str,
         default=os.path.join(config.DATASETS_DIR, "synthetic_smart", "smart_goals.csv"),
-        help="Output file name (csv) e.g. 'smart_goals.csv' or folder.",
+        help="Output file name (csv) e.g. 'smart_goals.csv' or folder path.",
     )
     parser.add_argument(
         "--model",
@@ -53,7 +53,7 @@ def main():
         help="Name of OpenAI model to use (see gpt.py).",
     )
     args = parser.parse_args()
-    config.set_seed(args.seed)
+    # config.set_seed(args.seed)
     config.source_dot_env()  # read api key
 
     assert args.sample_size > 0
@@ -61,7 +61,7 @@ def main():
         args.output = os.path.join(args.output, "smart_goals.csv")
     assert not os.path.isfile(args.output), f"refusing to overwrite '{args.output}'"
     assert args.output.endswith(".csv")
-    base_path = args.input[:-4]
+    base_path = args.output[:-4]
 
     print(f"\ncreating {args.sample_size} prompts... ", flush=True)
     df = create_prompts(args)
@@ -69,7 +69,6 @@ def main():
     config.args_to_dict(args, fname=base_path + ".config.json")  # document config
 
     print(f"\ngenerating {args.sample_size} outputs... ", flush=True)
-    time.sleep(5)  # last chance to abort
     model = gpt.GPTModel(args.model)
     outputs, meta = model(list(df["prompt"]), top_p=args.top_p, json_mode=True)
     print(f"price = ${model.compute_price(meta):.3f}")
@@ -86,10 +85,10 @@ def main():
         smart.append(obj["smart"])
         plan.append(obj["plan"])
 
-    df = df.assign(smart=smart, plan=plan)
+    df = df.assign(response=outputs, smart=smart, plan=plan)
     df.to_csv(args.output, index=False)
     print(f"saved to '{args.output}'")
-    # os.remove(bkp_name)
+    os.remove(bkp_name)
 
 
 def create_prompts(args):
@@ -137,7 +136,7 @@ def create_prompts(args):
 
 def add_ids(df: pd.DataFrame, name: str) -> pd.DataFrame:
     assert name not in df.columns
-    goal_ids = [config.create_id() for i in range(len(df))]
+    goal_ids = [config.create_id() for _ in range(len(df))]
     df.insert(0, name, goal_ids)
     return df
 

@@ -30,7 +30,8 @@ class GPTModel(AbstractModel):
     def __init__(self, model_name: str = "gpt-3.5-turbo-0125"):
         self.model_name = model_name
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        # assert model_name in PRICES.keys()
+        if model_name not in PRICES.keys():
+            logger.warning(f"price entry unknown for model '{model_name}'")
 
     def __call__(
         self,

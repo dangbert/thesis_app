@@ -25,6 +25,7 @@ pandas = "^2.2.1"
 matplotlib = "^3.8.3"
 pydantic = "^2.6.4"
 numpy = "^1.26.4"
+seaborn = "^0.13.2"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.3.2"
