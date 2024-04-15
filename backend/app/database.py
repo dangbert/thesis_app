@@ -19,6 +19,7 @@ mapper_registry = Base.registry
 metadata = Base.metadata
 
 # database Session factory
+#   https://docs.sqlalchemy.org/en/20/orm/session_basics.html
 # TODO: look into these params:
 SessionFactory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

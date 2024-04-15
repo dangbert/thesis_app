@@ -23,7 +23,10 @@ Start dev server, then vist http://localhost:8000
 
 ````bash
 # start dev server
-uvicorn main:app --reload
+uvicorn app.main:app --reload
+
+# old:
+#uvicorn main:app --reload
 ````
 
 ### Best Practices
