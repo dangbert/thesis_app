@@ -4,6 +4,7 @@ import time
 
 app = FastAPI()
 
+
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
     """
@@ -16,16 +17,17 @@ async def add_process_time_header(request: Request, call_next):
     response.headers["x-process-time-secs"] = str(process_time)
     return response
 
+
 @app.get("/")
 async def root():
     return {"hello": "thesis"}
 
-COURSES = {
-    "wetenschap": {"1234567890"}
-}
+
+COURSES = {"wetenschap": {"1234567890"}}
+
 
 @app.get("/join")
-#async def join(invite_code: str):
+# async def join(invite_code: str):
 async def join(invite_code: Annotated[str, Query(min_length=10, max_length=10)]):
     for course, codes in COURSES.items():
         if invite_code in codes:

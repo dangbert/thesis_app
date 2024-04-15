@@ -4,7 +4,24 @@ This repo corresponds to my VU A.I. Master's thesis project.
 
 ## Setup / Usage
 
+Install dependencies:
+````bash
+pip install virtualenv
+virtualenv .venv
+. .venv/bin/activate
+
+# install poetry project (defined by pyproject.toml)
+pip install poetry
+poetry install
+````
+
+For info on generating synthetic smart goals / and benchmarking feedback, see [./model/README.md](./model/README.md)
+
+
+<details>
+<summary>Show Snellius server specific directions</summary>
 Note for the commands below, if you're not running on a [slurm server](https://slurm.schedmd.com/overview.html) then use `bash` in place of `sbatch`
+
 
 ````bash
 # create conda environment
@@ -20,6 +37,4 @@ source activate_env.sh
 # launch jupyter notebook server (useful on slurm)
 sbatch jobs/launch_jupyter.job
 ````
-
-## References
-* [Hugging Face LLama2 docs](https://huggingface.co/docs/transformers/main/model_doc/llama2) (how to quanitize, fine-tune etc).
+</details>

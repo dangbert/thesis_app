@@ -2,7 +2,7 @@
 # validate the codebase with linting etc
 # run with -y to automatically fix issues
 
-set -e
+#set -e
 
 SCRIPT_DIR="$(realpath "$(dirname "$0")")"
 
