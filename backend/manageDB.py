@@ -74,7 +74,7 @@ def maybe_migrate():
         init_db()
 
     if not settings.auto_migrate:
-        logger.info(f"skipping DB migration check (auto_migrate disabled).")
+        logger.info("skipping DB migration check (auto_migrate disabled).")
         return
 
     exit_code, output = run_cmd("alembic upgrade head", exit_on_fail=False)
