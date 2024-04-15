@@ -75,12 +75,6 @@ def create_db() -> bool:
     finally:
         cursor.close()
         conn.close()
-
-    print(f"db_uri = {settings.db_uri_print_safe}")
-    with create_engine(settings.db_uri).connect() as conn:
-        conn.autocommit = True
-        conn.execute(sqlalchemy.text('CREATE EXTENSION if not exists "uuid-ossp"'))
-        print("uuid-ossp extension created!")
     return False
 
 

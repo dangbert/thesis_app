@@ -7,7 +7,10 @@ from app.settings import Settings
 from sqlalchemy.orm import close_all_sessions
 from typing import Tuple
 
+from config import get_logger
+
 settings = Settings()
+logger = get_logger(__name__)
 
 
 def main():
@@ -50,16 +53,16 @@ def main():
 
 def init_db(createTables: bool = False):
     if database.db_exists():
-        print("DB already exists!")
+        logger.info("DB already exists!")
     else:
         database.create_db()
 
     if not createTables:
         return
 
-    print("creating tables...")
+    logger.info("creating tables...")
     database.create_all_tables
-    print("\nDone initializing database!")
+    logger.info("Done initializing database!")
 
 
 def maybe_migrate():
@@ -67,31 +70,31 @@ def maybe_migrate():
     Ensure database exists and is migrated to latest version.
     noop if settings.auto_migrate is False.
     """
-    db_exists = database.db_exists()
+    if not database.db_exists():
+        init_db()
 
     if not settings.auto_migrate:
-        print(f"skipping DB migration check (auto_migrate disabled). {db_exists=}")
+        logger.info(f"skipping DB migration check (auto_migrate disabled).")
         return
 
-    exitCode, output = run_cmd("alembic upgrade head", exitOnFail=False)
-    if exitCode != 0:
-        print("\nERROR: DB upgrade failed!")
-        exit(exitCode)
-    print(output)
-    print("\n***Database is at the latest version!***\n")
+    exit_code, output = run_cmd("alembic upgrade head", exit_on_fail=False)
+    if exit_code != 0:
+        logger.error("DB upgrade failed!")
+        exit(exit_code)
+    logger.info(output)
+    logger.info("***Database is at the latest version!***")
 
 
 def destroy():
-    # prompt yes/no
     if (
         input("Are you sure you want to delete the database? (yes/no) > ").lower()
         != "yes"
     ):
-        print("aborting...")
+        logger.info("aborting...")
         return
 
     if not database.db_exists():
-        print("database already non-existent!")
+        logger.info("database already non-existent!")
         return
 
     close_all_sessions()
@@ -99,24 +102,23 @@ def destroy():
 
 
 def run_cmd(
-    cmd: str, exitOnFail: bool = True, verbose: bool = False, dryRun: bool = False
+    cmd: str, exit_on_fail: bool = True, verbose: bool = False, dry_run: bool = False
 ) -> Tuple[int, str]:
     """Runs a shell command, returns the exitcode and output."""
-    if verbose or dryRun:
-        print(f"\n{'running' if not dryRun else 'would run'} command:")
-        print(cmd)
-    if dryRun:
+    if verbose or dry_run:
+        logger.debug(f"{'running' if not dry_run else 'would run'} command: {cmd}")
+    if dry_run:
         return -1, ""
 
     exitCode, output = subprocess.getstatusoutput(cmd)
     if exitCode != 0:
-        print(f"\n*** command failed with code {exitCode} ***")
-        print("cmd:")
-        print(cmd)
-        print("output:")
-        print(output)
-        print("\n*******************************************")
-        if exitOnFail:
+        logger.error(f"*** command failed with code {exitCode} ***")
+        logger.error("cmd:")
+        logger.error(cmd)
+        logger.error("output:")
+        logger.error(output)
+        logger.error("*******************************************\n")
+        if exit_on_fail:
             exit(exitCode)
     return exitCode, output
 

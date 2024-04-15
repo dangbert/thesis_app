@@ -36,7 +36,7 @@ If we analyse this learning objective as an example with the aforementioned crit
 Specifics: Making eye contact with the audience
 Measurable: It is clear how this can be measured, as you can see in a video recording or ask the audience if eye contact is indeed made -> family or friends you can also ask for feedback!
 Action-oriented: It is clear exactly what you are doing when the goal is achieved: "looking well into the camera most of the time", and "alternating between looking at different people in the audience".
-Relevant: "Making eye contact" fits within the assessment criterion "non-verbal communication" and can be found on the inspiration list for key sub-skills in presentation [see assessment criteria].
+Relevant: "Making eye contact" fits within the assessment criterion "non-verbal communication" and can be found on the inspiration list for key sub-skills in presentation [see assessment csriteria].
 Time-bound: "during my video pitch and literature presentation"
 
 And Analyzing the sample action plan we see it specifically indicates which steps are taken in preparation ("don't literally memorise", "make video recordings and check if people are looking into the camera", and "by asking feedback from group members after a live presentation"). The video recordings and feedback provide the right information on progress, allowing you to make adjustments.

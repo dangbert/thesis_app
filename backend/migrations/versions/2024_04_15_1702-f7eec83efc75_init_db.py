@@ -1,8 +1,8 @@
 """init db
 
-Revision ID: 70ae49c487e8
+Revision ID: f7eec83efc75
 Revises:
-Create Date: 2024-04-08 20:06:38.824584+00:00
+Create Date: 2024-04-15 17:02:02.651654+00:00
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "70ae49c487e8"
+revision: str = "f7eec83efc75"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -27,10 +27,7 @@ def upgrade() -> None:
         sa.Column("name", sa.String(), nullable=False),
         sa.Column("about", sa.String(), nullable=False),
         sa.Column(
-            "id",
-            sa.UUID(),
-            server_default=sa.text("uuid_generate_v4()"),
-            nullable=False,
+            "id", sa.UUID(), server_default=sa.text("gen_random_uuid()"), nullable=False
         ),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True),
@@ -42,10 +39,7 @@ def upgrade() -> None:
         sa.Column("about", sa.String(), nullable=False),
         sa.Column("invite_key", sa.String(), nullable=False),
         sa.Column(
-            "id",
-            sa.UUID(),
-            server_default=sa.text("uuid_generate_v4()"),
-            nullable=False,
+            "id", sa.UUID(), server_default=sa.text("gen_random_uuid()"), nullable=False
         ),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True),
@@ -57,10 +51,7 @@ def upgrade() -> None:
         sa.Column("email_verified", sa.Boolean(), nullable=False),
         sa.Column("email_token", sa.String(), nullable=True),
         sa.Column(
-            "id",
-            sa.UUID(),
-            server_default=sa.text("uuid_generate_v4()"),
-            nullable=False,
+            "id", sa.UUID(), server_default=sa.text("gen_random_uuid()"), nullable=False
         ),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True),

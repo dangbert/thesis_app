@@ -10,8 +10,9 @@ class Base(DeclarativeBase):
 
     __abstract__ = True
     # https://docs.sqlalchemy.org/en/20/changelog/whatsnew_20.html#orm-declarative-models
+    # https://www.postgresql.org/docs/current/functions-uuid.html
     id = mapped_column(
-        UUID(as_uuid=True), primary_key=True, server_default=func.uuid_generate_v4()
+        UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
