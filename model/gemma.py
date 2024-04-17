@@ -6,7 +6,10 @@ from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
     BitsAndBytesConfig,
+    pipeline,
 )
+
+# from transformers.models.gemma
 from config import get_device, TaskTimer
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -20,12 +23,41 @@ def main():
 
     model, tokenizer = get_model()
 
+    # simple generation
     input_text = "Write me a poem in Dutch."
     input_ids = tokenizer(input_text, return_tensors="pt").to(device)
-
-    with TaskTimer("generation"):
+    with TaskTimer("single generation"):
         outputs = model.generate(**input_ids, max_new_tokens=400)
-    print(tokenizer.decode(outputs[0]))
+        print(tokenizer.decode(outputs[0]), "\n")
+
+    max_new_tokens = 400
+    pipe = pipeline(
+        "text-generation",
+        model=model,
+        tokenizer=tokenizer,
+        max_new_tokens=max_new_tokens,
+        # tokenizer_kwargs={"add_bos_token": True}
+    )
+    batch = [
+        f"write me a poem in {lang}"
+        for lang in ["Dutch", "French", "German", "Spanish"]
+    ]
+
+    batch.append(
+        "tell me a short story about a kid at the beach for the first time in Europe"
+    )
+    # reference: https://github.com/huggingface/transformers/blob/main/src/transformers/models/gemma/tokenization_gemma.py
+    batch = ["<bos>" + t for t in batch]
+
+    BATCH_SIZE = len(batch)
+    with TaskTimer(f"batch generation (n={len(batch)})"):
+        responses = pipe(batch, return_full_text=False, batch_size=BATCH_SIZE)
+        # outputs = model.generate(**input_ids, max_new_tokens=max_new_tokens)
+
+    for i, res in enumerate(responses):
+        res = res[0]["generated_text"]
+        print(f"\n--- response {i}: ---")
+        print(res, "\n")
 
 
 def get_model():
