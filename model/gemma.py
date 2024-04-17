@@ -74,7 +74,7 @@ def get_model():
     # load quantized model (load_in_8_bit is critical to fit in memory)
     quantization_config = BitsAndBytesConfig(llm_int8_threshold=4.0, load_in_8_bit=True)
     with TaskTimer("model load"):
-        tokenizer = AutoTokenizer.from_pretrained("google/gemma-2b-it")
+        tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
         model = AutoModelForCausalLM.from_pretrained(
             MODEL_ID,
             quantization_config=quantization_config,

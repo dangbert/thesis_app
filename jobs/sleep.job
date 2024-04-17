@@ -1,0 +1,15 @@
+#!/bin/bash
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=5
+#SBATCH --gpus=1
+#SBATCH --job-name=sleep
+#SBATCH --ntasks=1
+#SBATCH --time=04:00:00
+#SBATCH --mem=32000M
+#SBATCH --output=logs/slurm_output__sleep_%A.out
+
+# this is a dummy job to gain control of a node so you can ssh in and do whatever
+# launch this file with: sbatch sleep.job
+echo "sleeping forever"
+sleep infinity
