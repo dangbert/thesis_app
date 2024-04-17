@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-# tutorial (high level): https://huggingface.co/blog/gemma-peft
+################################################################################
+# based on (high level) tutorial: https://huggingface.co/blog/gemma-peft
+# see also:
+#   https://adithyask.medium.com/a-beginners-guide-to-fine-tuning-gemma-0444d46d821c 
+#   https://github.com/adithya-s-k/LLM-Alchemy-Chamber/blob/main/Finetuning/Gemma_finetuning_notebook.ipynb
+################################################################################
 
 import argparse
 import os
@@ -56,11 +61,27 @@ def main():
         outputs = model.generate(**inputs, max_new_tokens=max_new_tokens)
         print(tokenizer.decode(outputs[0]), "\n")
 
+
+    dataset_text_field = "formatted_text"
+    def add_formatted_text(example):
+        """Given a single dataset item, adds a formatted text combining quote and author."""
+        # Creating the formatted text by combining quote and author
+        example[dataset_text_field] = f"Quote: {example['quote']}\nCool Author: {example['author']}"
+        return example
+
+    # def format_and_tokenize(batch):
+    #     """Given a sample of dataset items, format them as desired and return results of tokenizer."""
+    #     formatted_texts = [f"Quote: {quote}\nCool Author: {author}" for quote, author in zip(batch['quote'], batch['author'])]
+    #     # Tokenizing the formatted texts
+    #     return tokenizer(formatted_texts)
+
     with TaskTimer("dataset load and process"):
         data = datasets.load_dataset("Abirate/english_quotes")
         print("original column names: ", data.column_names)
-        # add fields input_ids and attention_mask to each item
-        data = data.map(lambda samples: tokenizer(samples["quote"]), batched=True)
+        # add field "formatted_text" to each itme
+        data = data.map(add_formatted_text)
+        # add fields input_ids and attention_mask to each item (actually trainer seems to do this itself)
+        # data = data.map(lambda samples: tokenizer(samples[dataset_text_field]), batched=True)
 
     print("final column names: ", data.column_names)
     print("example data item: ", data["train"][0])
@@ -81,12 +102,13 @@ def main():
 
     trainer = SFTTrainer(
         model=model,
+        tokenizer=tokenizer,
         train_dataset=data["train"],
         args=transformers.TrainingArguments(
-            per_device_train_batch_size=1,
+            per_device_train_batch_size=4,
             gradient_accumulation_steps=4,
             warmup_steps=2,
-            max_steps=10,
+            max_steps=25,
             learning_rate=2e-4,
             fp16=True,
             logging_steps=1,
@@ -94,7 +116,8 @@ def main():
             optim="paged_adamw_8bit",
         ),
         peft_config=lora_config,
-        formatting_func=formatting_func,
+        # name of dataset field to read text from
+        dataset_text_field=dataset_text_field,
     )
     with TaskTimer("finetuning"):
         trainer.train()
@@ -104,10 +127,8 @@ def main():
         print(tokenizer.decode(outputs[0], skip_special_tokens=True), "\n")
 
 
-# TODO: this is never getting called see https://github.com/huggingface/blog/issues/2005
-def formatting_func(example):
-    text = f"Quote: {example['quote'][0]}\nAuthor: {example['author'][0]}"
-    return [text]
+    breakpoint()
+    print(trainer)
 
 
 def get_model():
