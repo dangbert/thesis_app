@@ -6,10 +6,8 @@ from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
     BitsAndBytesConfig,
-    pipeline,
 )
 
-# from transformers.models.gemma
 from config import get_device, TaskTimer
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -20,44 +18,38 @@ MODEL_ID = "google/gemma-2b-it"
 def main():
     device = get_device()
     print(f"using device {device}")
-
     model, tokenizer = get_model()
 
-    # simple generation
+    ### simple generation example
     input_text = "Write me a poem in Dutch."
     input_ids = tokenizer(input_text, return_tensors="pt").to(device)
     with TaskTimer("single generation"):
         outputs = model.generate(**input_ids, max_new_tokens=400)
         print(tokenizer.decode(outputs[0]), "\n")
 
-    max_new_tokens = 400
-    pipe = pipeline(
-        "text-generation",
-        model=model,
-        tokenizer=tokenizer,
-        max_new_tokens=max_new_tokens,
-        # tokenizer_kwargs={"add_bos_token": True}
-    )
-    batch = [
+    ### batch generation example
+    # (better than using pipeline which abstracts too much away, giving less control)
+    texts = [
         f"write me a poem in {lang}"
         for lang in ["Dutch", "French", "German", "Spanish"]
     ]
-
-    batch.append(
+    texts.append(
         "tell me a short story about a kid at the beach for the first time in Europe"
     )
-    # reference: https://github.com/huggingface/transformers/blob/main/src/transformers/models/gemma/tokenization_gemma.py
-    batch = ["<bos>" + t for t in batch]
+    max_new_tokens = 400
+    with TaskTimer(f"batch generation (n={len(texts)})"):
+        batch_inputs = tokenizer(texts, return_tensors="pt", padding=True).to(device)
+        batch_outputs = model.generate(**batch_inputs, max_new_tokens=max_new_tokens)
 
-    BATCH_SIZE = len(batch)
-    with TaskTimer(f"batch generation (n={len(batch)})"):
-        responses = pipe(batch, return_full_text=False, batch_size=BATCH_SIZE)
-        # outputs = model.generate(**input_ids, max_new_tokens=max_new_tokens)
+        # https://github.com/huggingface/transformers/blob/main/src/transformers/models/gemma/modeling_gemma.py#L1090
+        output_texts: list[str] = tokenizer.batch_decode(
+            batch_outputs, skip_special_tokens=True
+        )
 
-    for i, res in enumerate(responses):
-        res = res[0]["generated_text"]
+    for i, res in enumerate(output_texts):
         print(f"\n--- response {i}: ---")
         print(res, "\n")
+    print(res)
 
 
 def get_model():
