@@ -6,7 +6,6 @@ import json
 import random
 import pandas as pd
 import os
-import time
 
 import config
 import gpt

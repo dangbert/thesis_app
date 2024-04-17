@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 from dotenv import load_dotenv
 import argparse
 import subprocess
@@ -7,6 +8,8 @@ from typing import Optional
 import logging
 import json
 from haikunator import Haikunator
+import torch
+from contextlib import contextmanager
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, os.pardir))
@@ -101,3 +104,36 @@ def get_git_hash():
 def create_id(token_length: int = 2):
     """Create a humany-friendly UUID."""
     return Haikunator().haikunate(token_length=token_length)
+
+
+def get_device() -> str:
+    """Returns the device for PyTorch to use."""
+    device = "cpu"
+    if torch.cuda.is_available():
+        device = "cuda"
+    # mac MPS support: https://pytorch.org/docs/stable/notes/mps.html
+    elif torch.backends.mps.is_available():
+        if not torch.backends.mps.is_built():
+            print(
+                "MPS not available because the current PyTorch install was not built with MPS enabled."
+            )
+        else:
+            device = "mps"
+    return device
+
+
+@contextmanager
+def TaskTimer(task_name: str, verbose: bool = True):
+    """Reports the time a given section of code takes to run."""
+    try:
+        start_time = time.perf_counter()
+        if verbose:
+            print(f"\nstarting '{task_name}'...", flush=True)
+        yield  # This is where your block of code will execute
+    finally:
+        dur = time.perf_counter() - start_time
+        dur_str = f"{(dur):.2f} secs"
+        if dur > 60:
+            dur_str = f"{(dur/60):.2f} min"
+        if verbose:
+            print(f"'{task_name}' complete in {dur_str}!", flush=True)

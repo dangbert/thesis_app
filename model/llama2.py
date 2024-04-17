@@ -6,9 +6,7 @@
 # https://medium.com/@ankit941208/generating-summaries-for-large-documents-with-llama2-using-hugging-face-and-langchain-f7de567339d2
 ################################################################################
 
-import torch
 import os
-import time
 from transformers import (
     AutoConfig,
     AutoTokenizer,
@@ -20,10 +18,10 @@ from tqdm import tqdm
 from langchain_community.llms import HuggingFacePipeline
 from transformers.models.llama.tokenization_llama_fast import DEFAULT_SYSTEM_PROMPT
 from langchain.prompts import PromptTemplate
-from contextlib import contextmanager
 import pr_utils
 from datasets import Dataset, DatasetDict
 from typing import Dict
+from config import TaskTimer
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -174,39 +172,6 @@ def get_model(verbose: bool = True):
             device_map="auto",
         )
     return model, tokenizer
-
-
-def get_device() -> str:
-    """Returns the device for PyTorch to use."""
-    device = "cpu"
-    if torch.cuda.is_available():
-        device = "cuda"
-    # mac MPS support: https://pytorch.org/docs/stable/notes/mps.html
-    elif torch.backends.mps.is_available():
-        if not torch.backends.mps.is_built():
-            print(
-                "MPS not available because the current PyTorch install was not built with MPS enabled."
-            )
-        else:
-            device = "mps"
-    return device
-
-
-@contextmanager
-def TaskTimer(task_name: str, verbose: bool = True):
-    """Reports the time a given section of code takes to run."""
-    try:
-        start_time = time.perf_counter()
-        if verbose:
-            print(f"\nstarting '{task_name}'...", flush=True)
-        yield  # This is where your block of code will execute
-    finally:
-        dur = time.perf_counter() - start_time
-        dur_str = f"{(dur):.2f} secs"
-        if dur > 60:
-            dur_str = f"{(dur/60):.2f} min"
-        if verbose:
-            print(f"'{task_name}' complete in {dur_str}!", flush=True)
 
 
 if __name__ == "__main__":
