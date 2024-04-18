@@ -1,0 +1,36 @@
+name: backend-test
+
+on:
+  push:
+    paths:
+      - "backend/**"
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.11"
+
+      - name: "install dependencies"
+        run: |
+          pip install poetry
+          poetry export --with=dev --format requirements.txt  --output requirements.txt --without-hashes
+          pip install -r requirements.txt && rm -f requirements.txt
+
+      - name: ruff format
+        run: ruff format --check .
+
+      - name: ruff checks
+        run: ruff check .
+
+      - name: mypy checks
+        run: mypy .
+
+      # TODO: run unit tests with database
