@@ -1,4 +1,4 @@
-from app.models.Base import Base
+from app.models.base import Base
 from sqlalchemy import Column, String, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 from typing import Optional

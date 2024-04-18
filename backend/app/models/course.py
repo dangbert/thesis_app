@@ -1,5 +1,11 @@
-from app.models.Base import Base
-from app.models.User import User
+from app.models.base import Base
+from app.models.user import User
+from app.models.course_partials import (
+    CourseCreate,
+    CoursePublic,
+    AssignmentCreate,
+    AssignmentPublic,
+)
 from sqlalchemy import String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PUUID
@@ -22,6 +28,9 @@ class Course(Base):
         cascade="all, delete-orphan",
     )
 
+    def to_public(self) -> CoursePublic:
+        return CoursePublic(id=self.id, name=self.name, about=self.about)
+
 
 # class RoleEnum()
 
@@ -35,3 +44,6 @@ class Assignment(Base):
     about: Mapped[str] = mapped_column(String, nullable=False, default="")
 
     course: Mapped["Course"] = relationship("Course", back_populates="assignments")
+
+    def to_public(self) -> AssignmentPublic:
+        return AssignmentPublic(id=self.id, name=self.name, about=self.about)

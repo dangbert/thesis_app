@@ -22,11 +22,14 @@ Start dev server, then vist http://localhost:8000
 * And view OpenAPI schema at http://localhost:8000/openapi.json
 
 ````bash
-# start dev server
-uvicorn app.main:app --reload
+# ensure DB is up to date
+./manageDB.py --maybe-migrate
 
-# old:
-#uvicorn main:app --reload
+# start dev server
+./launch_dev.py
+
+# upon updating database models, be sure to create an alembic revision
+alembic revision --autogenerate -m "some description"
 ````
 
 ### Best Practices

@@ -9,7 +9,7 @@ import psycopg2
 from psycopg2 import sql
 import time
 import app.models as models
-from app.models.Base import Base
+from app.models.base import Base
 
 settings = Settings()
 
