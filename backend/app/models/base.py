@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import Column, DateTime, func
 from sqlalchemy.dialects.postgresql import UUID as PUUID
+from uuid import UUID
 from typing import Optional
 
 
@@ -11,7 +12,7 @@ class Base(DeclarativeBase):
     __abstract__ = True
     # https://docs.sqlalchemy.org/en/20/changelog/whatsnew_20.html#orm-declarative-models
     # https://www.postgresql.org/docs/current/functions-uuid.html
-    id = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         #  as_uuid=True -> automatically convert postgres UUIDs to python native uuid.UUID type
         PUUID(as_uuid=True),
         primary_key=True,

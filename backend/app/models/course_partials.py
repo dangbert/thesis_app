@@ -1,5 +1,8 @@
+"""Pydantic models for partial representations of course-related SQLAlchemy models."""
+
 from uuid import UUID
 from pydantic import BaseModel
+from typing import Any
 
 
 class CourseCreate(BaseModel):
@@ -19,4 +22,14 @@ class AssignmentCreate(BaseModel):
 
 
 class AssignmentPublic(AssignmentCreate):
+    id: UUID
+
+
+class AttemptCreate(BaseModel):
+    assignment_id: UUID
+    user_id: UUID
+    data: dict[str, Any]
+
+
+class AttemptPublic(AttemptCreate):
     id: UUID

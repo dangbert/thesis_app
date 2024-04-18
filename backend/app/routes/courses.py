@@ -8,8 +8,6 @@ from app.models.course import (
     AssignmentCreate,
     AssignmentPublic,
 )
-from pydantic import BaseModel
-from app.models.base import PUUID
 from uuid import UUID
 
 router = APIRouter()
