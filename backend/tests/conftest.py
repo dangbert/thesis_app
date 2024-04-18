@@ -3,20 +3,16 @@ import pytest
 from sqlalchemy.orm import close_all_sessions, Session
 from dotenv import load_dotenv
 from app.settings import Settings
+from fastapi.testclient import TestClient
 
 TEST_DIR = os.path.abspath(os.path.dirname(__file__))
 
-# @pytest.fixture
-# def client():
-#     """will be invoked for every test function"""
-#     from app import create_app
-#     from app.settings import settings
-#     from app.models.User import User
 
-#     app = create_app(TestingConfig)
-#     with app.test_client() as client:
-#         with app.app_context():
-#             yield client
+@pytest.fixture
+def client():
+    from app.main import app
+
+    return TestClient(app)
 
 
 @pytest.fixture
@@ -24,6 +20,11 @@ def session() -> Session:
     from app.database import SessionFactory
 
     return SessionFactory()
+
+
+@pytest.fixture
+def settings() -> Settings:
+    return Settings()
 
 
 def pytest_sessionstart():
@@ -35,10 +36,10 @@ def pytest_sessionstart():
 
     assert (
         settings.env == "TEST"
-    ), f"double check dotenv loaded correctly (settings.ENV='{settings.ENV}')"
+    ), f"double check dotenv loaded correctly (settings.env='{settings.env}')"
     assert (
         database.settings.env == "TEST"
-    ), f"double check dotenv loaded correctly (settings.ENV='{settings.ENV}')"
+    ), f"double check dotenv loaded correctly (settings.env='{settings.env}')"
 
 
 @pytest.fixture(autouse=True)

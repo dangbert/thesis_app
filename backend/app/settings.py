@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     # model_config = SettingsConfigDict(env_file="test.env", extra="ignore")
     model_config = SettingsConfigDict()
     env: Literal["PROD", "DEV", "TEST"]
+    api_v1_str: str = "/api/v1"
 
     # https://docs.python.org/3/library/logging.html#levels
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
