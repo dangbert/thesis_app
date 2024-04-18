@@ -1,3 +1,4 @@
+from sqlalchemy import select
 from app.models.course import (
     Course,
     CourseCreate,
@@ -12,8 +13,7 @@ from tests.dummy import DUMMY_ID, make_course, make_assignment
 ### courses
 def test_list_courses(client, settings, session):
     res = client.get(f"{settings.api_v1_str}/course")
-    assert res.status_code == 200
-    assert res.json() == []
+    assert res.status_code == 200 and res.json() == []
 
     course = make_course(session)
     res = client.get(f"{settings.api_v1_str}/course")
@@ -70,5 +70,5 @@ def test_create_assignment(client, settings, session):
         json=obj.model_dump(),
     )
     assert res.status_code == 201
-    a1 = session.query(Assignment).get(res.json()["id"])
+    a1 = session.get(Assignment, res.json()["id"])
     assert AssignmentPublic(**res.json()) == a1.to_public()

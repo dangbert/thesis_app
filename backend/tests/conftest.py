@@ -12,6 +12,7 @@ TEST_DIR = os.path.abspath(os.path.dirname(__file__))
 def client():
     from app.main import app
 
+    # TODO: change how this is instantiated after next Starlette release https://github.com/encode/starlette/issues/2524
     return TestClient(app)
 
 

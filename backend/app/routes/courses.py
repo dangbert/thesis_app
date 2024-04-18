@@ -14,7 +14,7 @@ router = APIRouter()
 
 
 def get_course_or_fail(course_id: UUID, session: SessionDep) -> Course:
-    course = session.query(Course).get(course_id)
+    course = session.get(Course, course_id)
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
     return course
