@@ -54,15 +54,19 @@ async def list_assignments(
 @router.get("/{course_id}/assignment/{assignment_id}")
 async def get_assignment(
     course_id: UUID, assignment_id: UUID, session: SessionDep
-) -> CoursePublic:
+) -> AssignmentPublic:
     course = session.query(Course).get(course_id)
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
-    a1 = session.query(Assignment).filter_by(course_id=course_id).first()
+    a1 = (
+        session.query(Assignment)
+        .filter_by(course_id=course_id, id=assignment_id)
+        .first()
+    )
     if not a1:
         raise HTTPException(status_code=404, detail="Assignment not found")
-    return a1
+    return a1.to_public()
 
 
 @router.put("/{course_id}/assignment", status_code=201)

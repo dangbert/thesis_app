@@ -9,7 +9,7 @@ from typing import Tuple
 
 from config import get_logger
 
-settings = Settings()
+settings = Settings()  # type: ignore [call-arg]
 logger = get_logger(__name__)
 
 

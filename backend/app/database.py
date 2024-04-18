@@ -10,8 +10,10 @@ from psycopg2 import sql
 import time
 import app.models as models
 from app.models.base import Base
+import config
 
-settings = Settings()
+settings = Settings()  # type: ignore [call-arg]
+logger = config.get_logger(__name__)
 
 # TODO: this engine in global scope probably prevents delete_db() from working
 engine = create_engine(settings.db_uri, echo=False)
@@ -43,11 +45,12 @@ def db_exists(await_conn: bool = True) -> bool:
                 return False
             # an OperationalError with any other message is a real problem (e.g. db is not online yet)
             if n >= maxTries - 1:
-                print(
-                    f"\nERROR: giving up after {n+1} tries to connect to DB {settings.db_uri_print_safe}"
+                logger.erorr(
+                    f"Giving up after {n+1} tries to connect to DB {settings.db_uri_print_safe}"
                 )
                 raise err
             time.sleep(2)
+    return False
 
 
 def settings_to_db_params(settings: Settings) -> dict:

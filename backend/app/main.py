@@ -17,7 +17,7 @@ def custom_generate_unique_id(route: APIRoute) -> str:
     return f"{route.tags[0]}-{route.name}"
 
 
-settings = Settings()
+settings = Settings()  # type: ignore [call-arg]
 app = FastAPI(
     title="thesis app",
     # openapi_url=f"{API_V1_STR}/openapi.json",

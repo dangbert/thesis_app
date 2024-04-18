@@ -24,7 +24,7 @@ def session() -> Session:
 
 @pytest.fixture
 def settings() -> Settings:
-    return Settings()
+    return Settings()  # type: ignore [call-arg]
 
 
 def pytest_sessionstart():

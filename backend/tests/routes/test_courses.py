@@ -41,11 +41,12 @@ def test_get_assignment(client, settings, session):
     assert res.status_code == 404 and res.json()["detail"] == "Assignment not found"
 
     a1 = make_assignment(session, c1.id)
+    a2 = make_assignment(session, c1.id, name="test2")
     res = client.get(
-        f"{settings.api_v1_str}/course/{c1.id}/assignment/{a1.id}",
+        f"{settings.api_v1_str}/course/{c1.id}/assignment/{a2.id}",
     )
     assert res.status_code == 200
-    assert AssignmentPublic(**res.json()) == a1.to_public()
+    assert AssignmentPublic(**res.json()) == a2.to_public()
 
     # try to get assignment from different course
     c2 = make_course(session, name="test2")
