@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from app.deps import SessionDep
 from app.models.course import (
     Course,
@@ -13,6 +13,13 @@ from uuid import UUID
 router = APIRouter()
 
 
+def get_course_or_fail(course_id: UUID, session: SessionDep) -> Course:
+    course = session.query(Course).get(course_id)
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    return course
+
+
 ### courses
 @router.get("/")
 async def list_courses(session: SessionDep) -> list[CoursePublic]:
@@ -22,10 +29,7 @@ async def list_courses(session: SessionDep) -> list[CoursePublic]:
 
 @router.get("/{course_id}")
 async def get_course(course_id: UUID, session: SessionDep) -> CoursePublic:
-    course = session.query(Course).get(course_id)
-    if not course:
-        raise HTTPException(status_code=404, detail="Course not found")
-    return course.to_public()
+    return get_course_or_fail(course_id, session).to_public()
 
 
 @router.put("/", status_code=201)
@@ -41,10 +45,7 @@ async def create_course(body: CourseCreate, session: SessionDep) -> CoursePublic
 async def list_assignments(
     course_id: UUID, session: SessionDep
 ) -> list[AssignmentPublic]:
-    course = session.query(Course).get(course_id)
-    if not course:
-        raise HTTPException(status_code=404, detail="Course not found")
-
+    course = get_course_or_fail(course_id, session)
     assignments = course.assignments
     return [a.to_public() for a in assignments]
 
@@ -53,10 +54,7 @@ async def list_assignments(
 async def get_assignment(
     course_id: UUID, assignment_id: UUID, session: SessionDep
 ) -> AssignmentPublic:
-    course = session.query(Course).get(course_id)
-    if not course:
-        raise HTTPException(status_code=404, detail="Course not found")
-
+    get_course_or_fail(course_id, session).to_public()
     a1 = (
         session.query(Assignment)
         .filter_by(course_id=course_id, id=assignment_id)
@@ -71,9 +69,7 @@ async def get_assignment(
 async def create_assignment(
     course_id: UUID, body: AssignmentCreate, session: SessionDep
 ) -> AssignmentPublic:
-    course = session.query(Course).get(course_id)
-    if not course:
-        raise HTTPException(status_code=404, detail="Course not found")
+    get_course_or_fail(course_id, session).to_public()
     assignment = Assignment(name=body.name, about=body.about, course_id=course_id)
     session.add(assignment)
     session.commit()
