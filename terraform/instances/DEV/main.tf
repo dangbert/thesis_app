@@ -36,7 +36,8 @@ module "auth0_tenant" {
   source   = "../../modules/auth0-tenant"
   domain   = var.auth0_provider.domain
   env_name = local.env_name
-  site_url = "http://localhost:4200"
+  # should match DEV_HOST_PORT in docker-compose.dev.yml
+  site_url = "http://localhost:2222"
 
   tf_client_id         = var.auth0_provider.client_id
   email_support        = "d.engbert@student.vu.nl"

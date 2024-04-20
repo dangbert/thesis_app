@@ -81,7 +81,7 @@ resource "auth0_connection" "google" {
   options {
     allowed_audiences = var.additional_audiences
     # allow user management over API
-    api_enable_users = true
+    # api_enable_users = true
     disable_signup   = var.disable_signup
     # domain_aliases                       = []
     scopes = [

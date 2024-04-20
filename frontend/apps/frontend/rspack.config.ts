@@ -6,7 +6,7 @@ module.exports = composePlugins(withNx(), withReact(), (config) => {
     port: process.env.DEV_HOST_PORT || 3000,
     proxy: {
       '/api': {
-        target: 'http://flask:5000',
+        target: 'http://backend:8000',
         changeOrigin: true,
       },
     },

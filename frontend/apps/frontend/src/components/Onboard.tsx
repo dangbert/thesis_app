@@ -3,6 +3,7 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import { CardActions } from '@mui/material';
+import { LOGIN_URL } from '../constants';
 
 function Onboard() {
   const courseName =
@@ -25,7 +26,12 @@ function Onboard() {
         <Typography sx={{ mt: 2 }}>{message}</Typography>
       </CardContent>
       <CardActions>
-        <Button size="large" variant="contained" sx={{ width: '100%' }}>
+        <Button
+          size="large"
+          variant="contained"
+          sx={{ width: '100%' }}
+          href={LOGIN_URL}
+        >
           Join Course
         </Button>
       </CardActions>

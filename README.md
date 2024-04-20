@@ -4,6 +4,24 @@ This repo corresponds to my VU A.I. Master's thesis project.
 
 ## Setup / Usage
 
+### Website
+
+Dev server:
+
+````bash
+cd docker
+# copy sample env file and edit as needed
+cp .env.sample .env
+
+
+alias dcd='docker compose -f docker-compose.yml -f docker-compose.dev.yml'
+# launch dev site
+dcd build && dcd up -d
+````
+
+Now you can visit the site running on http://localhost:2222
+
+### Experiments
 Install dependencies:
 ````bash
 pip install virtualenv

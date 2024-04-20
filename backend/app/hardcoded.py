@@ -8,3 +8,8 @@ class SMARTData(BaseModel):
 
     goal: str  # SMART goal formulation
     plan: str  # action plan
+
+
+def email_can_signup(email: str):
+    """Gatekeeper for email addresses that can sign up."""
+    return email.endswith("@vu.nl") or email.endswith("@student.vu.nl")

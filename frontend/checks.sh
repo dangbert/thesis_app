@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # validate the codebase with linting etc
 # run with -y to automatically fix issues
 
