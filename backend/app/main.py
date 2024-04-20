@@ -3,7 +3,7 @@ from fastapi import FastAPI, APIRouter, Request, status
 from fastapi.routing import APIRoute
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from app.settings import Settings
+from app.settings import get_settings
 import config
 
 # TODO: consider using this https://github.com/tiangolo/full-stack-fastapi-template/blob/a230f4fb2ca0e341e74727bae695687f1ea124b0/backend/app/main.py
@@ -23,7 +23,7 @@ def custom_generate_unique_id(route: APIRoute) -> str:
     return f"{route.tags[0]}-{route.name}"
 
 
-settings = Settings()  # type: ignore [call-arg]
+settings = get_settings()
 app = FastAPI(
     title="thesis app",
     # openapi_url=f"{API_V1_STR}/openapi.json",

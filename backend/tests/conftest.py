@@ -2,7 +2,7 @@ import os
 import pytest
 from sqlalchemy.orm import close_all_sessions, Session
 from dotenv import load_dotenv
-from app.settings import Settings
+from app.settings import Settings, get_settings
 from fastapi.testclient import TestClient
 
 TEST_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -25,14 +25,14 @@ def session() -> Session:
 
 @pytest.fixture
 def settings() -> Settings:
-    return Settings()  # type: ignore [call-arg]
+    return get_settings()
 
 
 def pytest_sessionstart():
     """Runs before all tests start https://stackoverflow.com/a/35394239"""
     if not load_dotenv(override=True, dotenv_path=os.path.join(TEST_DIR, "test.env")):
         raise Exception("failed to load dotenv")
-    settings = Settings()
+    settings = get_settings()
     import app.database as database
 
     assert (

@@ -58,3 +58,7 @@ class Settings(BaseSettings):
             f"postgresql://{self.db_user}:{password}@{self.db_host}:{self.db_port}"
         )
         return f"{base_uri}/{self.db_name}" if include_db_name else base_uri
+
+
+def get_settings() -> Settings:
+    return Settings()  # type: ignore [call-arg]

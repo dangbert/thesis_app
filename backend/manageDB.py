@@ -3,13 +3,13 @@
 import subprocess
 import argparse
 import app.database as database
-from app.settings import Settings
+from app.settings import get_settings
 from sqlalchemy.orm import close_all_sessions
 from typing import Tuple
 
 from config import get_logger
 
-settings = Settings()  # type: ignore [call-arg]
+settings = get_settings()
 logger = get_logger(__name__)
 
 

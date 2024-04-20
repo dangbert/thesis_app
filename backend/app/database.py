@@ -4,7 +4,7 @@ from sqlalchemy.orm import registry, sessionmaker
 import sqlalchemy
 from sqlalchemy import create_engine, Column, Integer, DateTime, func
 from sqlalchemy.exc import ProgrammingError, OperationalError
-from app.settings import Settings
+from app.settings import Settings, get_settings
 import psycopg2
 from psycopg2 import sql
 import time
@@ -12,7 +12,7 @@ import app.models as models
 from app.models.base import Base
 import config
 
-settings = Settings()  # type: ignore [call-arg]
+settings = get_settings()
 logger = config.get_logger(__name__)
 
 # TODO: this engine in global scope probably prevents delete_db() from working
