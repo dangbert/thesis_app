@@ -10,6 +10,9 @@ services:
       target: prod
     environment:
       - DB_PASS=${DB_PASS}
+      - AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID}
+      - AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET}
+      - AUTH0_DOMAIN=${AUTH0_DOMAIN}
 
   nginx:
     platform: ${PROD_PLATFORM}

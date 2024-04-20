@@ -43,3 +43,8 @@ module "auth0_tenant" {
   disable_signup       = false
   additional_audiences = ["http://localhost:8000/"]
 }
+
+output "auth0" {
+  sensitive = true
+  value     = module.auth0_tenant
+}

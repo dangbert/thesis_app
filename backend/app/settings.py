@@ -31,13 +31,18 @@ class Settings(BaseSettings):
     # https://docs.python.org/3/library/logging.html#levels
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
 
+    # database
     db_pass: str
     db_user: str = "postgres"  # TODO for now
     db_name: str = "thesis"
     db_host: str = "db"
     db_port: int = 5432
-
     auto_migrate: bool = True  # auto migrate database on startup
+
+    # auth0
+    auth0_domain: str
+    auth0_client_id: str
+    auth0_client_secret: str
 
     @property
     def db_uri(self):

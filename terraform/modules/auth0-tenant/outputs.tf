@@ -3,9 +3,9 @@ output "clients" {
   description = "Names (normalized) of auth0 clients mapped to their ID name secret."
   value = {
     backend = {
-      id = data.auth0_client.backend.client_id
-      #secret = data.auth0_client.backend.client_secret
-      name = data.auth0_client.backend.name
+      id     = data.auth0_client.backend.client_id
+      secret = data.auth0_client.backend.client_secret
+      name   = data.auth0_client.backend.name
     },
   }
 }
