@@ -22,3 +22,14 @@ variable "email_support" {
   description = "Support email for auth0 related issues."
   type        = string
 }
+
+variable "disable_signup" {
+  description = "Whether to disable new user signup"
+  type        = bool
+}
+
+variable "additional_audiences" {
+  description = "For dev tenant purposes, you can pass in a localhost url"
+  type        = list(string)
+  default     = []
+}

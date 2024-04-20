@@ -38,6 +38,8 @@ module "auth0_tenant" {
   env_name = local.env_name
   site_url = "http://localhost:4200"
 
-  tf_client_id  = var.auth0_provider.client_id
-  email_support = "d.engbert@student.vu.nl"
+  tf_client_id         = var.auth0_provider.client_id
+  email_support        = "d.engbert@student.vu.nl"
+  disable_signup       = false
+  additional_audiences = ["http://localhost:8000/"]
 }

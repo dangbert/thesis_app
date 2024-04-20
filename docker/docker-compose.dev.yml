@@ -12,7 +12,8 @@ services:
       - env=DEV
     ports:
       - 127.0.0.1:8000:8000
-    command: "bash -c 'echo sleeping && sleep infinity'"
+    # command: "bash -c 'echo sleeping && sleep infinity'"
+    command: "bash -c './manageDB.py --maybe-migrate && ./launch_dev.py'"
 
   nginx:
     platform: ${LOCAL_PLATFORM}
@@ -24,7 +25,8 @@ services:
       - 127.0.0.1:${DEV_HOST_PORT}:$DEV_HOST_PORT
     volumes:
       - ../frontend/:/frontend/
-    command: 'sleep infinity'
+    # command: "sh -c 'echo sleeping && sleep infinity'"
+    command: "sh -c 'yarn && yarn start'"
 
   db:
     platform: ${LOCAL_PLATFORM}

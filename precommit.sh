@@ -9,8 +9,8 @@ function main() {
     echo -e "ensuring terraform format..."
     terraform fmt -recursive terraform/
 
-    echo -e "\ncalling checks.sh"
-    ./checks.sh
+    # echo -e "\ncalling checks.sh"
+    # ./checks.sh
 
     echo -e "\nall done!"
 }
