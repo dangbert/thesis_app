@@ -3,17 +3,20 @@ from fastapi import FastAPI, APIRouter, Request, status
 from fastapi.routing import APIRoute
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.middleware.authentication import AuthenticationMiddleware
+from starlette.middleware.sessions import SessionMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 from app.settings import get_settings
 import config
 
 # TODO: consider using this https://github.com/tiangolo/full-stack-fastapi-template/blob/a230f4fb2ca0e341e74727bae695687f1ea124b0/backend/app/main.py
 # from starlette.middleware.cors import CORSMiddleware
 
-from app.routes import courses, attempts
+from app.routes import courses, attempts, auth
 
 logger = config.get_logger(__name__)
 api_router = APIRouter()
-# api_router.include_router(courses.router, tags=["login"])
+api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(courses.router, prefix="/course", tags=["courses"])
 api_router.include_router(attempts.router, prefix="/attempt", tags=["attempt"])
 # api_router.include_router(users.router, prefix="/user", tags=["user"])
@@ -31,7 +34,7 @@ app = FastAPI(
 )
 app.include_router(api_router, prefix=settings.api_v1_str)
 
-
+### middlewares (the furtherest below is applied first)
 """
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -57,3 +60,16 @@ async def add_process_time_header(request: Request, call_next):
     process_time = time.time() - start_time
     response.headers["x-process-time-secs"] = str(process_time)
     return response
+
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.secret_key,
+    max_age=settings.session_expiration_secs,
+)
+
+# https://fastapi.tiangolo.com/tutorial/cors/
+# https://www.starlette.io/middleware/
+app.add_middleware(
+    CORSMiddleware,
+)

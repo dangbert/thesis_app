@@ -25,8 +25,12 @@ class Settings(BaseSettings):
     # https://docs.pydantic.dev/latest/concepts/pydantic_settings/
     # model_config = SettingsConfigDict(env_file="test.env", extra="ignore")
     model_config = SettingsConfigDict()
-    env: Literal["PROD", "DEV", "TEST"]
+    env: Literal["TEST", "DEV", "PRD"]
     api_v1_str: str = "/api/v1"
+
+    # session management
+    secret_key: str
+    session_expiration_secs: int = 60 * 60 * 24 * 7
 
     # https://docs.python.org/3/library/logging.html#levels
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
