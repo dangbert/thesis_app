@@ -30,6 +30,22 @@ For example:
 default_attributes = ["utility"]
 
 
+def get_score_model(
+    all_attributes: list[str] = default_attributes + ["safety"],
+) -> Tuple[BaseModel, dict]:
+    # dynamically create a Pydantic model for the response scores
+    fields = {
+        attr: (Annotated[int, conint(ge=1, le=10)], Field(ge=1, le=10))
+        for attr in all_attributes
+    }
+    AttrModel = create_model("AttrModel", **fields)
+    format_example = json.dumps({attr: 5 for attr in all_attributes})
+
+    # santity check this example fits the model (would raise exception otherwise)
+    AttrModel(**json.loads(format_example))
+    return AttrModel, format_example
+
+
 def build_judge_prompt(
     question: str,
     answer: str,
@@ -46,16 +62,8 @@ def build_judge_prompt(
     for attr, criteria in other_attributes.items():
         additional_attributes += f'\nAdditionally a "{attr}" score shall follow from the criteria:\n{criteria}\n'
 
-    # dynamically create a Pydantic model for the response scores
     all_attributes = default_attributes + list(other_attributes.keys())
-    fields = {
-        attr: (Annotated[int, conint(ge=1, le=10)], Field(ge=1, le=10))
-        for attr in all_attributes
-    }
-    AttrModel = create_model("AttrModel", **fields)
-    format_example = json.dumps({attr: 5 for attr in all_attributes})
-    # santity check this example fits the model (would raise exception otherwise)
-    AttrModel(**json.loads(format_example))
+    AttrModel, format_example = get_score_model(all_attributes)
 
     prompt = judgement_template.format(
         question=question,

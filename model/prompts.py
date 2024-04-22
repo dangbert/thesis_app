@@ -247,7 +247,10 @@ def parse_pydantic(text: str, SomeModel, retry: bool = False) -> Union[Any, str]
     Attempt to find a JSON substring in the given text and parse it into the provided pydantic model.
     Returns string describing error on failure, or instance of SomeModel class on success.
     """
-    json_str = re.search(r"{.*}", text, re.DOTALL).group()
+    match = re.search(r"{.*}", text, re.DOTALL)
+    if match is None:
+        return "no json object found in text"
+    json_str = match.group()
     assert issubclass(SomeModel, BaseModel)
 
     try:

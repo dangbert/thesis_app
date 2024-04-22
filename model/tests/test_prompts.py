@@ -1,8 +1,8 @@
 import pytest
 import json
-import model.prompts as promptlib
-from model.prompts import SMARTFeedback
-import model.benchmark as benchmark
+import prompts as promptlib
+from prompts import SMARTFeedback
+import benchmark as benchmark
 from pydantic import ValidationError, BaseModel
 
 

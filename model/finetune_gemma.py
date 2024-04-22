@@ -2,7 +2,7 @@
 ################################################################################
 # based on (high level) tutorial: https://huggingface.co/blog/gemma-peft
 # see also:
-#   https://adithyask.medium.com/a-beginners-guide-to-fine-tuning-gemma-0444d46d821c 
+#   https://adithyask.medium.com/a-beginners-guide-to-fine-tuning-gemma-0444d46d821c
 #   https://github.com/adithya-s-k/LLM-Alchemy-Chamber/blob/main/Finetuning/Gemma_finetuning_notebook.ipynb
 ################################################################################
 
@@ -61,12 +61,14 @@ def main():
         outputs = model.generate(**inputs, max_new_tokens=max_new_tokens)
         print(tokenizer.decode(outputs[0]), "\n")
 
-
     dataset_text_field = "formatted_text"
+
     def add_formatted_text(example):
         """Given a single dataset item, adds a formatted text combining quote and author."""
         # Creating the formatted text by combining quote and author
-        example[dataset_text_field] = f"Quote: {example['quote']}\nCool Author: {example['author']}"
+        example[dataset_text_field] = (
+            f"Quote: {example['quote']}\nCool Author: {example['author']}"
+        )
         return example
 
     # def format_and_tokenize(batch):
@@ -125,7 +127,6 @@ def main():
     with TaskTimer("final generation:"):
         outputs = model.generate(**inputs, max_new_tokens=max_new_tokens)
         print(tokenizer.decode(outputs[0], skip_special_tokens=True), "\n")
-
 
     breakpoint()
     print(trainer)
