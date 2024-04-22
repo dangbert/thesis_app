@@ -33,7 +33,7 @@ pip install poetry
 poetry install
 ````
 
-For info on generating synthetic smart goals / and benchmarking feedback, see [./model/README.md](./model/README.md)
+For info on generating synthetic smart goals / and benchmarking feedback, see [./experiments/README.md](./experiments/README.md)
 
 
 <details>
