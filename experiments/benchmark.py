@@ -33,7 +33,8 @@ default_attributes = ["utility"]
 def get_score_model(
     all_attributes: list[str] = default_attributes + ["safety"],
 ) -> Tuple[BaseModel, dict]:
-    # dynamically create a Pydantic model for the response scores
+    """Dynamically create a Pydantic model for the response scores."""
+
     fields = {
         attr: (Annotated[int, conint(ge=1, le=10)], Field(ge=1, le=10))
         for attr in all_attributes

@@ -10,6 +10,8 @@ mkdir -p ../datasets/synthetic_smart/example
 # do the same with gpt3
 ./feedback.py -i ../datasets/synthetic_smart/example/ -m "gpt-3.5-turbo-0125"
 
+# compare feedback judgements
+# see benchmark.ipynb which is more complete!
 python3 benchmark.py -ig /Users/dan/Downloads/COURSES/thesis/repos/thesis_app/datasets/synthetic_smart/v3/smart_goals.csv -i3 /Users/dan/Downloads/COURSES/thesis/repos/thesis_app/datasets/synthetic_smart/v3/feedback_gpt-3.5-turbo-0125__judged_gpt-4-0125-preview.csv -i4 /Users/dan/Downloads/COURSES/thesis/repos/thesis_app/datasets/synthetic_smart/v3/feedback_gpt-4-0125-preview__judged_gpt-4-0125-preview.csv
 
 ````
