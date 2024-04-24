@@ -1,5 +1,7 @@
 ## Models and Scripts
 
+See also the [Microsoft promptflow repo for this project](https://github.com/madiepev/aistudio-feedback-generation)
+
 ````bash
 # generate synthetic smart goals (into desired directory)
 mkdir -p ../datasets/synthetic_smart/example
