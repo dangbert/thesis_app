@@ -10,6 +10,7 @@ import json
 from haikunator import Haikunator
 import torch
 from contextlib import contextmanager
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, os.pardir))
@@ -51,10 +52,26 @@ def get_logger(name: str, level: Optional[str] = None):
     return logger
 
 
+logger = get_logger(__name__)
+
+
 def source_dot_env(dotenv_path: str = ENV_PATH):
+    logger.debug(f"loading '{dotenv_path}'")
     if not load_dotenv(override=True, dotenv_path=dotenv_path):
         print(f"failed to load '{dotenv_path}'")
         exit(1)
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict()
+    deepl_api_key: str
+    openai_api_key: str
+
+
+def get_settings(dotenv_path: Optional[str] = ENV_PATH) -> Settings:
+    if dotenv_path is not None:
+        source_dot_env(dotenv_path)
+    return Settings()
 
 
 def set_seed(seed):
