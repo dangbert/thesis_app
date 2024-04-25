@@ -5,22 +5,53 @@ https://huggingface.co/datasets/yahma/alpaca-cleaned?row=16
 https://github.com/gururise/AlpacaDataCleaned
 """
 
+import argparse
 import os
 import json
 import sys
-from datasets import load_dataset
+from datasets import load_dataset, Dataset, DatasetDict
 import numpy as np
+import deepl
+from typing import Union
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 EXPERIMENTS_DIR = os.path.realpath(os.path.join(SCRIPT_DIR, "../.."))
 sys.path.append(EXPERIMENTS_DIR)
+import config # noqa
 from config import TaskTimer  # noqa
 
 
 DATASET_ID = "yahma/alpaca-cleaned"
+COL_NAMES = ['output', 'input', 'instruction'] # columns to translate
 
+logger = config.get_logger(__name__, level="DEBUG")
 
 def main():
+    # parser which shows default values in help
+    parser = argparse.ArgumentParser(
+        description="Download the alpaca cleaned dataset and report some stats about it.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "--translate",
+        "-t",
+        action="store_true",
+        help="Translate the dataset to Dutch",
+    )
+    args = parser.parse_args()
+
+    if args.translate:
+        sdataset, orig_indices = get_shuffled_dataset()
+        sdataset = sdataset.add_column("orig_index", orig_indices)
+        # fname = "shuffled_dataset.json"
+        # sdataset.to_json(fname, indent=2)
+        # print(f"wrote {fname}")
+
+        _ = estimate_budget()
+        result_fname = os.path.join(SCRIPT_DIR, "translated_dataset.json")
+        translate_dataset(sdataset, result_fname, max_samples=4)
+        return
+
     # download dataset to hugging face disk cache
     dataset = get_dataset()
     describe_dataset(dataset)
@@ -68,6 +99,97 @@ def get_shuffled_dataset():
     indices = np.random.permutation(len(dataset["train"]))
     sdataset = dataset["train"].select(indices)
     return sdataset, indices
+
+
+def estimate_budget(translate_budget: int = 500_000) -> int:
+    """Estimate number of samples that can be translated with a given budget."""
+    sdataset, orig_indices = get_shuffled_dataset()
+    print(f"{orig_indices[:5]=}")
+    print(sdataset.column_names)
+
+    count = 0
+    budget = translate_budget
+    for item in sdataset:
+        if budget <= 0:
+            count -= 1 if budget < 0 else 0
+            break
+        for col_name in COL_NAMES:
+            budget -= len(item[col_name])
+        count += 1
+
+    print(f"translate_budget={translate_budget:,} allows for {count:,} samples!\n")
+    return count
+
+
+class DUMMYResult:
+    text: str = "Hallo, wereld!"
+    detected_source_lang: str = "EN"
+
+
+def translate_dataset(dataset, disk_path: str, max_samples: int = 4, batch_size: int = 1):
+    """
+    batch_size: number of samples to translate at once (each API request will contain batch_size * len(col_names) strings)
+    max_samples: maximum number of samples to translate before quitting
+    """
+    assert batch_size == 1, "only batch_size of 1 currently supported"
+    assert disk_path.endswith(".json")
+
+    tdataset_dict: dict = {c: [] for c in COL_NAMES} # translated dataset
+    tdataset_dict["orig_index"] = []
+    if os.path.exists(disk_path):
+        # resume from cache of previous translations
+        tdataset: DatasetDict = load_dataset("json", data_files=disk_path, split="train")
+        tdataset_dict = {c: tdataset[c] for c in tdataset.column_names}
+        logger.info(f"reloaded cached dataset from '{disk_path}'")
+    
+    def flush_translated_dataset(tdataset_dict):
+        Dataset.from_dict(tdataset_dict).to_json(disk_path, indent=2)
+
+
+    translator = deepl.Translator(config.get_settings().deepl_api_key)
+    # result = translator.translate_text(["Hello, world!", "hola mi amigo"], target_lang="NL")
+    # [{'text': 'Hallo, wereld!', 'detected_source_lang': 'EN'}, ...]
+
+    # resume from where we left off (if any)
+    start_index = len(tdataset_dict[COL_NAMES[0]])
+    logger.info(f"starting from row {start_index} in dataset")
+    for i in range(start_index, len(dataset)):
+        sample = dataset[i]
+        # skip translating empty fields
+        results = {c: sample[c] for c in COL_NAMES if sample[c].strip() == ""}
+        batch = [sample[c] for c in COL_NAMES if c not in results]
+
+        logger.info(f"translating batch of {len(batch)} entries")
+        try:
+            # res = translator.translate_text(["Hello, world!", "hola mi amigo"], target_lang="NL")
+            res = [DUMMYResult() for _ in batch]
+        except Exception as e:
+            logger.error(f"failed to translate batch, stopping early: {e}")
+            break
+
+        
+        # res = translator.translate_text(["Hello, world!", "hola mi amigo"], target_lang="NL")
+        #results = translator.translate_text(batch, target_lang=target_lang)
+
+        # populate results dict with translations (considering some columns may have been skipped)
+        res_idx = 0
+        for c in COL_NAMES:
+            if c not in results:
+                results[c] = res[res_idx].text
+                res_idx += 1
+            tdataset_dict[c].append(results[c])
+        tdataset_dict["orig_index"].append(sample["orig_index"])
+            
+        if i % 10 == 0:
+            flush_translated_dataset(tdataset_dict)
+            logger.debug(f"flushed dataset to '{disk_path}' (row {i})")
+        if len(tdataset_dict[COL_NAMES[0]]) >= max_samples:
+            logger.info(f"reached max_samples={max_samples}, stopping")
+            break
+
+    logger.debug("final flush complete!")
+    flush_translated_dataset(tdataset_dict)
+
 
 
 if __name__ == "__main__":

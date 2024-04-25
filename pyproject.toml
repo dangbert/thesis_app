@@ -30,6 +30,7 @@ pydantic-settings = "^2.2.1"
 numpy = "^1.26.4"
 seaborn = "^0.13.2"
 haikunator = "^2.1.0"
+deepl = "^1.17.0"
 
 # GPU dependencies are only installable / relevant on a machine with a GPU
 [tool.poetry.group.gpu.dependencies]
