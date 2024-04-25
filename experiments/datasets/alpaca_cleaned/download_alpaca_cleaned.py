@@ -9,6 +9,7 @@ import os
 import json
 import sys
 from datasets import load_dataset
+import numpy as np
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 EXPERIMENTS_DIR = os.path.realpath(os.path.join(SCRIPT_DIR, "../.."))
@@ -21,8 +22,7 @@ DATASET_ID = "yahma/alpaca-cleaned"
 
 def main():
     # download dataset to hugging face disk cache
-    with TaskTimer("load dataset"):
-        dataset = load_dataset(DATASET_ID)
+    dataset = get_dataset()
     describe_dataset(dataset)
 
 
@@ -52,6 +52,22 @@ def describe_dataset(dataset):
                 chars += len(item[col_name])
     print(f"\ntotal chars in dataset: {chars:,}")
     print(f"\naverage chars per sample: {(chars / total_samples):.1f}")
+
+
+def get_dataset():
+    """Returns the full original dataset."""
+    with TaskTimer("load dataset"):
+        return load_dataset(DATASET_ID)
+
+
+def get_shuffled_dataset():
+    """Shuffles the train split of the dataset and return it. Uses a constant seed so the returned dataset is always the same."""
+    dataset = get_dataset()
+    # calculate how many samples can be translated with a budget of 500_000 chars
+    np.random.seed(42)
+    indices = np.random.permutation(len(dataset["train"]))
+    sdataset = dataset["train"].select(indices)
+    return sdataset, indices
 
 
 if __name__ == "__main__":
