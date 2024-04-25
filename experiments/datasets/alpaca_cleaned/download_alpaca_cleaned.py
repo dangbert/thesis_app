@@ -17,14 +17,15 @@ from typing import Union
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 EXPERIMENTS_DIR = os.path.realpath(os.path.join(SCRIPT_DIR, "../.."))
 sys.path.append(EXPERIMENTS_DIR)
-import config # noqa
+import config  # noqa
 from config import TaskTimer  # noqa
 
 
 DATASET_ID = "yahma/alpaca-cleaned"
-COL_NAMES = ['output', 'input', 'instruction'] # columns to translate
+COL_NAMES = ["output", "input", "instruction"]  # columns to translate
 
-logger = config.get_logger(__name__, level="DEBUG")
+logger = config.get_logger(__name__, level="INFO")
+
 
 def main():
     # parser which shows default values in help
@@ -49,7 +50,7 @@ def main():
 
         _ = estimate_budget()
         result_fname = os.path.join(SCRIPT_DIR, "translated_dataset.json")
-        translate_dataset(sdataset, result_fname, max_samples=4)
+        translate_dataset(sdataset, result_fname, max_samples=100)
         return
 
     # download dataset to hugging face disk cache
@@ -63,7 +64,7 @@ def describe_dataset(dataset):
 
     total_samples = 0
     for split in dataset:
-        print(f"\nsplit: {split} has {len(dataset[split]):,} entires")
+        print(f"\nsplit: {split} has {len(dataset[split]):,} entries")
         total_samples += len(dataset[split])
 
     for item in dataset["train"]:
@@ -126,50 +127,53 @@ class DUMMYResult:
     detected_source_lang: str = "EN"
 
 
-def translate_dataset(dataset, disk_path: str, max_samples: int = 4, batch_size: int = 1):
+def translate_dataset(dataset, disk_path: str, max_samples: int):
     """
-    batch_size: number of samples to translate at once (each API request will contain batch_size * len(col_names) strings)
-    max_samples: maximum number of samples to translate before quitting
+    Translates the provided dataset, writing the results to disk.
+    Rerunning this function will automatically resume from where it left off.
+
+    max_samples: maximum number of samples to translate before quitting (one sample has len(COL_NAMES) columns
     """
-    assert batch_size == 1, "only batch_size of 1 currently supported"
     assert disk_path.endswith(".json")
 
-    tdataset_dict: dict = {c: [] for c in COL_NAMES} # translated dataset
-    tdataset_dict["orig_index"] = []
+    tdataset_dict: dict = {c: [] for c in COL_NAMES}  # translated dataset
+    extra_cols = ["orig_index", "detected_source_lang"]
+    for c in extra_cols:
+        tdataset_dict[c] = []
     if os.path.exists(disk_path):
         # resume from cache of previous translations
-        tdataset: DatasetDict = load_dataset("json", data_files=disk_path, split="train")
+        tdataset: DatasetDict = load_dataset(
+            "json", data_files=disk_path, split="train"
+        )
         tdataset_dict = {c: tdataset[c] for c in tdataset.column_names}
         logger.info(f"reloaded cached dataset from '{disk_path}'")
-    
+    assert tdataset_dict.keys() == set(COL_NAMES + extra_cols)
+
     def flush_translated_dataset(tdataset_dict):
         Dataset.from_dict(tdataset_dict).to_json(disk_path, indent=2)
 
-
     translator = deepl.Translator(config.get_settings().deepl_api_key)
-    # result = translator.translate_text(["Hello, world!", "hola mi amigo"], target_lang="NL")
-    # [{'text': 'Hallo, wereld!', 'detected_source_lang': 'EN'}, ...]
 
     # resume from where we left off (if any)
     start_index = len(tdataset_dict[COL_NAMES[0]])
-    logger.info(f"starting from row {start_index} in dataset")
+    logger.info(f"starting translation from row {start_index} in dataset")
     for i in range(start_index, len(dataset)):
+        if len(tdataset_dict[COL_NAMES[0]]) >= max_samples:
+            logger.info(f"reached max_samples={max_samples}, stopping")
+            break
+
         sample = dataset[i]
         # skip translating empty fields
         results = {c: sample[c] for c in COL_NAMES if sample[c].strip() == ""}
         batch = [sample[c] for c in COL_NAMES if c not in results]
 
-        logger.info(f"translating batch of {len(batch)} entries")
+        logger.debug(f"translating batch of {len(batch)} entries")
         try:
-            # res = translator.translate_text(["Hello, world!", "hola mi amigo"], target_lang="NL")
-            res = [DUMMYResult() for _ in batch]
+            res = translator.translate_text(batch, target_lang="NL")
+            # res = [DUMMYResult() for _ in batch] # for testing
         except Exception as e:
             logger.error(f"failed to translate batch, stopping early: {e}")
             break
-
-        
-        # res = translator.translate_text(["Hello, world!", "hola mi amigo"], target_lang="NL")
-        #results = translator.translate_text(batch, target_lang=target_lang)
 
         # populate results dict with translations (considering some columns may have been skipped)
         res_idx = 0
@@ -179,17 +183,15 @@ def translate_dataset(dataset, disk_path: str, max_samples: int = 4, batch_size:
                 res_idx += 1
             tdataset_dict[c].append(results[c])
         tdataset_dict["orig_index"].append(sample["orig_index"])
-            
+        source_langs = sorted(list(set(r.detected_source_lang for r in res)))
+        tdataset_dict["detected_source_lang"].append(",".join(source_langs))
+
         if i % 10 == 0:
             flush_translated_dataset(tdataset_dict)
             logger.debug(f"flushed dataset to '{disk_path}' (row {i})")
-        if len(tdataset_dict[COL_NAMES[0]]) >= max_samples:
-            logger.info(f"reached max_samples={max_samples}, stopping")
-            break
 
-    logger.debug("final flush complete!")
     flush_translated_dataset(tdataset_dict)
-
+    logger.info("final flush complete!")
 
 
 if __name__ == "__main__":
