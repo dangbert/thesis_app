@@ -2,12 +2,15 @@
 ################################################################################
 # based on (high level) tutorial: https://huggingface.co/blog/gemma-peft
 # see also:
-#   https://adithyask.medium.com/a-beginners-guide-to-fine-tuning-gemma-0444d46d821c
 #   https://github.com/adithya-s-k/LLM-Alchemy-Chamber/blob/main/Finetuning/Gemma_finetuning_notebook.ipynb
+#   https://huggingface.co/google/gemma-7b-it#chat-template
+#   https://ai.google.dev/gemma/docs/formatting
+#   https://adithyask.medium.com/a-beginners-guide-to-fine-tuning-gemma-0444d46d821c
 ################################################################################
 
 import argparse
 import os
+import sys
 import torch
 import transformers
 from transformers import (
@@ -18,15 +21,30 @@ from transformers import (
     Trainer,
     TrainingArguments,
 )
-import datasets
+from transformers.models.gemma import modeling_gemma
+from transformers.models.gemma.tokenization_gemma_fast import GemmaTokenizerFast
+from datasets import load_dataset, Dataset, DatasetDict
 from peft import LoraConfig
 from trl import SFTTrainer  # https://github.com/huggingface/trl
 
+import config
 from config import get_device, TaskTimer
+
+sys.path.append(os.path.join(config.DATASETS_DIR, "alpaca_cleaned"))
+from download_alpaca_cleaned import TRANSLATED_PATH
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-MODEL_ID = "google/gemma-2b"
+MODEL_ID = "google/gemma-2b-it"
+
+logger = config.get_logger(__name__)
+
+prompt_template = """
+<start_of_turn>user
+{instruction}
+{input}<end_of_turn>
+<start_of_turn>model
+""".strip()
 
 
 def main():
@@ -48,48 +66,50 @@ def main():
 
     device = get_device()
 
-    model, tokenizer = get_model()
-
     max_new_tokens = 400
     print(f"using device {device}")
     model, tokenizer = get_model()
 
-    ### simple generation example
-    input_text = "Quote: Imagination is more"
-    inputs = tokenizer(input_text, return_tensors="pt").to(device)
-    with TaskTimer("single generation"):
-        outputs = model.generate(**inputs, max_new_tokens=max_new_tokens)
-        print(tokenizer.decode(outputs[0]), "\n")
+    # load translated alpaca dataset
+    tdataset: DatasetDict = load_dataset(
+        "json", data_files=TRANSLATED_PATH, split="train"
+    )
+    logger.info(f"reloaded cached dataset from '{TRANSLATED_PATH}'")
+    logger.info(f"column names: {tdataset.column_names}")
 
-    dataset_text_field = "formatted_text"
-
-    def add_formatted_text(example):
-        """Given a single dataset item, adds a formatted text combining quote and author."""
-        # Creating the formatted text by combining quote and author
-        example[dataset_text_field] = (
-            f"Quote: {example['quote']}\nCool Author: {example['author']}"
+    def format_entry(entry):
+        chat = [
+            {"role": "user", "content": f"{entry['instruction']}\\n{entry['input']}"},
+            {"role": "assistant", "content": entry["output"]},
+        ]
+        entry["prompt"] = tokenizer.apply_chat_template(
+            chat, tokenize=False, add_generation_prompt=False
         )
-        return example
+        return entry
 
-    # def format_and_tokenize(batch):
-    #     """Given a sample of dataset items, format them as desired and return results of tokenizer."""
-    #     formatted_texts = [f"Quote: {quote}\nCool Author: {author}" for quote, author in zip(batch['quote'], batch['author'])]
-    #     # Tokenizing the formatted texts
-    #     return tokenizer(formatted_texts)
+    with TaskTimer("format dataset entries"):
+        tdataset = tdataset.map(format_entry)
 
-    with TaskTimer("dataset load and process"):
-        data = datasets.load_dataset("Abirate/english_quotes")
-        print("original column names: ", data.column_names)
-        # add field "formatted_text" to each itme
-        data = data.map(add_formatted_text)
-        # add fields input_ids and attention_mask to each item (actually trainer seems to do this itself)
-        # data = data.map(lambda samples: tokenizer(samples[dataset_text_field]), batched=True)
+    tdataset = tdataset.train_test_split(test_size=0.2)
+    train_data = tdataset["train"]
+    test_data = tdataset["test"]
 
-    print("final column names: ", data.column_names)
-    print("example data item: ", data["train"][0])
+    ### simple generation example
+    with TaskTimer("single generation"):
+        outputs = get_completion(
+            "schrijf een gedicht over de liefde",
+            model,
+            tokenizer,
+            device,
+        )
+        print(outputs)
+
+    logger.info("train_data column names: ", train_data.column_names)
+    logger.info("example data item: ", train_data[1]["prompt"])
 
     lora_config = LoraConfig(
-        r=8,
+        r=8,  # rank (low attention dimension)
+        # this list is equivalent to find_all_linear_names() in https://github.com/adithya-s-k/LLM-Alchemy-Chamber/blob/c50a8ac2f0078ed1e7a69427a3953fe58a825699/Finetuning/Gemma_finetuning_notebook.ipynb
         target_modules=[
             "q_proj",
             "o_proj",
@@ -102,31 +122,39 @@ def main():
         task_type="CAUSAL_LM",
     )
 
+    torch.cuda.empty_cache()
     trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
-        train_dataset=data["train"],
+        train_dataset=train_data,
+        eval_dataset=test_data,
         args=transformers.TrainingArguments(
-            per_device_train_batch_size=4,
+            per_device_train_batch_size=1,
             gradient_accumulation_steps=4,
             warmup_steps=2,
-            max_steps=25,
+            max_steps=100,
             learning_rate=2e-4,
             fp16=True,
             logging_steps=1,
             output_dir="outputs",
             optim="paged_adamw_8bit",
+            save_strategy="epoch",
         ),
         peft_config=lora_config,
         # name of dataset field to read text from
-        dataset_text_field=dataset_text_field,
+        dataset_text_field="prompt",
     )
     with TaskTimer("finetuning"):
         trainer.train()
 
     with TaskTimer("final generation:"):
-        outputs = model.generate(**inputs, max_new_tokens=max_new_tokens)
-        print(tokenizer.decode(outputs[0], skip_special_tokens=True), "\n")
+        outputs = get_completion(
+            "schrijf een gedicht over de liefde",
+            model,
+            tokenizer,
+            device,
+        )
+        print(outputs)
 
     breakpoint()
     print(trainer)
@@ -148,6 +176,36 @@ def get_model():
             device_map="auto",
         )
         return model, tokenizer
+
+
+def get_completion(
+    query: str, model, tokenizer, device: str, max_new_tokens: int = 1000
+) -> str:
+    #     prompt_template = """
+    # <start_of_turn>user
+    # Below is an instruction that describes a task. Write a response that appropriately completes the request.
+    # {query}
+    # <end_of_turn>\n<start_of_turn>model
+    # """
+    #     prompt = prompt_template.format(query=query)
+    #     encodeds = tokenizer(prompt, return_tensors="pt", add_special_tokens=True) # also adds special <bos> to start
+
+    # equivalent
+    prompt = tokenizer.apply_chat_template(
+        [{"role": "user", "content": query}], tokenize=False, add_generation_prompt=True
+    )
+    encodeds = tokenizer(prompt, return_tensors="pt", add_special_tokens=False)
+
+    model_inputs = encodeds.to(device)
+    generated_ids = model.generate(
+        **model_inputs,
+        max_new_tokens=max_new_tokens,
+        do_sample=True,
+        pad_token_id=tokenizer.eos_token_id,
+    )
+    # decoded = tokenizer.batch_decode(generated_ids)
+    decoded = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+    return decoded
 
 
 if __name__ == "__main__":

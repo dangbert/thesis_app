@@ -13,9 +13,8 @@ cd docker
 # copy sample env file and edit as needed
 cp .env.sample .env
 
-
+# build and launch dev site
 alias dcd='docker compose -f docker-compose.yml -f docker-compose.dev.yml'
-# launch dev site
 dcd build && dcd up -d
 ````
 
@@ -40,6 +39,8 @@ For info on generating synthetic smart goals / and benchmarking feedback, see [.
 <summary>Show Snellius server specific directions</summary>
 Note for the commands below, if you're not running on a [slurm server](https://slurm.schedmd.com/overview.html) then use `bash` in place of `sbatch`
 
+
+Disclaimer: the conda environment is now (somewhat) deprecated in favor of poetry...
 
 ````bash
 # create conda environment
