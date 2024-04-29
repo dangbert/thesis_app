@@ -24,6 +24,8 @@ from config import TaskTimer  # noqa
 DATASET_ID = "yahma/alpaca-cleaned"
 COL_NAMES = ["output", "input", "instruction"]  # columns to translate
 
+TRANSLATED_PATH = os.path.join(SCRIPT_DIR, "translated_dataset.json")
+
 logger = config.get_logger(__name__, level="INFO")
 
 
@@ -49,8 +51,7 @@ def main():
         # print(f"wrote {fname}")
 
         _ = estimate_budget()
-        result_fname = os.path.join(SCRIPT_DIR, "translated_dataset.json")
-        translate_dataset(sdataset, result_fname, max_samples=100)
+        translate_dataset(sdataset, TRANSLATED_PATH, max_samples=100)
         return
 
     # download dataset to hugging face disk cache

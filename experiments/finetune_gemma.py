@@ -48,6 +48,7 @@ prompt_template = """
 
 
 def main():
+    max_seq_len = 1000
     parser = argparse.ArgumentParser(
         description="fine tune gemma-2b",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -66,7 +67,6 @@ def main():
 
     device = get_device()
 
-    max_new_tokens = 400
     print(f"using device {device}")
     model, tokenizer = get_model()
 
@@ -104,8 +104,8 @@ def main():
         )
         print(outputs)
 
-    logger.info("train_data column names: ", train_data.column_names)
-    logger.info("example data item: ", train_data[1]["prompt"])
+    logger.info(f"train_data column names: {train_data.column_names}")
+    logger.info(f"example data item: train_data[1]['prompt']")
 
     lora_config = LoraConfig(
         r=8,  # rank (low attention dimension)
@@ -122,7 +122,10 @@ def main():
         task_type="CAUSAL_LM",
     )
 
+    tokenizer.pad_token = tokenizer.eos_token  # https://stackoverflow.com/a/76453052
     torch.cuda.empty_cache()
+    # pass max_seq_len here?
+    # TODO: pass in compute_metrics to log/compute eval metrics as well...
     trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
@@ -131,11 +134,13 @@ def main():
         args=transformers.TrainingArguments(
             per_device_train_batch_size=1,
             gradient_accumulation_steps=4,
-            warmup_steps=2,
-            max_steps=100,
+            warmup_steps=100,
+            num_epochs=10,
+            max_steps=1_000_000,
+            logging_steps=1,
+            eval_steps=5,
             learning_rate=2e-4,
             fp16=True,
-            logging_steps=1,
             output_dir="outputs",
             optim="paged_adamw_8bit",
             save_strategy="epoch",
@@ -156,7 +161,7 @@ def main():
         )
         print(outputs)
 
-    breakpoint()
+    # breakpoint()
     print(trainer)
 
 
