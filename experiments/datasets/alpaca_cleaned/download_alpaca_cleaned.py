@@ -41,6 +41,13 @@ def main():
         action="store_true",
         help="Translate the dataset to Dutch",
     )
+    parser.add_argument(
+        "--max-samples",
+        "-m",
+        type=int,
+        default=100,
+        help="max number of samples to translate",
+    )
     args = parser.parse_args()
 
     if args.translate:
@@ -51,7 +58,7 @@ def main():
         # print(f"wrote {fname}")
 
         _ = estimate_budget()
-        translate_dataset(sdataset, TRANSLATED_PATH, max_samples=100)
+        translate_dataset(sdataset, TRANSLATED_PATH, max_samples=args.max_samples)
         return
 
     # download dataset to hugging face disk cache
