@@ -21,7 +21,7 @@ PRICES = {
     "gpt-3.5-turbo-instruct": [1.5, 2.0],
     # https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4
     "gpt-4-turbo-2024-04-09": [10.0, 30.0],
-    "gpt-4-0125-preview": [10.0, 30.0], # also turbo despite name
+    "gpt-4-0125-preview": [10.0, 30.0],  # also turbo despite name
 }
 
 # convert to price / token
@@ -31,7 +31,7 @@ PRICES = {k: [p / 1_000_000 for p in v] for k, v in PRICES.items()}
 class GPTModel(AbstractModel):
     def __init__(self, model_name: str = "gpt-3.5-turbo-0125"):
         self.model_name = model_name
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.client = OpenAI(api_key=config.get_settings().openai_api_key)
         if model_name not in PRICES.keys():
             logger.warning(f"price entry unknown for model '{model_name}'")
 
@@ -86,6 +86,9 @@ class GPTModel(AbstractModel):
         total_price = 0.0
         for c in completions:
             prompt_price, completion_price = PRICES[c.model]
+            if c.model not in PRICES:
+                logger.warning(f"price entry unknown for model '{c.model}'")
+                continue
             total_price += (
                 prompt_price * c.usage.prompt_tokens
                 + completion_price * c.usage.completion_tokens

@@ -44,6 +44,10 @@ def main():
         help="Max number of feedback generation iterations (given invalid response formats).",
     )
 
+    legacy_feedback_format = (
+        False  # whether to request/expect feedback in SMARTFeedback model format
+    )
+
     args = parser.parse_args()
     config.source_dot_env()  # read api key
 
@@ -57,15 +61,22 @@ def main():
     bkp_path = base_dot_path + ".output.json.bkp"
     if not os.path.isfile(feedback_path):
         config.args_to_dict(args, fname=base_dot_path + ".config.json")
-        feedback_df = get_feedback(goals_df, args, bkp_path=bkp_path)
+        feedback_df = get_feedback(
+            goals_df, args, bkp_path=bkp_path, validate=legacy_feedback_format
+        )
         feedback_df.to_csv(feedback_path, index=False)
         print(f"\nwrote '{feedback_path}'")
 
-        feedback_df = extend_outputs(feedback_df)
-        feedback_df.to_csv(feedback_path, index=False)
+        if legacy_feedback_format:
+            feedback_df = extend_outputs(feedback_df)
+            feedback_df.to_csv(feedback_path, index=False)
     else:
         print("reloading existing feedback!")
         feedback_df = pd.read_csv(feedback_path)
+
+    if not legacy_feedback_format:
+        logger.info("skipping feedback score plots")
+        return
 
     plot_scores(feedback_df, base_path=base_path)
 
@@ -79,14 +90,14 @@ def main():
 
 def add_feedback_prompt(row: pd.Series) -> str:
     """Given row with smart goal and plan, construct prompt for feedback generation."""
-    json_schema = SMARTFeedback.model_json_schema()
+    # json_schema = SMARTFeedback.model_json_schema()
     draft = SMARTResponse(smart=row["smart"], plan=row["plan"])
-    prompt = promptlib.PROMPT_SMART_FEEDBACK.format(
+    prompt = promptlib.PROMPT_SMART_FEEDBACK_TEXT_ONLY.format(
         FEEDBACK_PRINCIPLES=promptlib.FEEDBACK_PRINCIPLES,
         SMART_RUBRIC=promptlib.SMART_RUBRIC,
-        SMART_EXAMPLE=promptlib.SMART_EXAMPLE,
-        student_draft=draft.model_dump_json(indent=2),
-        json_schema=json_schema,
+        learning_goal=draft.smart,
+        action_plan=draft.plan,
+        language="Dutch",
     )
     return prompt
 
@@ -99,6 +110,7 @@ def get_feedback(
     df: pd.DataFrame,
     args: argparse.Namespace,
     bkp_path: Optional[str] = None,
+    validate: bool = False,  # whether to validate feedback against SMARTFeedback model
 ) -> pd.DataFrame:
     """
     Generates feedback for dataframe of smart goals and plans, returning a new dataframe with the feedback.
@@ -115,9 +127,16 @@ def get_feedback(
         res = promptlib.parse_pydantic(text, SMARTFeedback)
         return isinstance(res, SMARTFeedback)
 
+    def noop_validator(text: str):
+        return True
+
     model = gpt.GPTModel(args.model)
+    logger.info(f"validator enabled: {validate}")
     outputs, total_price, total_calls = gpt.auto_reprompt(
-        validator, args.max_retries, model, data["prompt"]
+        validator if validate else noop_validator,
+        args.max_retries,
+        model,
+        data["prompt"],
     )
 
     if bkp_path is not None:  # backup just in case
