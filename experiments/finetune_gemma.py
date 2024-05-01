@@ -48,7 +48,7 @@ prompt_template = """
 
 
 def main():
-    max_seq_len = 1000
+    # max_seq_len = 1000
     parser = argparse.ArgumentParser(
         description="fine tune gemma-2b",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -105,7 +105,7 @@ def main():
         print(outputs)
 
     logger.info(f"train_data column names: {train_data.column_names}")
-    logger.info(f"example data item: train_data[1]['prompt']")
+    logger.info("example data item: train_data[1]['prompt']")
 
     lora_config = LoraConfig(
         r=8,  # rank (low attention dimension)

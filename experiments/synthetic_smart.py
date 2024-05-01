@@ -52,6 +52,13 @@ def main():
         default="gpt-3.5-turbo-0125",
         help="Name of OpenAI model to use (see gpt.py).",
     )
+    parser.add_argument(
+        "--language",
+        "-l",
+        type=str,
+        default="Dutch",
+        help="Name of language to output smart goals in.",
+    )
     args = parser.parse_args()
     # config.set_seed(args.seed)
     config.source_dot_env()  # read api key
@@ -120,6 +127,7 @@ def create_prompts(args):
             skill_description=skill_description,
             tone=tone,
             extra=extra,
+            language=args.language,
         )
         data["skill"].append(skill)
         data["tone"].append(tone)
