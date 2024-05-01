@@ -19,7 +19,9 @@ PRICES = {
     # [input,output] prices
     "gpt-3.5-turbo-0125": [0.5, 1.5],
     "gpt-3.5-turbo-instruct": [1.5, 2.0],
-    "gpt-4-0125-preview": [10.0, 30.0],
+    # https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4
+    "gpt-4-turbo-2024-04-09": [10.0, 30.0],
+    "gpt-4-0125-preview": [10.0, 30.0], # also turbo despite name
 }
 
 # convert to price / token

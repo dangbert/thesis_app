@@ -15,7 +15,7 @@ Your response should contain a SMART goal written from your perspective as a stu
 
 In your case the goal you're writing should focus on a skill such as '{skill}' (for example {skill_description}) and you shall write your goal/plan using a tone of voice such as '{tone}'.
 {extra}
-Now respond only with a SMART goal written from your perspective as a student as well as an appropriate action plan in json format like the example. You do not have to adhere to the particular wording structure used in the example, just the json format. However, your SMART goald and plan should be written in the {language} language.
+Now respond only with a SMART goal written from your perspective as a student as well as an appropriate action plan in json format like the example. You do not have to adhere to the particular wording structure used in the example, just the json format. However, your SMART goal and plan should be written in the {language} language.
 """.strip()
 
 EDUCATION_WORDS = [
