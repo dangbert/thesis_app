@@ -25,6 +25,9 @@ DATASET_ID = "yahma/alpaca-cleaned"
 COL_NAMES = ["output", "input", "instruction"]  # columns to translate
 
 TRANSLATED_PATH = os.path.join(SCRIPT_DIR, "translated_dataset.json")
+# TRANSLATED_PATH = os.path.join(SCRIPT_DIR, "translated_dataset[100_samples].json")
+# TRANSLATED_PATH = "./tmp.json"
+TRANSLATED_DATASET_ID = "dangbert/alpaca-cleaned-nl" # where to upload on hugging face
 
 logger = config.get_logger(__name__, level="INFO")
 
@@ -48,6 +51,12 @@ def main():
         default=100,
         help="max number of samples to translate",
     )
+    parser.add_argument(
+        "--upload",
+        "-u",
+        action="store_true",
+        help="Upload translated dataset to hugging face hub",
+    )
     args = parser.parse_args()
 
     if args.translate:
@@ -59,6 +68,16 @@ def main():
 
         _ = estimate_budget()
         translate_dataset(sdataset, TRANSLATED_PATH, max_samples=args.max_samples)
+        if not args.upload:
+            return
+
+    if args.upload:
+        tdataset, tdataset_dict = load_local_dataset(TRANSLATED_PATH)
+        logger.info(f"uploading translated dataset to hugging face hub '{TRANSLATED_DATASET_ID}'")
+        # https://huggingface.co/docs/datasets/upload_dataset
+        breakpoint()
+        with TaskTimer("push to hub"):
+            tdataset.push_to_hub(TRANSLATED_DATASET_ID)
         return
 
     # download dataset to hugging face disk cache
@@ -135,6 +154,16 @@ class DUMMYResult:
     detected_source_lang: str = "EN"
 
 
+def load_local_dataset(disk_path: str):
+    """Reload dataset from local cache of previous translations."""
+    assert os.path.exists(disk_path)
+    tdataset: DatasetDict = load_dataset(
+        "json", data_files=disk_path, split="train"
+    )
+    tdataset_dict = {c: tdataset[c] for c in tdataset.column_names}
+    logger.info(f"reloaded cached dataset from '{disk_path}'")
+    return tdataset, tdataset_dict
+
 def translate_dataset(dataset, disk_path: str, max_samples: int):
     """
     Translates the provided dataset, writing the results to disk.
@@ -149,12 +178,7 @@ def translate_dataset(dataset, disk_path: str, max_samples: int):
     for c in extra_cols:
         tdataset_dict[c] = []
     if os.path.exists(disk_path):
-        # resume from cache of previous translations
-        tdataset: DatasetDict = load_dataset(
-            "json", data_files=disk_path, split="train"
-        )
-        tdataset_dict = {c: tdataset[c] for c in tdataset.column_names}
-        logger.info(f"reloaded cached dataset from '{disk_path}'")
+        tdataset, tdataset_dict = load_local_dataset(disk_path)
     assert tdataset_dict.keys() == set(COL_NAMES + extra_cols)
 
     def flush_translated_dataset(tdataset_dict):
