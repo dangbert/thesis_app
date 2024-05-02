@@ -1,4 +1,7 @@
-"""Pydantic models for partial representations of course-related SQLAlchemy models."""
+"""
+Pydantic models for partial representations of course-related SQLAlchemy models.
+Must match frontend/apps/frontend/models.ts
+"""
 
 from uuid import UUID
 from pydantic import BaseModel
