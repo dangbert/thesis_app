@@ -6,7 +6,7 @@
 #SBATCH --job-name=sleep
 #SBATCH --ntasks=1
 #SBATCH --time=04:00:00
-#SBATCH --mem=32000M
+#SBATCH --mem=64000M
 #SBATCH --output=logs/slurm_output__sleep_%A.out
 
 # this is a dummy job to gain control of a node so you can ssh in and do whatever

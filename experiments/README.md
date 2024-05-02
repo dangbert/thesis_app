@@ -1,6 +1,9 @@
 ## Models and Scripts
 
-See also the [Microsoft promptflow repo for this project](https://github.com/madiepev/aistudio-feedback-generation)
+See also:
+* [Microsoft promptflow repo for this project](https://github.com/madiepev/aistudio-feedback-generation)
+
+* [alpaca-cleaned-nl](https://huggingface.co/datasets/dangbert/alpaca-cleaned-nl) dataset created with this repo.
 
 ````bash
 # generate synthetic smart goals (into desired directory)
@@ -17,7 +20,7 @@ mkdir -p ../datasets/synthetic_smart/example
 python3 benchmark.py -ig /Users/dan/Downloads/COURSES/thesis/repos/thesis_app/datasets/synthetic_smart/v3/smart_goals.csv -i3 /Users/dan/Downloads/COURSES/thesis/repos/thesis_app/datasets/synthetic_smart/v3/feedback_gpt-3.5-turbo-0125__judged_gpt-4-0125-preview.csv -i4 /Users/dan/Downloads/COURSES/thesis/repos/thesis_app/datasets/synthetic_smart/v3/feedback_gpt-4-0125-preview__judged_gpt-4-0125-preview.csv
 ````
 
-For the other experiments with running models locally, you may first need to run `hugging-face-cli login` and [enter a token from your hugging face account](https://huggingface.co/settings/tokens).
+For the other experiments with running models locally, you may first need to run `huggingface-cli login` and [enter a token from your hugging face account](https://huggingface.co/settings/tokens).
 
 
 ## Misc References
