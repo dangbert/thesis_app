@@ -13,6 +13,18 @@ WORKDIR /backend
 FROM common as dev
 RUN poetry install --with dev
 
+# TODO: play with ts code generation:
+#   https://redux-toolkit.js.org/rtk-query/usage/code-generation
+#   https://pypi.org/project/pydantic-to-typescript/ https://www.npmjs.com/package/json-schema-to-typescript
+# RUN apt update && apt install -y nodejs curl gnupg
+# RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+# RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+# RUN apt update && apt install -y yarn
+# RUN yarn global add json-schema-to-typescript
+# pydantic2ts --module app.models.course_partials --output ./models.ts
+
+
+
 
 FROM common as prod
 RUN poetry export --format requirements.txt --output requirements_prod.txt --without-hashes --without=dev
