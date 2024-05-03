@@ -16,7 +16,7 @@ export const jsonOrError = async (
   promise: Promise<Response>,
   getText = false
 ) => {
-  let result: APIResult = {
+  const result: APIResult = {
     timeMs: new Date().getTime(),
     error: '',
   };

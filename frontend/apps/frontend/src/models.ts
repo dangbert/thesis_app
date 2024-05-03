@@ -1,3 +1,9 @@
+/* must match backend/app/hardcoded.py */
+export interface SMARTData {
+  goal: string;
+  plan: string;
+}
+
 /* must match backend/app/models/course_partials.py */
 
 export interface CourseCreate {
@@ -21,7 +27,8 @@ export interface AssignmentPublic extends AssignmentCreate {
 export interface AttemptCreate {
   assignment_id: string;
   user_id: string;
-  data: { [key: string]: any };
+  /* eslint-disable  @typescript-eslint/no-explicit-any */
+  data: SMARTData | { [key: string]: any };
 }
 
 export interface AttemptPublic extends AttemptCreate {

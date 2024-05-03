@@ -4,7 +4,10 @@ from pydantic import BaseModel
 
 
 class SMARTData(BaseModel):
-    """A SMART goal and plan."""
+    """
+    A SMART goal and plan.
+    Must match frontend/apps/frontend/models.ts
+    """
 
     goal: str  # SMART goal formulation
     plan: str  # action plan

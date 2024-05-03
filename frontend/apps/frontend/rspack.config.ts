@@ -1,3 +1,4 @@
+/* eslint @typescript-eslint/no-var-requires: "off" */
 const { composePlugins, withNx, withReact } = require('@nx/rspack');
 
 module.exports = composePlugins(withNx(), withReact(), (config) => {

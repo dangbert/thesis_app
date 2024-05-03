@@ -69,7 +69,7 @@ const HomePage = () => {
     courseIdx > -1 && courseIdx < courseList.length
       ? courseList[courseIdx]
       : null;
-  const curAs = asIdx > -1 && asIdx < asList.length ? asList[asIdx] : null;
+  const asData = asIdx > -1 && asIdx < asList.length ? asList[asIdx] : null;
 
   return (
     <div>
@@ -95,12 +95,12 @@ const HomePage = () => {
           </div>
         ))}
         <hr />
-        {curAs && (
+        {asData && (
           <>
             <Typography variant="h3" gutterBottom>
               Your Assignment:
             </Typography>
-            <AssignmentView data={curAs} />
+            <AssignmentView asData={asData} />
           </>
         )}
       </div>

@@ -1,5 +1,5 @@
 import { jsonOrError, API_PATH } from './common';
-import { AttemptCreate } from '../models';
+import * as models from '../models';
 
 const coursePath = `${API_PATH}/course`;
 
@@ -45,29 +45,27 @@ const attemptPath = `${API_PATH}/attempt`;
 export const listAttempts = async (assignment_id: string) => {
   const params = new URLSearchParams({ assignment_id });
   return await jsonOrError(
-    fetch(`${coursePath}/?${params}`, { method: 'GET' })
+    fetch(`${attemptPath}/?${params}`, { method: 'GET' })
   );
 };
 
 export const createAttempt = async (
-  assignment_id: string,
-  attempt: AttemptCreate
+  attempt: models.AttemptCreate
+  // ): Promise<models.AttemptPublic | { error: string }> => {
 ) => {
-  const formData = new FormData();
-  for (const [key, value] of Object.entries(attempt)) {
-    formData.append(key, value);
-  }
+  const params = new URLSearchParams({ assignment_id: attempt.assignment_id });
 
   return await jsonOrError(
-    fetch(attemptPath, {
+    fetch(`${attemptPath}/?${params}`, {
       method: 'PUT',
-      body: formData,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(attempt),
     })
   );
 };
 
 export const getAttempt = async (attempt_id: string) => {
   return await jsonOrError(
-    fetch(`${coursePath}/${attempt_id}`, { method: 'GET' })
+    fetch(`${attemptPath}/${attempt_id}`, { method: 'GET' })
   );
 };
