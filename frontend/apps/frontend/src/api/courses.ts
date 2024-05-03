@@ -8,14 +8,36 @@ export const listCourses = async () => {
   return await jsonOrError(fetch(`${coursePath}/`, { method: 'GET' }));
 };
 
-export const getCourse = async (id: string) => {
-  return await jsonOrError(fetch(`${coursePath}/${id}`, { method: 'GET' }));
+export const getCourse = async (course_id: string) => {
+  return await jsonOrError(
+    fetch(`${coursePath}/${course_id}`, { method: 'GET' })
+  );
 };
 
 // export const createCourse = async (id: string) => {
 //   const url = `${basePath}/${id}`;
 //   return await jsonOrError(fetch(url, { method: 'GET' }));
 // };
+
+// MARK: assignments
+export const listAssignments = async (course_id: string) => {
+  return await jsonOrError(
+    fetch(`${coursePath}/${course_id}/assignment`, { method: 'GET' })
+  );
+};
+
+export const getAssignment = async (
+  course_id: string,
+  assignment_id: string
+) => {
+  return await jsonOrError(
+    fetch(`${coursePath}/${course_id}/assignment/${assignment_id}/`, {
+      method: 'GET',
+    })
+  );
+};
+
+// TODO: createAssignment
 
 // MARK: attempts
 const attemptPath = `${API_PATH}/attempt`;
