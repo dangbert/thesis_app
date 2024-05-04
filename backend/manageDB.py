@@ -3,6 +3,7 @@
 import subprocess
 import argparse
 import app.database as database
+from app.models.user import User, Auth0UserInfo
 from app.settings import get_settings
 from sqlalchemy.orm import close_all_sessions
 from typing import Tuple
@@ -33,7 +34,17 @@ def main():
         help="ensure database is created and migrated to latest version (if ENV var AUTO_MIGRATE=1)",
     )
     parser.add_argument("--delete-db", action="store_true", help="delete DB and tables")
+    parser.add_argument(
+        "--create-user",
+        "-u",
+        action="store_true",
+        help="manually create a user (for testing)",
+    )
     args = parser.parse_args()
+
+    if args.create_user:
+        create_user()
+        exit(0)
 
     if args.init_db_empty:
         init_db(createTables=False)
@@ -49,6 +60,20 @@ def main():
 
     parser.print_help()
     exit(1)
+
+
+def create_user():
+    with database.SessionFactory() as session:
+        email = input("Enter email > ").strip()
+        name = input("Enter name > ").strip()
+        sub = f"auth0|{str(hash(email))}"
+        # validate email
+
+        Auth0UserInfo.model_validate({"email": email, "name": name, "sub": sub})
+        user = User(email=email, name=name, sub=sub)
+        session.add(user)
+        session.commit()
+        print(f"created user: {user.id}")
 
 
 def init_db(createTables: bool = False):

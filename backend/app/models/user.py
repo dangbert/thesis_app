@@ -9,11 +9,16 @@ from pydantic import BaseModel, EmailStr
 class User(Base):
     __tablename__ = "user"
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    name: Mapped[str]
+    sub: Mapped[str] = mapped_column(String, unique=True, nullable=False)  # from Auth0
     # TODO: deprecate email_verified, the social loging with Auth0 handles this implicitly
     email_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     email_token: Mapped[Optional[str]] = mapped_column(
         String, unique=True, nullable=True, default=lambda: secrets.token_urlsafe(16)
     )
+
+    def to_public(self) -> "UserPublic":
+        return UserPublic(sub=self.sub, name=self.name, email=self.email)
 
 
 class Auth0UserInfo(BaseModel):
@@ -25,3 +30,7 @@ class Auth0UserInfo(BaseModel):
     sub: str
     name: str
     email: EmailStr
+
+
+class UserPublic(Auth0UserInfo):
+    pass

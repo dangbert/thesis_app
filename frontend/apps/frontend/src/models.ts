@@ -4,6 +4,13 @@ export interface SMARTData {
   plan: string;
 }
 
+/* must match backend/app/models/user.py */
+export interface UserPublic {
+  sub: string;
+  name: string;
+  email: string;
+}
+
 /* must match backend/app/models/course_partials.py */
 
 export interface CourseCreate {

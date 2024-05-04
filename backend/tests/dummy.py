@@ -10,8 +10,11 @@ from typing import Any, Optional
 DUMMY_ID = UUID("cc2d7ce4-170f-4817-b4a9-76e11d5f9c56")
 
 
-def make_user(session: Session, email: str = "testuser@example.com") -> User:
-    user = User(email=email)
+def make_user(
+    session: Session, email: str = "testuser@example.com", name: str = "Jane van Doe"
+) -> User:
+    sub = f"auth0|{str(hash(email))}"
+    user = User(email=email, name=name, sub=sub)
     session.add(user)
     session.commit()
     return user
