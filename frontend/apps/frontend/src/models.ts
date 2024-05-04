@@ -34,6 +34,7 @@ export interface AssignmentPublic extends AssignmentCreate {
 
 export interface AttemptCreate {
   assignment_id: string;
+  // TODO: no need to store user_id it should be in the cookie
   user_id: string;
   /* eslint-disable  @typescript-eslint/no-explicit-any */
   data: SMARTData | { [key: string]: any };

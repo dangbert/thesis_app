@@ -56,7 +56,7 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
     const response = await courseApi.createAttempt(dummyAttempt);
     if (!response.error) {
       console.log('Attempt created:', response.data);
-      setAttempts([...attempts, response.data]);
+      setAttempts((prev) => [...prev, response.data]);
     } else {
       console.error('Error creating attempt:', response.error);
     }

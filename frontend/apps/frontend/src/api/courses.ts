@@ -31,13 +31,24 @@ export const getAssignment = async (
   assignment_id: string
 ) => {
   return await jsonOrError(
-    fetch(`${coursePath}/${course_id}/assignment/${assignment_id}/`, {
+    fetch(`${coursePath}/${course_id}/assignment`, {
       method: 'GET',
     })
   );
 };
 
-// TODO: createAssignment
+export const createAssignment = async (
+  course_id: string,
+  attempt: models.AssignmentCreate
+) => {
+  return await jsonOrError(
+    fetch(`${coursePath}/${course_id}/assignment`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(attempt),
+    })
+  );
+};
 
 // MARK: attempts
 const attemptPath = `${API_PATH}/attempt`;
@@ -46,6 +57,12 @@ export const listAttempts = async (assignment_id: string) => {
   const params = new URLSearchParams({ assignment_id });
   return await jsonOrError(
     fetch(`${attemptPath}/?${params}`, { method: 'GET' })
+  );
+};
+
+export const getAttempt = async (attempt_id: string) => {
+  return await jsonOrError(
+    fetch(`${attemptPath}/${attempt_id}`, { method: 'GET' })
   );
 };
 
@@ -61,11 +78,5 @@ export const createAttempt = async (
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(attempt),
     })
-  );
-};
-
-export const getAttempt = async (attempt_id: string) => {
-  return await jsonOrError(
-    fetch(`${attemptPath}/${attempt_id}`, { method: 'GET' })
   );
 };

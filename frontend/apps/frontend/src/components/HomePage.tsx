@@ -25,6 +25,11 @@ const HomePage = () => {
       id: '6b3c87e9-7ad2-407b-bb29-c8ab919bda5d',
     };
     userCtx.onChange(dummyUser);
+
+    let cancel = false;
+    (async () => {
+      return () => (cancel = true);
+    })();
   }, []);
 
   // load course list
@@ -83,15 +88,42 @@ const HomePage = () => {
       : null;
   const asData = asIdx > -1 && asIdx < asList.length ? asList[asIdx] : null;
 
+  const handleCreateAs = async () => {
+    if (!userCtx.user || !curCourse) return;
+    console.log('creating attempt');
+    const dummyAs: models.AssignmentCreate = {
+      name: 'dummy assignment',
+      about: '**more info to come**\n:)',
+    };
+    const response = await courseApi.createAssignment(curCourse.id, dummyAs);
+    if (!response.error) {
+      console.log('Assignment created:', response.data);
+      setAsList((prev) => [...prev, response.data]);
+    } else {
+      console.error('Error creating assignment:', response.error);
+    }
+  };
+  if (!userCtx.user) return; // TODO: redirect to login page?
+
   return (
     <div>
       <Typography variant="h1" gutterBottom>
-        Welcome Home{' '}
-        <Button variant="contained" href="/join">
-          Onboard now!
-        </Button>
-        <Link href="/join">Onboard!</Link>
+        Welcome Home {userCtx.user?.name}
       </Typography>
+      <Typography variant="body1">
+        there are {courseList.length} courses + {asList.length} assignments
+      </Typography>
+      <br />
+
+      <Button variant="contained" onClick={handleCreateAs}>
+        Create Assignment
+      </Button>
+
+      <Button variant="contained" href="/join">
+        Onboard now!
+      </Button>
+      <Link href="/join">Onboard!</Link>
+
       <div style={{ border: '2px solid purple' }}>
         {/* <AssignmentView
           name="Smart"
