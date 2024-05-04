@@ -4,6 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from typing import Optional
 import secrets
 from pydantic import BaseModel, EmailStr
+from uuid import UUID
 
 
 class User(Base):
@@ -18,7 +19,7 @@ class User(Base):
     )
 
     def to_public(self) -> "UserPublic":
-        return UserPublic(sub=self.sub, name=self.name, email=self.email)
+        return UserPublic(id=self.id, sub=self.sub, name=self.name, email=self.email)
 
 
 class Auth0UserInfo(BaseModel):
@@ -33,4 +34,4 @@ class Auth0UserInfo(BaseModel):
 
 
 class UserPublic(Auth0UserInfo):
-    pass
+    id: UUID

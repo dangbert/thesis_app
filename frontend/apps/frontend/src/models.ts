@@ -9,6 +9,7 @@ export interface UserPublic {
   sub: string;
   name: string;
   email: string;
+  id: string;
 }
 
 /* must match backend/app/models/course_partials.py */

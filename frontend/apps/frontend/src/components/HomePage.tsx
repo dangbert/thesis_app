@@ -4,6 +4,7 @@ import Button from '@mui/material/Button';
 import Link from '@mui/material/Link';
 import AssignmentView from './Assignment';
 
+import { useUserContext } from '../providers';
 import * as models from '../models';
 import * as courseApi from '../api/courses';
 
@@ -14,6 +15,17 @@ const HomePage = () => {
   const [asList, setAsList] = useState<models.AssignmentPublic[]>([]);
   // curent assignment index
   const [asIdx, setAsIdx] = useState<number>(-1);
+  const userCtx = useUserContext();
+
+  useEffect(() => {
+    const dummyUser = {
+      email: 'd.engbert@student.vu.nl',
+      name: 'Daniel Engbert',
+      sub: 'auth0|447806806544022035',
+      id: '6b3c87e9-7ad2-407b-bb29-c8ab919bda5d',
+    };
+    userCtx.onChange(dummyUser);
+  }, []);
 
   // load course list
   useEffect(() => {

@@ -4,6 +4,7 @@ import { Button } from '@mui/material';
 import { AssignmentPublic } from '../models';
 import * as models from '../models';
 import * as courseApi from '../api/courses';
+import { useUserContext } from '../providers';
 
 const DUMMY_ID = 'cc2d7ce4-170f-4817-b4a9-76e11d5f9c56';
 interface IAssignmentViewProps {
@@ -13,6 +14,7 @@ interface IAssignmentViewProps {
 
 const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
   const [attempts, setAttempts] = useState<models.AttemptPublic[]>([]);
+  const userCtx = useUserContext();
 
   // load attempts
   useEffect(() => {
@@ -40,6 +42,7 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
 
   // Function to handle button click to create an attempt
   const handleCreateAttempt = async () => {
+    if (!userCtx.user) return;
     console.log('creating attempt');
     const dummySMART: models.SMARTData = {
       goal: 'Ik plan om mijn presentatietechniek te verbeteren door het gebruik van handgebaren.',
@@ -47,7 +50,7 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
     };
     const dummyAttempt: models.AttemptCreate = {
       assignment_id: asData.id,
-      user_id: DUMMY_ID,
+      user_id: userCtx.user.id,
       data: dummySMART,
     };
     const response = await courseApi.createAttempt(dummyAttempt);
@@ -59,11 +62,15 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
     }
   };
 
+  if (!userCtx.user) {
+    return <div>not logged in...</div>;
+  }
+
   return (
     <div>
       <div>
-        welcome to the assignment {asData.name} (you have made {attempts.length}{' '}
-        attempts)
+        welcome {userCtx.user.name} to the assignment {asData.name} (you have
+        made {attempts.length} attempts)
       </div>
       <Button variant="contained" onClick={handleCreateAttempt}>
         Create Attempt
