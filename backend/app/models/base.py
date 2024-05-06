@@ -4,6 +4,7 @@ from sqlalchemy import MetaData, DateTime, func
 from sqlalchemy.dialects.postgresql import UUID as PUUID
 from uuid import UUID
 from typing import Optional
+from app.models.course_partials import DateFields
 
 
 # https://stackoverflow.com/q/71451982
@@ -38,3 +39,6 @@ class Base(_Base):  # type:ignore
     updated_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), onupdate=func.current_timestamp()
     )
+
+    def to_public(self) -> DateFields:
+        return DateFields(created_at=self.created_at, updated_at=self.updated_at)

@@ -3,8 +3,8 @@ from sqlalchemy import String, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 from typing import Optional
 import secrets
-from pydantic import BaseModel, EmailStr
 from uuid import UUID
+from app.models.course_partials import UserPublic, Auth0UserInfo
 
 
 class User(Base):
@@ -19,19 +19,10 @@ class User(Base):
     )
 
     def to_public(self) -> "UserPublic":
-        return UserPublic(id=self.id, sub=self.sub, name=self.name, email=self.email)
-
-
-class Auth0UserInfo(BaseModel):
-    """
-    Schema for user info returned by Auth0 upon login.
-    https://auth0.com/docs/api/authentication#user-profile
-    """
-
-    sub: str
-    name: str
-    email: EmailStr
-
-
-class UserPublic(Auth0UserInfo):
-    id: UUID
+        return UserPublic(
+            id=self.id,
+            sub=self.sub,
+            name=self.name,
+            email=self.email,
+            **super().to_public().model_dump(),
+        )

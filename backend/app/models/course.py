@@ -42,7 +42,12 @@ class Course(Base):
     )
 
     def to_public(self) -> CoursePublic:
-        return CoursePublic(id=self.id, name=self.name, about=self.about)
+        return CoursePublic(
+            id=self.id,
+            name=self.name,
+            about=self.about,
+            **super().to_public().model_dump(),
+        )
 
 
 # class RoleEnum()
@@ -67,7 +72,12 @@ class Assignment(Base):
     )
 
     def to_public(self) -> AssignmentPublic:
-        return AssignmentPublic(id=self.id, name=self.name, about=self.about)
+        return AssignmentPublic(
+            id=self.id,
+            name=self.name,
+            about=self.about,
+            **super().to_public().model_dump(),
+        )
 
 
 class Attempt(Base):
@@ -97,11 +107,16 @@ class Attempt(Base):
     )
 
     def to_public(self) -> AttemptPublic:
+        feed_objs = [feed.to_public() for feed in self.feedback]
+        feed_objs = sorted(feed_objs, key=lambda x: x.created_at)
+
         return AttemptPublic(
             id=self.id,
             assignment_id=self.assignment_id,
             user_id=self.user_id,
             data=self.data,
+            feedback=feed_objs,
+            **super().to_public().model_dump(),
         )
 
 
@@ -131,7 +146,12 @@ class File(Base):
         # read URL is the API endpoint to GET the file  e.g. "/api/v1/file/c773cf48-cf50-4a21-a8e0-863cca1c8e3b"
         # see backend/app/routes/files.py
         read_url = f"{settings.api_v1_str}/file/{self.id}"
-        return FilePublic(id=self.id, filename=self.filename, read_url=read_url)
+        return FilePublic(
+            id=self.id,
+            filename=self.filename,
+            read_url=read_url,
+            **super().to_public().model_dump(),
+        )
 
     @property
     def disk_path(self) -> str:
@@ -183,6 +203,7 @@ class Feedback(Base):
             user_id=self.user_id,
             is_ai=self.is_ai,
             data=self.data,
+            **super().to_public().model_dump(),
         )
 
 

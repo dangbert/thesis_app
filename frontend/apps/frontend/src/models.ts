@@ -1,3 +1,11 @@
+/**
+ * Date fields as shown in backend/app/models/base.py:Base
+ */
+interface DateFields {
+  created_at: string;
+  updated_at?: string;
+}
+
 /* must match backend/app/hardcoded.py */
 export interface SMARTData {
   goal: string;
@@ -10,7 +18,7 @@ export interface FeedbackData {
 }
 
 /* must match backend/app/models/user.py */
-export interface UserPublic {
+export interface UserPublic extends DateFields {
   sub: string;
   name: string;
   email: string;
@@ -24,7 +32,7 @@ export interface CourseCreate {
   about: string;
 }
 
-export interface CoursePublic extends CourseCreate {
+export interface CoursePublic extends CourseCreate, DateFields {
   id: string;
 }
 
@@ -33,7 +41,7 @@ export interface AssignmentCreate {
   about: string;
 }
 
-export interface AssignmentPublic extends AssignmentCreate {
+export interface AssignmentPublic extends AssignmentCreate, DateFields {
   id: string;
 }
 
@@ -45,17 +53,18 @@ export interface AttemptCreate {
   data: SMARTData | { [key: string]: any };
 }
 
-export interface AttemptPublic extends AttemptCreate {
+export interface AttemptPublic extends AttemptCreate, DateFields {
   id: string;
+  feedback: FeedbackPublic[];
 }
 
-export interface FilePublic {
+export interface FilePublic extends DateFields {
   id: string;
   filename: string;
   read_url: string;
 }
 
-export interface FeedbackPublic {
+export interface FeedbackPublic extends DateFields {
   id: string;
   attempt_id: string;
   user_id?: string;
