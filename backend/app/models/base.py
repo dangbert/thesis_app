@@ -4,7 +4,7 @@ from sqlalchemy import MetaData, DateTime, func
 from sqlalchemy.dialects.postgresql import UUID as PUUID
 from uuid import UUID
 from typing import Optional
-from app.models.course_partials import DateFields
+from app.models.schemas import DateFields
 
 
 # https://stackoverflow.com/q/71451982

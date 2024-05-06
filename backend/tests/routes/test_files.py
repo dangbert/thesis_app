@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from tests.dummy import make_user, make_file
 from app.models.course import File
-from app.models.course_partials import FilePublic
+from app.models.schemas import FilePublic
 from io import BytesIO
 import os
 

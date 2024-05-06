@@ -4,7 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from typing import Optional
 import secrets
 from uuid import UUID
-from app.models.course_partials import UserPublic, Auth0UserInfo
+from app.models.schemas import UserPublic, Auth0UserInfo
 
 
 class User(Base):

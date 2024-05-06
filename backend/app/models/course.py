@@ -1,7 +1,7 @@
 from app.models.base import Base
 from app.models.user import User
 from app.settings import get_settings
-from app.models.course_partials import (
+from app.models.schemas import (
     CourseCreate,
     CoursePublic,
     AssignmentCreate,
