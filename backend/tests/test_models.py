@@ -1,7 +1,9 @@
 from app.models import User, Course, Assignment
+import app.models as models
 from uuid import UUID
 from sqlalchemy.orm import Session
-from tests.dummy import make_user, make_course
+from tests.dummy import make_user, make_course, make_assignment, example_feedback_data
+import tests.dummy as dummy
 
 
 def test_user(session: Session):
@@ -42,3 +44,25 @@ def test_integration__user_course_assignment(session: Session):
     session.delete(course)
     session.commit()
     assert session.query(Assignment).count() == 0, "cascade delete failed"
+
+
+def test_attempt_feedback(session):
+    course = make_course(session)
+    as1 = make_assignment(session, course.id)
+    user = make_user(session)
+
+    at1 = dummy.make_attempt(session, as1.id, user.id)
+    assert at1.feedback == []
+
+    feedback = models.Feedback(
+        attempt_id=at1.id,
+        user_id=user.id,
+        is_ai=False,
+        data=example_feedback_data.model_dump(),
+    )
+    session.add(feedback)
+    session.commit()
+    session.add(models.AttemptFeedback(attempt_id=at1.id, feedback_id=feedback.id))
+    session.commit()
+
+    assert len(at1.feedback) == 1 and at1.feedback[0].id == feedback.id

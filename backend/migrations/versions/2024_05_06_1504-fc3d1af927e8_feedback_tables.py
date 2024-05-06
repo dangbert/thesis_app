@@ -1,8 +1,8 @@
 """feedback tables
 
-Revision ID: bec5a75fc99b
+Revision ID: fc3d1af927e8
 Revises: a1e2dc450abe
-Create Date: 2024-05-06 14:43:53.199880+00:00
+Create Date: 2024-05-06 15:04:28.267753+00:00
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "bec5a75fc99b"
+revision: str = "fc3d1af927e8"
 down_revision: Union[str, None] = "a1e2dc450abe"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -42,7 +42,7 @@ def upgrade() -> None:
     )
     op.create_table(
         "attempt_feedback",
-        sa.Column("atttempt_id", sa.UUID(), nullable=False),
+        sa.Column("attempt_id", sa.UUID(), nullable=False),
         sa.Column("feedback_id", sa.UUID(), nullable=False),
         sa.Column(
             "id", sa.UUID(), server_default=sa.text("gen_random_uuid()"), nullable=False
@@ -50,9 +50,9 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(
-            ["atttempt_id"],
+            ["attempt_id"],
             ["attempt.id"],
-            name=op.f("fk_attempt_feedback_atttempt_id_attempt"),
+            name=op.f("fk_attempt_feedback_attempt_id_attempt"),
         ),
         sa.ForeignKeyConstraint(
             ["feedback_id"],

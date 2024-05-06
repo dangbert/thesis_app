@@ -188,7 +188,7 @@ class Feedback(Base):
 
 class AttemptFeedback(Base):
     __tablename__ = "attempt_feedback"
-    atttempt_id: Mapped[UUID] = mapped_column(
+    attempt_id: Mapped[UUID] = mapped_column(
         PUUID(as_uuid=True),
         ForeignKey("attempt.id"),
     )

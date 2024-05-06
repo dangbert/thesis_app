@@ -1,7 +1,7 @@
 """Utilities for creating dummy data for testing."""
 
 from app.models import User, Course, Assignment, Attempt, File
-from app.hardcoded import SMARTData
+from app.hardcoded import SMARTData, FeedbackData
 from app.settings import get_settings
 from sqlalchemy.orm import Session
 from uuid import UUID
@@ -38,6 +38,9 @@ def make_assignment(
 
 
 example_smart_data = SMARTData(goal="test goal", plan="test plan")
+example_feedback_data = FeedbackData(
+    feedback="good start, but try again", approved=False
+)
 
 
 def make_attempt(
