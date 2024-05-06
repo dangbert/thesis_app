@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.deps import SessionDep
+from app.models.schemas import FeedbackCreate
 from app.models.course import (
     Course,
     CourseCreate,
@@ -10,8 +11,11 @@ from app.models.course import (
     Attempt,
     AttemptCreate,
     AttemptPublic,
+    AttemptFeedback,
+    FeedbackPublic,
+    Feedback,
 )
-from app.hardcoded import SMARTData
+from app.hardcoded import SMARTData, FeedbackData
 from uuid import UUID
 from pydantic import ValidationError
 
@@ -65,3 +69,27 @@ async def create_attempt(
     session.add(attempt)
     session.commit()
     return attempt.to_public()
+
+
+@router.put("/{attempt_id}/feedback", status_code=201)
+async def create_feedback(
+    attempt_id: UUID, body: FeedbackCreate, session: SessionDep
+) -> FeedbackPublic:
+    attempt = session.get(Attempt, attempt_id)
+    if not attempt:
+        raise HTTPException(status_code=404, detail="Attempt not found")
+
+    try:
+        FeedbackData(**body.data)
+    except ValidationError:
+        raise HTTPException(status_code=400, detail="Feedback data in incorrect format")
+
+    # TODO: get user from cookies
+    feedback = Feedback(
+        attempt_id=attempt_id, user_id=body.user_id, is_ai=False, data=body.data
+    )
+    session.add(feedback)
+    session.flush()  # to get ID
+    session.add(AttemptFeedback(attempt_id=attempt.id, feedback_id=feedback.id))
+    session.commit()
+    return feedback.to_public()

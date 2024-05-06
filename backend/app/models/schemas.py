@@ -1,5 +1,5 @@
 """
-Pydantic models for partial representations of course-related SQLAlchemy models.
+Pydantic models for partial representations of SQLAlchemy models.
 Must match frontend/apps/frontend/models.ts
 """
 
@@ -66,6 +66,12 @@ class FilePublic(DateFields):
     id: UUID
     filename: str
     read_url: str
+
+
+class FeedbackCreate(BaseModel):
+    attempt_id: UUID
+    user_id: Optional[UUID]
+    data: dict[str, Any]
 
 
 class FeedbackPublic(DateFields):

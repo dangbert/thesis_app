@@ -4,7 +4,8 @@ from app.models.course import (
     AttemptCreate,
     AttemptPublic,
 )
-from app.hardcoded import SMARTData
+import app.models.schemas as schemas
+from app.hardcoded import SMARTData, FeedbackData
 from tests.dummy import (
     DUMMY_ID,
     make_user,
@@ -13,6 +14,7 @@ from tests.dummy import (
     make_attempt,
     example_smart_data,
 )
+import tests.dummy as dummy
 import json
 
 
@@ -81,3 +83,27 @@ def test_create_attempt(client, settings, session):
     assert res.status_code == 201
     created = session.get(Attempt, res.json()["id"])
     assert AttemptPublic(**res.json()) == created.to_public()
+
+
+def test_create_feedback(client, settings, session):
+    course = make_course(session)
+    as1 = make_assignment(session, course.id)
+    user = make_user(session)
+    at1 = make_attempt(session, as1.id, user.id)
+
+    obj = schemas.FeedbackCreate(
+        attempt_id=at1.id,
+        user_id=user.id,
+        data=dummy.example_feedback_data.model_dump(),
+    )
+
+    res = client.put(
+        f"{settings.api_v1_str}/attempt/{at1.id}/feedback",
+        json=json.loads(obj.model_dump_json()),
+    )
+    assert res.status_code == 201
+    session.refresh(at1)
+    assert (
+        len(at1.feedback) == 1
+        and FeedbackData(**at1.feedback[0].data) == dummy.example_feedback_data
+    )

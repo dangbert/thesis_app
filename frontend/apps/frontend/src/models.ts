@@ -17,15 +17,13 @@ export interface FeedbackData {
   plan: string;
 }
 
-/* must match backend/app/models/user.py */
+/* must match backend/app/models/schemas.py */
 export interface UserPublic extends DateFields {
   sub: string;
   name: string;
   email: string;
   id: string;
 }
-
-/* must match backend/app/models/course_partials.py */
 
 export interface CourseCreate {
   name: string;
@@ -50,7 +48,7 @@ export interface AttemptCreate {
   // TODO: no need to store user_id it should be in the cookie
   user_id: string;
   /* eslint-disable  @typescript-eslint/no-explicit-any */
-  data: SMARTData | { [key: string]: any };
+  data: SMARTData; // | { [key: string]: any };
 }
 
 export interface AttemptPublic extends AttemptCreate, DateFields {
@@ -62,6 +60,12 @@ export interface FilePublic extends DateFields {
   id: string;
   filename: string;
   read_url: string;
+}
+
+export interface FeedbackCreate {
+  attempt_id: string;
+  user_id: string;
+  data: FeedbackData;
 }
 
 export interface FeedbackPublic extends DateFields {
