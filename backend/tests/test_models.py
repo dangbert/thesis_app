@@ -35,6 +35,9 @@ def test_integration__user_course_assignment(session: Session):
     session.commit()
     assert len(course.assignments) == 1
 
+    assert len(course.files) == 0
+    assert len(a1.files) == 0
+
     # delete course then check if assignments are deleted
     session.delete(course)
     session.commit()

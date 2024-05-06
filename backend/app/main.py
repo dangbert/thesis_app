@@ -12,13 +12,14 @@ import config
 # TODO: consider using this https://github.com/tiangolo/full-stack-fastapi-template/blob/a230f4fb2ca0e341e74727bae695687f1ea124b0/backend/app/main.py
 # from starlette.middleware.cors import CORSMiddleware
 
-from app.routes import courses, attempts, auth
+from app.routes import courses, attempts, auth, files
 
 logger = config.get_logger(__name__)
 api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(courses.router, prefix="/course", tags=["courses"])
-api_router.include_router(attempts.router, prefix="/attempt", tags=["attempt"])
+api_router.include_router(attempts.router, prefix="/attempt", tags=["attempts"])
+api_router.include_router(files.router, prefix="/file", tags=["files"])
 # api_router.include_router(users.router, prefix="/user", tags=["user"])
 
 

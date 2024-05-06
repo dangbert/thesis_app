@@ -30,6 +30,12 @@ class Course(Base):
         # if this course is deleted, automatically delete all its assignments
         cascade="all, delete-orphan",
     )
+    files: Mapped[list["File"]] = relationship(
+        "File",
+        secondary="course_file",
+        back_populates="courses",
+        cascade="all, delete",
+    )
 
     def to_public(self) -> CoursePublic:
         return CoursePublic(id=self.id, name=self.name, about=self.about)
@@ -49,6 +55,13 @@ class Assignment(Base):
 
     course: Mapped["Course"] = relationship("Course", back_populates="assignments")
 
+    files: Mapped[list["File"]] = relationship(
+        "File",
+        secondary="assignment_file",
+        back_populates="assignments",
+        cascade="all, delete",
+    )
+
     def to_public(self) -> AssignmentPublic:
         return AssignmentPublic(id=self.id, name=self.name, about=self.about)
 
@@ -65,6 +78,14 @@ class Attempt(Base):
     assignment: Mapped["Assignment"] = relationship("Assignment")
     user: Mapped["User"] = relationship("User")
 
+    # for now, an attempt can only have one file
+    file_id: Mapped[Optional[UUID]] = mapped_column(
+        PUUID(as_uuid=True),
+        ForeignKey("file.id"),
+    )
+
+    file: Mapped["File"] = relationship("File", back_populates="attempt")
+
     def to_public(self) -> AttemptPublic:
         return AttemptPublic(
             id=self.id,
@@ -72,3 +93,54 @@ class Attempt(Base):
             user_id=self.user_id,
             data=self.data,
         )
+
+
+class File(Base):
+    __tablename__ = "file"
+    filename: Mapped[str]
+    user_id: Mapped[UUID] = mapped_column(PUUID(as_uuid=True), ForeignKey("user.id"))
+
+    user: Mapped["User"] = relationship("User")
+
+    courses: Mapped[list["Course"]] = relationship(
+        "Course",
+        secondary="course_file",
+        back_populates="files",
+    )
+    assignments: Mapped[list["Assignment"]] = relationship(
+        "Assignment",
+        secondary="assignment_file",
+        back_populates="files",
+    )
+    attempt: Mapped[Optional["Attempt"]] = relationship(
+        "Attempt", back_populates="file"
+    )
+
+
+class AssignmentFile(Base):
+    __tablename__ = "assignment_file"
+    assignment_id: Mapped[UUID] = mapped_column(
+        PUUID(as_uuid=True),
+        ForeignKey("assignment.id"),
+    )
+    file_id: Mapped[UUID] = mapped_column(
+        PUUID(as_uuid=True),
+        ForeignKey("file.id"),
+    )
+
+    assignment: Mapped["Assignment"] = relationship("Assignment")
+    file: Mapped["File"] = relationship("File")
+
+
+class CourseFile(Base):
+    __tablename__ = "course_file"
+    course_id: Mapped[UUID] = mapped_column(
+        PUUID(as_uuid=True),
+        ForeignKey("course.id"),
+    )
+    file_id: Mapped[UUID] = mapped_column(
+        PUUID(as_uuid=True),
+        ForeignKey("file.id"),
+    )
+    course: Mapped["Course"] = relationship("Course")
+    file: Mapped["File"] = relationship("File")

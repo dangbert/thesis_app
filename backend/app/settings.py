@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     env: Literal["TEST", "DEV", "PRD"]
     api_v1_str: str = "/api/v1"
 
+    # files
+    file_dir: Path = Path("/files")
+
     # session management
     secret_key: str
     session_expiration_secs: int = 60 * 60 * 24 * 7
