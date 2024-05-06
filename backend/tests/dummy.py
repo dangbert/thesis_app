@@ -1,7 +1,8 @@
 """Utilities for creating dummy data for testing."""
 
-from app.models import User, Course, Assignment, Attempt
+from app.models import User, Course, Assignment, Attempt, File
 from app.hardcoded import SMARTData
+from app.settings import get_settings
 from sqlalchemy.orm import Session
 from uuid import UUID
 from typing import Any, Optional
@@ -20,14 +21,16 @@ def make_user(
     return user
 
 
-def make_course(session: Session, name="Test Course"):
+def make_course(session: Session, name="Test Course") -> Course:
     course = Course(name=name)
     session.add(course)
     session.commit()
     return course
 
 
-def make_assignment(session: Session, course_id: UUID, name="Test Assignment"):
+def make_assignment(
+    session: Session, course_id: UUID, name="Test Assignment"
+) -> Assignment:
     assignment = Assignment(course_id=course_id, name=name)
     session.add(assignment)
     session.commit()
@@ -42,10 +45,29 @@ def make_attempt(
     assignment_id: UUID,
     user_id: UUID,
     data: Optional[dict[str, Any]] = None,
-):
+) -> Attempt:
     if data is None:
         data = example_smart_data.model_dump()
     attempt = Attempt(assignment_id=assignment_id, user_id=user_id, data=data)
     session.add(attempt)
     session.commit()
     return attempt
+
+
+def make_file(
+    session: Session,
+    user_id: UUID,
+    filename: str = "dummyfile.txt",
+    ext: str = ".txt",
+    content: bytes = b"dummy file :)",
+) -> File:
+    file = File(
+        filename=filename,
+        ext=ext,
+        user_id=user_id,
+    )
+    session.add(file)
+    session.commit()
+    with open(file.disk_path, "wb") as f:
+        f.write(content)
+    return file

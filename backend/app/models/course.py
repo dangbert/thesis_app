@@ -121,10 +121,15 @@ class File(Base):
 
     def to_public(self) -> FilePublic:
         settings = get_settings()
-        read_url = os.path.join(
-            settings.api_v1_str, settings.file_dir, f"{self.id}.{self.ext}"
-        )
+        # read URL is the API endpoint to GET the file  e.g. "/api/v1/file/c773cf48-cf50-4a21-a8e0-863cca1c8e3b"
+        # see backend/app/routes/files.py
+        read_url = f"{settings.api_v1_str}/file/{self.id}"
         return FilePublic(id=self.id, name=self.filename, read_url=read_url)
+
+    @property
+    def disk_path(self) -> str:
+        settings = get_settings()
+        return os.path.join(settings.file_dir, f"{self.id}.{self.ext}")
 
 
 class AssignmentFile(Base):
