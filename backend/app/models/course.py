@@ -138,9 +138,6 @@ class AssignmentFile(Base):
         ForeignKey("file.id"),
     )
 
-    assignment: Mapped["Assignment"] = relationship("Assignment")
-    file: Mapped["File"] = relationship("File")
-
 
 class CourseFile(Base):
     __tablename__ = "course_file"
@@ -152,5 +149,3 @@ class CourseFile(Base):
         PUUID(as_uuid=True),
         ForeignKey("file.id"),
     )
-    course: Mapped["Course"] = relationship("Course")
-    file: Mapped["File"] = relationship("File")
