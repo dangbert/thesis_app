@@ -4,6 +4,11 @@ export interface SMARTData {
   plan: string;
 }
 
+export interface FeedbackData {
+  feedback: string;
+  plan: string;
+}
+
 /* must match backend/app/models/user.py */
 export interface UserPublic {
   sub: string;
@@ -42,4 +47,18 @@ export interface AttemptCreate {
 
 export interface AttemptPublic extends AttemptCreate {
   id: string;
+}
+
+export interface FilePublic {
+  id: string;
+  filename: string;
+  read_url: string;
+}
+
+export interface FeedbackPublic {
+  id: string;
+  attempt_id: string;
+  user_id?: string;
+  is_ai: boolean;
+  data: FeedbackData;
 }

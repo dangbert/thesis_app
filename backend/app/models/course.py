@@ -9,6 +9,7 @@ from app.models.course_partials import (
     AttemptCreate,
     AttemptPublic,
     FilePublic,
+    FeedbackPublic,
 )
 from sqlalchemy import String, ForeignKey, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -89,6 +90,12 @@ class Attempt(Base):
 
     file: Mapped["File"] = relationship("File", back_populates="attempt")
 
+    feedback: Mapped[list["Feedback"]] = relationship(
+        "Feedback",
+        secondary="attempt_feedback",
+        cascade="all, delete",
+    )
+
     def to_public(self) -> AttemptPublic:
         return AttemptPublic(
             id=self.id,
@@ -124,7 +131,7 @@ class File(Base):
         # read URL is the API endpoint to GET the file  e.g. "/api/v1/file/c773cf48-cf50-4a21-a8e0-863cca1c8e3b"
         # see backend/app/routes/files.py
         read_url = f"{settings.api_v1_str}/file/{self.id}"
-        return FilePublic(id=self.id, name=self.filename, read_url=read_url)
+        return FilePublic(id=self.id, filename=self.filename, read_url=read_url)
 
     @property
     def disk_path(self) -> str:
@@ -153,4 +160,39 @@ class CourseFile(Base):
     file_id: Mapped[UUID] = mapped_column(
         PUUID(as_uuid=True),
         ForeignKey("file.id"),
+    )
+
+
+class Feedback(Base):
+    __tablename__ = "feedback"
+    attempt_id: Mapped[UUID] = mapped_column(
+        PUUID(as_uuid=True),
+        ForeignKey("attempt.id"),
+    )
+    user_id: Mapped[Optional[UUID]] = mapped_column(
+        PUUID(as_uuid=True),
+        ForeignKey("user.id"),
+    )
+    is_ai: Mapped[bool]
+    data: Mapped[dict[str, Any]] = mapped_column(JSON)
+
+    def to_public(self) -> FeedbackPublic:
+        return FeedbackPublic(
+            id=self.id,
+            attempt_id=self.attempt_id,
+            user_id=self.user_id,
+            is_ai=self.is_ai,
+            data=self.data,
+        )
+
+
+class AttemptFeedback(Base):
+    __tablename__ = "attempt_feedback"
+    atttempt_id: Mapped[UUID] = mapped_column(
+        PUUID(as_uuid=True),
+        ForeignKey("attempt.id"),
+    )
+    feedback_id: Mapped[UUID] = mapped_column(
+        PUUID(as_uuid=True),
+        ForeignKey("feedback.id"),
     )

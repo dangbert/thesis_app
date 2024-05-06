@@ -5,7 +5,7 @@ Must match frontend/apps/frontend/models.ts
 
 from uuid import UUID
 from pydantic import BaseModel
-from typing import Any
+from typing import Any, Optional
 
 
 class CourseCreate(BaseModel):
@@ -40,5 +40,13 @@ class AttemptPublic(AttemptCreate):
 
 class FilePublic(BaseModel):
     id: UUID
-    name: str
+    filename: str
     read_url: str
+
+
+class FeedbackPublic(BaseModel):
+    id: UUID
+    attempt_id: UUID
+    user_id: Optional[UUID]
+    is_ai: bool
+    data: dict[str, Any]
