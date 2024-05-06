@@ -36,3 +36,9 @@ class AttemptCreate(BaseModel):
 
 class AttemptPublic(AttemptCreate):
     id: UUID
+
+
+class FilePublic(BaseModel):
+    id: UUID
+    name: str
+    read_url: str

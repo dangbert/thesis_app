@@ -1,5 +1,6 @@
 from app.models.base import Base
 from app.models.user import User
+from app.settings import get_settings
 from app.models.course_partials import (
     CourseCreate,
     CoursePublic,
@@ -7,11 +8,13 @@ from app.models.course_partials import (
     AssignmentPublic,
     AttemptCreate,
     AttemptPublic,
+    FilePublic,
 )
 from sqlalchemy import String, ForeignKey, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PUUID
 from uuid import UUID
+import os
 from typing import Optional, Any
 import secrets
 
@@ -99,9 +102,9 @@ class File(Base):
     __tablename__ = "file"
     filename: Mapped[str]
     user_id: Mapped[UUID] = mapped_column(PUUID(as_uuid=True), ForeignKey("user.id"))
+    ext: Mapped[str]  # file extension
 
     user: Mapped["User"] = relationship("User")
-
     courses: Mapped[list["Course"]] = relationship(
         "Course",
         secondary="course_file",
@@ -115,6 +118,13 @@ class File(Base):
     attempt: Mapped[Optional["Attempt"]] = relationship(
         "Attempt", back_populates="file"
     )
+
+    def to_public(self) -> FilePublic:
+        settings = get_settings()
+        read_url = os.path.join(
+            settings.api_v1_str, settings.file_dir, f"{self.id}.{self.ext}"
+        )
+        return FilePublic(id=self.id, name=self.filename, read_url=read_url)
 
 
 class AssignmentFile(Base):

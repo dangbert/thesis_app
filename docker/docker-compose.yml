@@ -15,6 +15,8 @@ services:
       - AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID}
       - AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET}
       - AUTH0_DOMAIN=${AUTH0_DOMAIN}
+    volumes:
+      - ${VOLUMES_DIR}/files:/files
 
   nginx:
     platform: ${PROD_PLATFORM}

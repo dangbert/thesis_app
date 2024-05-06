@@ -1,11 +1,15 @@
 import os
+import shutil
 import pytest
 from sqlalchemy.orm import close_all_sessions, Session
 from dotenv import load_dotenv
 from app.settings import Settings, get_settings
+import config
 from fastapi.testclient import TestClient
 
 TEST_DIR = os.path.abspath(os.path.dirname(__file__))
+
+logger = config.get_logger(__name__)
 
 
 @pytest.fixture
@@ -61,6 +65,11 @@ def run_around_tests():
     create_db()  # ensure test database exists
     delete_all_tables()
     create_all_tables()
+
+    logger.debug(f"recreating files dir '{settings.file_dir}'")
+    if os.path.exists(settings.file_dir):
+        shutil.rmtree(settings.file_dir)
+    os.makedirs(settings.file_dir)
 
     yield
 
