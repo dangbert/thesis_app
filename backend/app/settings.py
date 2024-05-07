@@ -27,6 +27,13 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict()
     env: Literal["TEST", "DEV", "PRD"]
     api_v1_str: str = "/api/v1"
+    server_name: str  # e.g. "http://localhost:8000" or "example.com"
+
+    @property
+    def site_url(self):
+        if self.server_name.startswith("http"):
+            return self.server_name
+        return f"https://{self.server_name}"
 
     # files
     file_dir: Path = Path("/files")

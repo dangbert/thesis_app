@@ -60,8 +60,8 @@ async def login(
     request.session["destination"] = destination  # remember for later
 
     # after login, have Auth0 redirect to the /callback endpoint
-    # TODO: instead construct url with settings.server_name
-    redirect_uri = str(request.url_for("callback"))
+    settings = get_settings()
+    redirect_uri = f"{settings.site_url}{settings.api_v1_str}/auth/callback"
     return await oauth.auth0.authorize_redirect(request, redirect_uri)
 
 
