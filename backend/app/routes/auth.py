@@ -11,7 +11,7 @@ from typing import Optional
 from app.deps import SessionDep
 from app.settings import get_settings
 from config import get_logger
-from app.models.user import Auth0UserInfo, User
+from app.models.user import Auth0UserInfo, User, UserPublic
 import app.hardcoded as hardcoded
 
 logger = get_logger(__name__)
@@ -19,6 +19,9 @@ logger = get_logger(__name__)
 
 USE_CONNECTION = "email"
 settings = get_settings()
+LOGIN_URL = (
+    f"{settings.site_url}{settings.api_v1_str}/auth/login"  # request.url_for("login")
+)
 
 oauth = OAuth()
 oauth.register(
@@ -78,18 +81,17 @@ async def login(
     )
 
 
-@router.api_route("/callback", methods=["GET", "POST"], response_class=RedirectResponse)
+@router.get("/callback", response_class=RedirectResponse)
 async def callback(request: Request, session: SessionDep):
     """
     After Auth0 authenticates a user, it redirects here so the user's information can be stored in the session cookie.
     """
 
-    login_url = f"{settings.site_url}{settings.api_v1_str}/auth/login"  # request.url_for("login")
     try:
         token = await oauth.auth0.authorize_access_token(request)
     except (OAuth2Error, OAuthError) as exc:
         logger.warning(f"Invalid authentication request: {exc}")
-        return RedirectResponse(url=login_url)
+        return RedirectResponse(url=LOGIN_URL)
     except ValueError as exc:
         # check if "Invalid JSON Web Key Set"
         if "Invalid JSON Web Key Set" in str(exc):
@@ -98,7 +100,7 @@ async def callback(request: Request, session: SessionDep):
                 status_code=500,
                 detail="Something is misconfigured, please let the administrator know.",
             )
-            return RedirectResponse(url=login_url)
+            return RedirectResponse(url=LOGIN_URL)
         raise exc
 
     # Validate the received user information and store it in the session cookie
@@ -142,3 +144,25 @@ async def logout(request: Request) -> str:
     request.session.clear()
     # Redirect user to Auth0 logout, and return them to /
     return auth0_logout_url(return_to=request.base_url)
+
+
+@router.get(
+    "/me",
+    response_model=UserPublic,
+    responses={302: {"description": "Redirect to login"}},
+)
+async def me(request: Request, session: SessionDep) -> UserPublic | RedirectResponse:
+    """Returns information about the currently logged in user."""
+    user_info = request.session.get("user")
+    if not user_info:
+        return RedirectResponse(url=LOGIN_URL)
+
+    statement = select(User).where(User.email == user_info["email"])
+    user = session.execute(statement).scalars().first()
+    if not user:
+        logger.error(
+            f"User in session but not found in database '{user_info['email']}'"
+        )
+        return RedirectResponse(url=LOGIN_URL)
+
+    return user.to_public()

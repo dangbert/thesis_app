@@ -15,11 +15,12 @@ import base64
 import itsdangerous
 import json
 import app.models as models
+import app.models.schemas as schemas
 import tests.dummy as dummy
 import pytest_mock
 import pytest
 import unittest.mock
-from app.routes.auth import oauth, USE_CONNECTION
+from app.routes.auth import oauth, USE_CONNECTION, LOGIN_URL
 
 settings = get_settings()
 
@@ -68,6 +69,7 @@ def test_callback(
     session,
     mocker: pytest_mock.MockerFixture,
 ):
+    # test callback flow for an existing user
     user = dummy.make_user(session)
     mock = mocker.patch.object(oauth.auth0, "authorize_access_token")
     mock.return_value = {
@@ -83,17 +85,56 @@ def test_callback(
     client.headers = {"Referer": "http://testserver/"}  # type: ignore [assignment]
     res = client.get(f"{settings.api_v1_str}/auth/callback")
     mock.assert_called_once()
-    assert res.is_redirect
 
-    # Check redirect to / and session cookie is set correctly
-    assert res.is_redirect
-    assert res.headers["location"] == "/"
-    cookie = res.headers["set-cookie"]
-    assert cookie.startswith("session=")
-    assert "httponly" in cookie
-    assert "path=/" in cookie
-    assert "samesite=lax" in cookie
+    def check_res(res):
+        # Check redirect to / and session cookie is set correctly
+        assert res.is_redirect
+        assert res.headers["location"] == "/"
+        cookie = res.headers["set-cookie"]
+        assert cookie.startswith("session=")
+        assert "httponly" in cookie
+        assert "path=/" in cookie
+        assert "samesite=lax" in cookie
 
-    # Check user has access
-    # res = client.get("/api/auth/me")
-    # assert res.status_code == 200
+    check_res(res)
+
+    # check user has access
+    res = client.get(f"{settings.api_v1_str}/auth/me")
+    assert res.status_code == 200
+    assert schemas.UserPublic(**res.json()) == user.to_public()
+
+    # test callback flow for a new user
+    client.cookies.clear()  # logout
+    new_user_info = {
+        "sub": "auth0|1234",
+        "name": "John van Doe",
+        "email": "hi@student.vu.nl",
+        "extra": "extra",
+    }
+    mock.return_value = {"userinfo": new_user_info}
+    res = client.get(f"{settings.api_v1_str}/auth/callback")
+    statement = select(models.User).where(models.User.email == new_user_info["email"])
+    new_user = session.execute(statement).scalars().first()
+    assert new_user
+    check_res(res)
+    res = client.get(f"{settings.api_v1_str}/auth/me")
+    assert res.status_code == 200
+    assert schemas.UserPublic(**res.json()) == new_user.to_public()
+
+
+def test_me(client: TestClient, session):
+    user = dummy.make_user(session)
+    res = client.get(f"{settings.api_v1_str}/auth/me")
+    assert res.is_redirect
+    assert res.headers["location"] == LOGIN_URL
+
+    set_session_cookie_on_client(client, user)
+    res = client.get(f"{settings.api_v1_str}/auth/me")
+    assert res.status_code == 200
+    assert schemas.UserPublic(**res.json()) == user.to_public()
+
+    session.delete(user)
+    session.commit()
+    res = client.get(f"{settings.api_v1_str}/auth/me")
+    assert res.is_redirect
+    assert res.headers["location"] == LOGIN_URL
