@@ -68,7 +68,7 @@ resource "auth0_client_grant" "backend" {
 
 
 #### define user sources (e.g. databases, passwordless, socials, etc): ####
-# https://registry.terraform.io/providers/auth0/auth0/latest/docs/resources/connection
+# https://registry.terraform.io/providers/auth0/auth0/latest/docs/resources/connection#google-oauth2-connection
 
 # TODO
 #  terraform import module.auth0_tenant.auth0_connection.google con_id_changeme
@@ -79,10 +79,12 @@ resource "auth0_connection" "google" {
   strategy             = "google-oauth2"
 
   options {
+    client_id         = var.google_oauth.client_id
+    client_secret     = var.google_oauth.client_secret
     allowed_audiences = var.additional_audiences
     # allow user management over API
     # api_enable_users = true
-    disable_signup   = var.disable_signup
+    disable_signup = var.disable_signup
     # domain_aliases                       = []
     scopes = [
       "email",

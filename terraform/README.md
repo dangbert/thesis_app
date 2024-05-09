@@ -15,3 +15,5 @@
 
 4. Manual Tenant Steps
     * Under `Applications > Database` delete "Username-Password-Authentication" (as we'll just support Google login)
+
+5. Follow the [Google Social Connection installation steps here](https://marketplace.auth0.com/integrations/google-social-connection), creating your project on https://console.cloud.google.com

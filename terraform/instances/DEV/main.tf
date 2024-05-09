@@ -28,6 +28,20 @@ variable "auth0_provider" {
   })
 }
 
+variable "google_oauth" {
+  description = "Your google oauth credentials, see installation steps here https://marketplace.auth0.com/integrations/google-social-connectio"
+  sensitive   = true
+  type = object({
+    client_id     = string
+    client_secret = string
+  })
+  default = {
+    client_id     = ""
+    client_secret = ""
+  }
+}
+
+
 locals {
   env_name = basename(abspath(path.module))
 }
@@ -43,6 +57,8 @@ module "auth0_tenant" {
   email_support        = "d.engbert@student.vu.nl"
   disable_signup       = false
   additional_audiences = ["http://localhost:8000/"]
+
+  google_oauth = var.google_oauth
 }
 
 output "auth0" {

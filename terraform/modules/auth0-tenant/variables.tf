@@ -33,3 +33,16 @@ variable "additional_audiences" {
   type        = list(string)
   default     = []
 }
+
+variable "google_oauth" {
+  description = "Your google oauth credentials, see installation steps here https://marketplace.auth0.com/integrations/google-social-connectio"
+  sensitive   = true
+  type = object({
+    client_id     = string
+    client_secret = string
+  })
+  default = {
+    client_id     = ""
+    client_secret = ""
+  }
+}
