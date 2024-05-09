@@ -93,6 +93,49 @@ resource "auth0_connection" "google" {
   }
 }
 
+resource "auth0_connection" "passwordless_email" {
+  strategy = "email"
+  name     = "email"
+
+  display_name         = null
+  is_domain_connection = false
+  metadata             = {}
+  show_as_button       = null
+
+  options {
+    brute_force_protection = true
+    disable_signup         = var.disable_signup
+    name                   = "email"
+    syntax                 = "liquid"
+
+    # from     = var.email_from
+    subject = "Welcome to {{ application.name }}"
+    # template = file("${local.templates_dir}/passwordless-template.html")
+
+    # https://auth0.com/docs/authenticate/passwordless/authentication-methods/email-otp
+    totp {
+      # length of the emailed login code:
+      length = 6
+      # seconds users have to enter the emailed login code:
+      # NOTE: if you update this, also update passwordless-email-template.html
+      time_step = 60 * 60 # 1 hour
+    }
+  }
+}
+
+resource "auth0_connection_clients" "passwordless_email" {
+  connection_id   = resource.auth0_connection.passwordless_email.id
+  enabled_clients = [auth0_client.backend.id]
+}
+
+# same as the UI page "Authentication" > "Authentication Profile"
+resource "auth0_prompt" "prompts" {
+  # don't show password field on initial login page
+  identifier_first               = true
+  universal_login_experience     = "new"
+  webauthn_platform_first_factor = false
+}
+
 ##################
 
 resource "auth0_branding" "branding" {

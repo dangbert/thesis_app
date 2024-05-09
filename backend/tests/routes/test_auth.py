@@ -17,7 +17,9 @@ import json
 import app.models as models
 import tests.dummy as dummy
 import pytest_mock
-from app.routes.auth import oauth
+import pytest
+import unittest.mock
+from app.routes.auth import oauth, USE_CONNECTION
 
 settings = get_settings()
 
@@ -41,8 +43,8 @@ def test_login(client: TestClient, session, mocker: pytest_mock.MockerFixture):
     mock.assert_called_once_with(
         mocker.ANY,
         "http://localhost:2222/api/v1/auth/callback",
-        connection="google-oauth2",
-        response_type="code",
+        connection=USE_CONNECTION,
+        # response_type="code",
     )
     assert res.is_redirect
 
@@ -59,3 +61,39 @@ def test_logout(client: TestClient, session):
     )
     assert res.headers["set-cookie"].startswith("session=null;")
     # assert res.json() == {"detail": "Logged out"}
+
+
+def test_callback(
+    client: TestClient,
+    session,
+    mocker: pytest_mock.MockerFixture,
+):
+    user = dummy.make_user(session)
+    mock = mocker.patch.object(oauth.auth0, "authorize_access_token")
+    mock.return_value = {
+        "userinfo": {
+            "sub": user.sub,
+            "name": user.name,
+            "email": user.email,
+            "extra": "extra",
+        }
+    }
+
+    client.cookies.clear()  # User is not logged in
+    client.headers = {"Referer": "http://testserver/"}  # type: ignore [assignment]
+    res = client.get(f"{settings.api_v1_str}/auth/callback")
+    mock.assert_called_once()
+    assert res.is_redirect
+
+    # Check redirect to / and session cookie is set correctly
+    assert res.is_redirect
+    assert res.headers["location"] == "/"
+    cookie = res.headers["set-cookie"]
+    assert cookie.startswith("session=")
+    assert "httponly" in cookie
+    assert "path=/" in cookie
+    assert "samesite=lax" in cookie
+
+    # Check user has access
+    # res = client.get("/api/auth/me")
+    # assert res.status_code == 200

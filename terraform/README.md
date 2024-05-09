@@ -17,3 +17,4 @@
     * Under `Applications > Database` delete "Username-Password-Authentication" (as we'll just support Google login)
 
 5. Follow the [Google Social Connection installation steps here](https://marketplace.auth0.com/integrations/google-social-connection), creating your project on https://console.cloud.google.com
+  * In your project under `Credentials > OAuth2.0 Client IDs`, be sure to add your "https://CHANGE_ME.eu.auth0.com/login/callback" (substituting in your Auth0 domain name) under "Authorized redirect URIs."

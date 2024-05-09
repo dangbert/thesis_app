@@ -3,3 +3,8 @@ auth0_provider = {
   client_id     = "CHANGE_ME"
   client_secret = "CHANGE_ME"
 }
+
+google_oauth = {
+  client_id     = ""
+  client_secret = ""
+}
