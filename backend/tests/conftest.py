@@ -14,10 +14,17 @@ logger = config.get_logger(__name__)
 
 @pytest.fixture
 def client():
+    """
+    Return a FastAPI TestClient instance.
+    https://fastapi.tiangolo.com/reference/testclient/
+    """
     from app.main import app
 
     # TODO: change how this is instantiated after next Starlette release https://github.com/encode/starlette/issues/2524
-    return TestClient(app)
+    # note default base_url is "http://testserver"
+    test_client = TestClient(app)
+    test_client.follow_redirects = False
+    return test_client
 
 
 @pytest.fixture

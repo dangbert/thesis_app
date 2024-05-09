@@ -9,7 +9,7 @@ services:
     volumes:
       - ../backend/:/backend/
     environment:
-      - env=DEV
+      - ENV=DEV
       - SERVER_NAME=http://localhost:2222
     ports:
       - 127.0.0.1:8000:8000

@@ -14,5 +14,4 @@
     * And just run `terraform init && terraform apply` to start managing your tenant with Terraform :)
 
 4. Manual Tenant Steps
-    * Under "Applications" delete "Default App"
-    * Under `Authentication > Social` delete "google-auth2"
+    * Under `Applications > Database` delete "Username-Password-Authentication" (as we'll just support Google login)

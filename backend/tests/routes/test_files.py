@@ -21,7 +21,7 @@ def test_file_upload(client: TestClient, settings, session):
     }
 
     res = client.put(
-        f"{settings.api_v1_str}/file",
+        f"{settings.api_v1_str}/file/",
         files=data,  # type: ignore [arg-type]
     )
 

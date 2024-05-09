@@ -12,11 +12,11 @@ from tests.dummy import DUMMY_ID, make_course, make_assignment
 
 ### courses
 def test_list_courses(client, settings, session):
-    res = client.get(f"{settings.api_v1_str}/course")
+    res = client.get(f"{settings.api_v1_str}/course/")
     assert res.status_code == 200 and res.json() == []
 
     course = make_course(session)
-    res = client.get(f"{settings.api_v1_str}/course")
+    res = client.get(f"{settings.api_v1_str}/course/")
     assert res.status_code == 200
     res_list = res.json()
     assert len(res_list) == 1
@@ -24,7 +24,7 @@ def test_list_courses(client, settings, session):
     assert res_course == course.to_public()
 
     _ = make_course(session, name="test2")
-    res = client.get(f"{settings.api_v1_str}/course")
+    res = client.get(f"{settings.api_v1_str}/course/")
     assert len(res.json()) == 2
 
 

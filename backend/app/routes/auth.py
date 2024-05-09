@@ -25,6 +25,7 @@ oauth.register(
     # https://auth0.com/docs/get-started/apis/scopes/openid-connect-scopes#standard-claims
     client_kwargs={"scope": "openid profile email"},
     server_metadata_url=f"https://{settings.auth0_domain}/.well-known/openid-configuration",
+    # authorize_state=settings.secret_key,
 )
 
 
@@ -45,12 +46,15 @@ def auth0_logout_url(return_to: URL) -> str:
 router = APIRouter()
 
 
+# https://auth0.com/docs/authenticate/protocols/oauth#authorization-endpoint
 # https://docs.authlib.org/en/latest/client/fastapi.html
 @router.get("/login", status_code=302)
 async def login(
     request: Request, destination: Optional[str] = None
 ) -> RedirectResponse:
-    """Redirects user to Auth0 login page. destination is the (optional) URL to redirect to after login."""
+    """
+    Redirects user to Auth0 login page. destination is the (optional) URL to redirect to after login.
+    """
     if not destination:
         destination = "/"
     if not is_relative_url(URL(destination)):
@@ -60,22 +64,41 @@ async def login(
     request.session["destination"] = destination  # remember for later
 
     # after login, have Auth0 redirect to the /callback endpoint
-    settings = get_settings()
     redirect_uri = f"{settings.site_url}{settings.api_v1_str}/auth/callback"
-    return await oauth.auth0.authorize_redirect(request, redirect_uri)
+    # adding the connection parameter sends the user directly to the Google login page (skipping an auth0 intermediary page)
+    return await oauth.auth0.authorize_redirect(
+        request,
+        redirect_uri,
+        connection="google-oauth2",
+        response_type="code",
+    )
 
 
-@router.api_route("/callback", methods=["GET", "POST"], response_class=RedirectResponse)
+@router.api_route("/callback", methods=["GET"], response_class=RedirectResponse)
 async def callback(request: Request):
     """
     After Auth0 authenticates a user, it redirects here so the user's information can be stored in the session cookie.
     """
 
+    login_url = f"{settings.site_url}{settings.api_v1_str}/auth/login"  # request.url_for("login")
     try:
+        breakpoint()
         token = await oauth.auth0.authorize_access_token(request)
     except (OAuth2Error, OAuthError) as exc:
         logger.warning(f"Invalid authentication request: {exc}")
-        return RedirectResponse(url=request.url_for("login"))
+        return RedirectResponse(url=login_url)
+    except ValueError as exc:
+        # check if "Invalid JSON Web Key Set"
+        if "Invalid JSON Web Key Set" in str(exc):
+            raise HTTPException(
+                status_code=500,
+                detail="Something is misconfigured, please let the administrator know.",
+            )
+            breakpoint()
+            return RedirectResponse(url=login_url)
+        raise exc
+
+    breakpoint()
 
     # Validate the received user information and store it in the session cookie
     user_info = Auth0UserInfo.model_validate(token["userinfo"])
@@ -84,13 +107,14 @@ async def callback(request: Request):
     if not hardcoded.email_can_signup(user_info.email):
         logger.warning(f"Rejecting unauthorized email: '{user_info.email}'")
         raise HTTPException(
-            status_code=403, detail="Only VU emails are permitted at present."
+            status_code=403,
+            detail="Only VU emails are permitted at present, please login with your vu.nl email.",
         )
     # TODO: check if user exists in database and handle appropriately
 
     destination = request.session.get("destination") or "/"
     if not is_relative_url(URL(destination)):
-        logger.warning(f"Overrding invalid destination: '{destination}'")
+        logger.warning(f"Overriding invalid destination: '{destination}'")
         destination = "/"
 
     # request.session["user"] = user.model_dump()
@@ -98,3 +122,14 @@ async def callback(request: Request):
     # referer = request.headers.get("Referer")
     # if referer is not None:
     #     return referer
+
+
+# TODO: post would be better
+@router.get("/logout", response_class=RedirectResponse)
+async def logout(request: Request) -> str:
+    """End the FastAPI session and redirect the user to Auth0 for OAuth logout."""
+
+    # Clear user session, effectively logging out the user
+    request.session.clear()
+    # Redirect user to Auth0 logout, and return them to /
+    return auth0_logout_url(return_to=request.base_url)

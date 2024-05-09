@@ -15,10 +15,13 @@ from pathlib import Path
 from typing import Literal, Optional
 
 import dotenv
+import config
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 BACKEND_ROOT = os.path.dirname(SCRIPT_DIR)
+
+logger = config.get_logger(__name__)
 
 
 class Settings(BaseSettings):
@@ -32,6 +35,8 @@ class Settings(BaseSettings):
     @property
     def site_url(self):
         if self.server_name.startswith("http"):
+            if not self.server_name.startswith("https://") and self.env == "PRD":
+                logger.warning(f"server_name '{self.server_name}' is not https")
             return self.server_name
         return f"https://{self.server_name}"
 
