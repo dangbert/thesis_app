@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@mui/material';
 import Snackbar from '@mui/material/Snackbar';
 import AttemptCreateModal from './AttemptCreateModal';
+import AttemptView from './AttemptView';
 
 import { AssignmentPublic } from '../models';
 import * as models from '../models';
@@ -17,6 +18,7 @@ interface IAssignmentViewProps {
 const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
   const [attempts, setAttempts] = useState<models.AttemptPublic[]>([]);
   const userCtx = useUserContext();
+  const [viewAttemptIdx, setViewAttemptIdx] = useState(-1);
 
   const [creatingAttempt, setCreatingAttempt] = useState(false);
   const [snackbarTxt, setSnackbarTxt] = useState('');
@@ -75,6 +77,20 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
             setAttempts((prev) => [...prev, att]);
             setSnackbarTxt('Attempt submitted ✅');
           }}
+        />
+      )}
+
+      {attempts.length && viewAttemptIdx === -1 && (
+        <Button variant="contained" onClick={() => setViewAttemptIdx(0)}>
+          View Last attempt
+        </Button>
+      )}
+      {attempts.length && viewAttemptIdx > -1 && (
+        <AttemptView
+          attempt={attempts[viewAttemptIdx]}
+          open={true}
+          onClose={() => setViewAttemptIdx(-1)}
+          mode="createFeedback"
         />
       )}
     </div>

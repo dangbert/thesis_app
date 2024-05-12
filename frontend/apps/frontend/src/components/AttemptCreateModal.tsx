@@ -54,34 +54,23 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
 
     let cancelled = false;
     setSubmitting(true);
-
     const attemptData: AttemptCreate = {
       assignment_id: asData.id,
       user_id: userCtx.user.id,
       data,
     };
 
-    try {
-      const response = await courseApi.createAttempt(attemptData);
-      if (cancelled) return;
+    const res = await courseApi.createAttempt(attemptData);
+    if (cancelled) return;
 
-      if (response.error) {
-        setError('Failed to create attempt: ' + response.error);
-        setSubmitting(false);
-      } else {
-        onSubmit?.(response.data);
-        onClose();
-      }
-    } catch (err: any) {
-      if (!cancelled) {
-        setError('An error occurred: ' + err.message);
-        setSubmitting(false);
-      }
+    if (res.error) {
+      setError('Failed to create attempt: ' + res.error);
+      setSubmitting(false);
+    } else {
+      onSubmit?.(res.data);
+      onClose();
     }
-
-    return () => {
-      cancelled = true;
-    };
+    return () => (cancelled = true);
   };
 
   const canSubmit = !submitting && data.goal && data.plan;

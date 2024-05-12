@@ -80,3 +80,13 @@ export const createAttempt = async (
     })
   );
 };
+
+export const createFeedback = async (feedback: models.FeedbackCreate) => {
+  return await jsonOrError(
+    fetch(`${attemptPath}/${feedback.attempt_id}/feedback`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(feedback),
+    })
+  );
+};
