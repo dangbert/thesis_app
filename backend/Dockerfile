@@ -11,6 +11,7 @@ WORKDIR /backend
 
 
 FROM common as dev
+RUN apt install -y vim
 RUN poetry install --with dev
 
 # TODO: play with ts code generation:

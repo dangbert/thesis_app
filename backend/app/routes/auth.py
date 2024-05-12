@@ -92,16 +92,8 @@ async def callback(request: Request, session: SessionDep):
     except (OAuth2Error, OAuthError) as exc:
         logger.warning(f"Invalid authentication request: {exc}")
         return RedirectResponse(url=LOGIN_URL)
-    except ValueError as exc:
-        # check if "Invalid JSON Web Key Set"
-        if "Invalid JSON Web Key Set" in str(exc):
-            raise exc
-            raise HTTPException(
-                status_code=500,
-                detail="Something is misconfigured, please let the administrator know.",
-            )
-            return RedirectResponse(url=LOGIN_URL)
-        raise exc
+
+    # note: a "Value Error Invalid JSON Web Key Set" here means the auth0 tenant needs to be configured to use RS256 instead of HS256
 
     # Validate the received user information and store it in the session cookie
     user_info = Auth0UserInfo.model_validate(token["userinfo"])

@@ -52,6 +52,15 @@ resource "auth0_client" "backend" {
   logo_uri            = local.logo_url
   initiate_login_uri  = !local.is_http ? var.site_url : ""
   name                = local.friendly_name
+
+  sso = true
+  oidc_conformant = true
+  jwt_configuration {
+    # IMPORTANT! the default algorith, "HS256" leads to 'ValueError: Invalid JSON Web Key Set' upon calling  'await oauth.auth0.authorize_access_token(request)' in auth.py
+    # due to kid field missing in the decoded token ('authlib/jose/rfc7517/key_set.py', line 29, in find_by_kid)
+    # https://community.auth0.com/t/rs256-vs-hs256-jwt-signing-algorithms/58609
+    alg = "RS256"
+  }
 }
 
 data "auth0_client" "backend" {
