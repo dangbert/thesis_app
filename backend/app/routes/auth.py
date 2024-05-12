@@ -17,7 +17,7 @@ import app.hardcoded as hardcoded
 logger = get_logger(__name__)
 
 
-USE_CONNECTION = "email"
+USE_CONNECTION = "google-oauth2"  # "email" for passwordless login
 settings = get_settings()
 LOGIN_URL = (
     f"{settings.site_url}{settings.api_v1_str}/auth/login"  # request.url_for("login")
@@ -71,13 +71,11 @@ async def login(
 
     # after login, have Auth0 redirect to the /callback endpoint
     redirect_uri = f"{settings.site_url}{settings.api_v1_str}/auth/callback"
-    # adding the connection parameter sends the user directly to the Google login page (skipping an auth0 intermediary page)
     return await oauth.auth0.authorize_redirect(
         request,
         redirect_uri,
-        # connection="google-oauth2",
+        # adding the connection parameter sends the user directly to the Google login page (skipping an auth0 intermediary page)
         connection=USE_CONNECTION,
-        # response_type="code",
     )
 
 

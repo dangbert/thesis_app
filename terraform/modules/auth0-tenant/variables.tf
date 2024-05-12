@@ -34,6 +34,12 @@ variable "additional_audiences" {
   default     = []
 }
 
+variable "with_passwordless" {
+  description = "Whether to enable passwordless connections"
+  type        = bool
+  default     = false
+}
+
 variable "google_oauth" {
   description = "Your google oauth credentials, see installation steps here https://marketplace.auth0.com/integrations/google-social-connectio"
   sensitive   = true

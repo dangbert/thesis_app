@@ -53,7 +53,7 @@ resource "auth0_client" "backend" {
   initiate_login_uri  = !local.is_http ? var.site_url : ""
   name                = local.friendly_name
 
-  sso = true
+  sso             = true
   oidc_conformant = true
   jwt_configuration {
     # IMPORTANT! the default algorith, "HS256" leads to 'ValueError: Invalid JSON Web Key Set' upon calling  'await oauth.auth0.authorize_access_token(request)' in auth.py
@@ -130,11 +130,13 @@ resource "auth0_connection" "passwordless_email" {
       time_step = 60 * 60 # 1 hour
     }
   }
+  count = var.with_passwordless ? 1 : 0
 }
 
 resource "auth0_connection_clients" "passwordless_email" {
-  connection_id   = resource.auth0_connection.passwordless_email.id
+  connection_id   = resource.auth0_connection.passwordless_email[0].id
   enabled_clients = [auth0_client.backend.id]
+  count           = var.with_passwordless ? 1 : 0
 }
 
 # same as the UI page "Authentication" > "Authentication Profile"
