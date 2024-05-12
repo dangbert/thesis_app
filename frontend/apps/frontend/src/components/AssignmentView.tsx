@@ -3,6 +3,7 @@ import { Button } from '@mui/material';
 import Snackbar from '@mui/material/Snackbar';
 import AttemptCreateModal from './AttemptCreateModal';
 import AttemptView from './AttemptView';
+import AttemptHistory from './AttemptHistory';
 
 import { AssignmentPublic } from '../models';
 import * as models from '../models';
@@ -97,6 +98,9 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
           }}
         />
       )}
+
+      <hr />
+      <AttemptHistory attempts={attempts} />
     </div>
   );
 };
