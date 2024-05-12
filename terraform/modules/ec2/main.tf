@@ -26,6 +26,9 @@ resource "aws_instance" "this" {
     content {
       encrypted   = true
       volume_size = var.volume_size
+      tags = {
+        Name = "${var.namespace}-block-device"
+      }
     }
   }
 
@@ -33,7 +36,7 @@ resource "aws_instance" "this" {
   vpc_security_group_ids = [aws_security_group.ec2.id]
 
   tags = {
-    "Name" = "${var.namespace}"
+    Name = "${var.namespace}"
   }
 
   # copy setup.sh to EC2 for use there

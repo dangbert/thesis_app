@@ -8,3 +8,5 @@ google_oauth = {
   client_id     = ""
   client_secret = ""
 }
+
+create_ec2 = true
