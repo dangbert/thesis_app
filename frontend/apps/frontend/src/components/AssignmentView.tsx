@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@mui/material';
+import AttemptCreateModal from './AttemptCreateModal';
 
 import { AssignmentPublic } from '../models';
 import * as models from '../models';
@@ -16,9 +17,10 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
   const [attempts, setAttempts] = useState<models.AttemptPublic[]>([]);
   const userCtx = useUserContext();
 
+  const [creatingAttempt, setCreatingAttempt] = useState(false);
+
   // load attempts
   useEffect(() => {
-    console.log('at magic = ', asData.id);
     let cancel = false;
     (async () => {
       if (asData.id === '') {
@@ -72,9 +74,21 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
         welcome {userCtx.user.name} to the assignment {asData.name} (you have
         made {attempts.length} attempts)
       </div>
-      <Button variant="contained" onClick={handleCreateAttempt}>
-        Create Attempt
-      </Button>
+      {!creatingAttempt && (
+        <Button variant="contained" onClick={() => setCreatingAttempt(true)}>
+          New Submission
+        </Button>
+      )}
+      {creatingAttempt && (
+        <AttemptCreateModal
+          asData={asData}
+          open={creatingAttempt}
+          onClose={() => setCreatingAttempt(false)}
+          onCreate={(att: models.AttemptPublic) =>
+            setAttempts((prev) => [...prev, att])
+          }
+        />
+      )}
     </div>
   );
 };

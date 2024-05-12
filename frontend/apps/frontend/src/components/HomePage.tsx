@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Link from '@mui/material/Link';
-import AssignmentView from './Assignment';
+import AssignmentView from './AssignmentView';
 
 import { useUserContext } from '../providers';
 import * as models from '../models';
@@ -19,9 +19,11 @@ const HomePage = () => {
 
   useEffect(() => {
     const dummyUser = {
+      created_at: '2024-05-12T13:13:47.346969Z',
+      updated_at: undefined,
+      sub: 'auth0|4005879303709086033',
+      name: 'Dan Engbert',
       email: 'd.engbert@student.vu.nl',
-      name: 'Daniel Engbert',
-      sub: 'auth0|447806806544022035',
       id: '6b3c87e9-7ad2-407b-bb29-c8ab919bda5d',
     };
     userCtx.onChange(dummyUser);
@@ -90,7 +92,7 @@ const HomePage = () => {
 
   const handleCreateAs = async () => {
     if (!userCtx.user || !curCourse) return;
-    console.log('creating attempt');
+    console.log('creating assignment');
     const dummyAs: models.AssignmentCreate = {
       name: 'dummy assignment',
       about: '**more info to come**\n:)',

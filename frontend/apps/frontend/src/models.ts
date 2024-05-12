@@ -3,7 +3,7 @@
  */
 interface DateFields {
   created_at: string;
-  updated_at?: string;
+  updated_at?: string; // TODO: maybe should be string | null
 }
 
 /* must match backend/app/hardcoded.py */
