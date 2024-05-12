@@ -32,7 +32,7 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
   asData,
   open,
   onClose,
-  onCreate: onSubmit,
+  onCreate,
 }) => {
   const [error, setError] = useState<string>('');
   const [data, setData] = useState<SMARTData>({ goal: '', plan: '' });
@@ -65,7 +65,7 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
       setError('Failed to create attempt: ' + res.error);
       setSubmitting(false);
     } else {
-      onSubmit?.(res.data);
+      onCreate?.(res.data);
       onClose();
     }
     return () => (cancelled = true);

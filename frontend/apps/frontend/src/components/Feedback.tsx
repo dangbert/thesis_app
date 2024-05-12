@@ -18,12 +18,16 @@ interface FeedbackViewProps {
   attemptId: string;
   feedback?: FeedbackPublic;
   readOnly: boolean;
+  onClose: () => void;
+  onCreate?: (feedback: FeedbackPublic) => void;
 }
 
 const FeedbackView: React.FC<FeedbackViewProps> = ({
   attemptId,
   feedback,
   readOnly,
+  onClose,
+  onCreate,
 }) => {
   const [feedbackData, setFeedbackData] = useState<FeedbackData>({
     feedback: feedback?.data.feedback || '',
@@ -53,12 +57,13 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
       data: feedbackData,
     };
 
-    const response = await courseApi.createFeedback(feedbackToCreate);
-    if (response.error) {
-      setError(response.error);
+    const res = await courseApi.createFeedback(feedbackToCreate);
+    if (res.error) {
+      setError(res.error);
     } else {
       // Handle success (refresh data, close modal, etc.)
-      console.log('Feedback successfully created:', response.data);
+      console.log('Feedback successfully created:', res.data);
+      onCreate?.(res.data);
     }
     setSubmitting(false);
   };
@@ -94,6 +99,9 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
       {error && <Typography color="error">{error}</Typography>}
       {!readOnly && (
         <Box display="flex" justifyContent="flex-end" mt={2}>
+          <Button onClick={onClose} color="primary">
+            Cancel
+          </Button>
           <Button onClick={handleSubmit} color="primary" disabled={!canSubmit}>
             {submitting ? <CircularProgress size={24} /> : 'Submit Feedback'}
           </Button>

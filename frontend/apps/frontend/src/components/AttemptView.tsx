@@ -12,11 +12,13 @@ import FeedbackView from './Feedback'; // Make sure this component is properly i
 import { FIELD_ROWS } from './AttemptCreateModal';
 
 import * as models from '../models';
+import { on } from 'events';
 
 interface AttemptViewProps {
   attempt: models.AttemptPublic;
   open: boolean;
   onClose: () => void;
+  onCreateFeedback?: (feedback: models.FeedbackPublic) => void;
   mode: 'view' | 'createFeedback';
   feedback?: models.FeedbackPublic;
 }
@@ -25,6 +27,7 @@ const AttemptView: React.FC<AttemptViewProps> = ({
   attempt,
   open,
   onClose,
+  onCreateFeedback,
   mode,
   feedback,
 }) => {
@@ -81,6 +84,7 @@ const AttemptView: React.FC<AttemptViewProps> = ({
                   attemptId={attempt.id}
                   feedback={feedback}
                   readOnly={true}
+                  onClose={onClose}
                 />
               ) : (
                 <Typography>No feedback available yet.</Typography>
@@ -90,6 +94,8 @@ const AttemptView: React.FC<AttemptViewProps> = ({
                 attemptId={attempt.id}
                 feedback={feedback}
                 readOnly={false}
+                onClose={onClose}
+                onCreate={onCreateFeedback}
               />
             )}
           </Grid>

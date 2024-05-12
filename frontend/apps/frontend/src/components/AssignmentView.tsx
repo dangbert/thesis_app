@@ -91,6 +91,10 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
           open={true}
           onClose={() => setViewAttemptIdx(-1)}
           mode="createFeedback"
+          onCreateFeedback={(feedback: models.FeedbackPublic) => {
+            setSnackbarTxt('Feedback submitted ✅');
+            setViewAttemptIdx(-1);
+          }}
         />
       )}
     </div>
