@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -6,8 +6,10 @@ import {
   TextField,
   DialogActions,
   Button,
-  CircularProgress,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
+import { LoadingButton } from '@mui/lab';
 import {
   AssignmentPublic,
   AttemptCreate,
@@ -35,6 +37,9 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
   const [data, setData] = useState<SMARTData>({ goal: '', plan: '' });
   const [submitting, setSubmitting] = useState<boolean>(false);
   const userCtx = useUserContext();
+
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('lg'));
 
   const handleFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -79,18 +84,28 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
     };
   };
 
+  const canSubmit = !submitting && data.goal && data.plan;
   return (
-    <Dialog open={open} onClose={onClose} aria-labelledby="form-dialog-title">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      aria-labelledby="form-dialog-title"
+      fullWidth={true}
+      maxWidth="md"
+    >
       <DialogTitle id="form-dialog-title">Create New Attempt</DialogTitle>
       <DialogContent>
         {error && <div style={{ color: 'red' }}>{error}</div>}
         <TextField
+          placeholder=""
           autoFocus
           margin="dense"
           id="goal"
-          label="Goal"
+          label="SMART Goal"
           type="text"
           fullWidth
+          multiline
+          rows={4}
           name="goal"
           value={data.goal}
           onChange={handleFormChange}
@@ -98,9 +113,11 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
         <TextField
           margin="dense"
           id="plan"
-          label="Plan"
+          label="Actieplan"
           type="text"
           fullWidth
+          multiline
+          rows={4}
           name="plan"
           value={data.plan}
           onChange={handleFormChange}
@@ -110,9 +127,15 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
         <Button onClick={onClose} color="primary">
           Cancel
         </Button>
-        <Button onClick={handleSubmit} color="primary" disabled={submitting}>
-          {submitting ? <CircularProgress size={24} /> : 'Submit'}
-        </Button>
+        {/* loading spinner when submitting */}
+        <LoadingButton
+          onClick={handleSubmit}
+          color="primary"
+          loading={submitting}
+          disabled={!canSubmit}
+        >
+          Submit
+        </LoadingButton>
       </DialogActions>
     </Dialog>
   );

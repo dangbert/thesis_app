@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@mui/material';
+import Snackbar from '@mui/material/Snackbar';
 import AttemptCreateModal from './AttemptCreateModal';
 
 import { AssignmentPublic } from '../models';
@@ -18,6 +19,7 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
   const userCtx = useUserContext();
 
   const [creatingAttempt, setCreatingAttempt] = useState(false);
+  const [snackbarTxt, setSnackbarTxt] = useState('');
 
   // load attempts
   useEffect(() => {
@@ -42,34 +44,19 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
     })();
   }, [asData.id]);
 
-  // Function to handle button click to create an attempt
-  const handleCreateAttempt = async () => {
-    if (!userCtx.user) return;
-    console.log('creating attempt');
-    const dummySMART: models.SMARTData = {
-      goal: 'Ik plan om mijn presentatietechniek te verbeteren door het gebruik van handgebaren.',
-      plan: "Ik zal af en toe kijken naar video's van sprekers om te leren welke handgebaren zij gebruiken. Ik zal proberen deze gebaren te oefenen voor de spiegel wanneer ik tijd heb. Ik ga mijn vooruitgang beoordelen door na te denken over hoe zelfverzekerd ik me voel, en ik zal soms feedback vragen aan vrienden na presentaties.",
-    };
-    const dummyAttempt: models.AttemptCreate = {
-      assignment_id: asData.id,
-      user_id: userCtx.user.id,
-      data: dummySMART,
-    };
-    const response = await courseApi.createAttempt(dummyAttempt);
-    if (!response.error) {
-      console.log('Attempt created:', response.data);
-      setAttempts((prev) => [...prev, response.data]);
-    } else {
-      console.error('Error creating attempt:', response.error);
-    }
-  };
-
   if (!userCtx.user) {
     return <div>not logged in...</div>;
   }
 
   return (
     <div>
+      <Snackbar
+        open={snackbarTxt !== ''}
+        autoHideDuration={4000}
+        onClose={() => setSnackbarTxt('')}
+        message={snackbarTxt}
+      />
+
       <div>
         welcome {userCtx.user.name} to the assignment {asData.name} (you have
         made {attempts.length} attempts)
@@ -84,9 +71,10 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
           asData={asData}
           open={creatingAttempt}
           onClose={() => setCreatingAttempt(false)}
-          onCreate={(att: models.AttemptPublic) =>
-            setAttempts((prev) => [...prev, att])
-          }
+          onCreate={(att: models.AttemptPublic) => {
+            setAttempts((prev) => [...prev, att]);
+            setSnackbarTxt('Attempt submitted ✅');
+          }}
         />
       )}
     </div>
