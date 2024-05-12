@@ -56,7 +56,7 @@ function setup_yum {
   ensure_ssh_keys
   sudo yum update -y
 
-  sudo yum install -y docker git rsync
+  sudo yum install -y docker git tree rsync ncdu tmux
   sudo systemctl enable docker && sudo systemctl start docker
   sudo amazon-linux-extras install -y epel # needed to install certbot
 }
@@ -107,7 +107,7 @@ function init_site {
     sudo certbot certonly
   fi
 
-  INSTALL_DIR="~/thesis_app"
+  INSTALL_DIR="$HOME/thesis_app"
   if [[ ! -d "$INSTALL_DIR" ]]; then
     git clone git@github.com:dangbert/thesis_app.git "$INSTALL_DIR"
   else

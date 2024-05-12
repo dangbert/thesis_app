@@ -22,7 +22,7 @@ locals {
   # audience comes from `Applications > APIs`
   audience      = "https://${var.domain}/api/v2/"
   is_prd        = lower(var.env_name) == "prd"
-  friendly_name = "Feedback Tool${local.is_prd ? "" : " (${var.env_name})"}"
+  friendly_name = "Ezfeedback${local.is_prd ? "" : " (${var.env_name})"}"
   is_http       = startswith(var.site_url, "http://")
 }
 

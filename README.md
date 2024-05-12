@@ -57,3 +57,7 @@ source activate_env.sh
 sbatch jobs/launch_jupyter.job
 ````
 </details>
+
+
+## Site Deployment Steps
+For instructions on how to deploy the ezfeedback site/tool, see [../terraform/README.md](../terraform/README.md)!
