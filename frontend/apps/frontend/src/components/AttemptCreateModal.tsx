@@ -16,7 +16,6 @@ import {
   AttemptPublic,
   SMARTData,
 } from '../models';
-import * as models from '../models';
 import * as courseApi from '../api/courses';
 import { useUserContext } from '../providers';
 
@@ -26,6 +25,8 @@ interface AttemptCreateModalProps {
   onClose: () => void;
   onCreate?: (attempt: AttemptPublic) => void;
 }
+
+export const FIELD_ROWS = 8;
 
 const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
   asData,
@@ -37,9 +38,6 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
   const [data, setData] = useState<SMARTData>({ goal: '', plan: '' });
   const [submitting, setSubmitting] = useState<boolean>(false);
   const userCtx = useUserContext();
-
-  const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down('lg'));
 
   const handleFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -73,7 +71,7 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
     return () => (cancelled = true);
   };
 
-  const canSubmit = !submitting && data.goal && data.plan;
+  const canSubmit = !submitting && data.goal.trim() && data.plan.trim();
   return (
     <Dialog
       open={open}
@@ -94,7 +92,7 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
           type="text"
           fullWidth
           multiline
-          rows={4}
+          rows={FIELD_ROWS}
           name="goal"
           value={data.goal}
           onChange={handleFormChange}
@@ -106,7 +104,7 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
           type="text"
           fullWidth
           multiline
-          rows={4}
+          rows={FIELD_ROWS}
           name="plan"
           value={data.plan}
           onChange={handleFormChange}

@@ -1,14 +1,15 @@
 import React from 'react';
 import {
+  Typography,
   Dialog,
   DialogTitle,
   DialogContent,
   TextField,
-  useTheme,
-  useMediaQuery,
   Grid,
+  Box,
 } from '@mui/material';
-import FeedbackView from './Feedback'; // Make sure to create this component
+import FeedbackView from './Feedback'; // Make sure this component is properly imported
+import { FIELD_ROWS } from './AttemptCreateModal';
 
 import * as models from '../models';
 
@@ -27,29 +28,37 @@ const AttemptView: React.FC<AttemptViewProps> = ({
   mode,
   feedback,
 }) => {
-  const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down('lg'));
-
   return (
     <Dialog
       open={open}
       onClose={onClose}
       aria-labelledby="attempt-view-title"
       fullWidth={true}
-      maxWidth="md"
+      maxWidth="lg"
+      // PaperProps={{ style: { minHeight: '70vh' } }}
     >
-      <DialogTitle id="attempt-view-title">Attempt Details</DialogTitle>
       <DialogContent>
         <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
+          <Grid
+            item
+            xs={12}
+            md={6}
+            style={{
+              paddingRight: 16,
+            }}
+          >
+            <Typography variant="h6" gutterBottom>
+              Attempt Details
+            </Typography>
             <TextField
               label="SMART Goal"
               value={attempt.data.goal}
               fullWidth
               margin="dense"
               InputProps={{ readOnly: true }}
+              disabled={true}
               multiline
-              rows={4}
+              rows={FIELD_ROWS}
             />
             <TextField
               label="Action Plan"
@@ -57,11 +66,15 @@ const AttemptView: React.FC<AttemptViewProps> = ({
               fullWidth
               margin="dense"
               InputProps={{ readOnly: true }}
+              disabled={true}
               multiline
-              rows={4}
+              rows={FIELD_ROWS}
             />
           </Grid>
           <Grid item xs={12} md={6}>
+            <Typography variant="h6" gutterBottom>
+              Feedback
+            </Typography>
             {mode === 'view' ? (
               feedback ? (
                 <FeedbackView
@@ -70,7 +83,7 @@ const AttemptView: React.FC<AttemptViewProps> = ({
                   readOnly={true}
                 />
               ) : (
-                <div>No feedback available yet.</div>
+                <Typography>No feedback available yet.</Typography>
               )
             ) : (
               <FeedbackView

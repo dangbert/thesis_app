@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import {
-  Card,
-  CardContent,
   Typography,
   TextField,
   Button,
   CircularProgress,
+  Checkbox,
+  FormControlLabel,
+  Box,
 } from '@mui/material';
 import { FeedbackPublic, FeedbackData, FeedbackCreate } from '../models';
 import * as courseApi from '../api/courses';
+import { useUserContext } from '../providers';
+
+const FEEDBACK_ROWS = 10;
 
 interface FeedbackViewProps {
   attemptId: string;
@@ -23,81 +27,79 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
 }) => {
   const [feedbackData, setFeedbackData] = useState<FeedbackData>({
     feedback: feedback?.data.feedback || '',
-    plan: feedback?.data.plan || '',
+    approved: feedback?.data.approved || false,
   });
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
+  const userCtx = useUserContext();
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-    setFeedbackData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = event.target;
+    setFeedbackData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
   };
 
   const handleSubmit = async () => {
-    let cancelled = false;
+    if (!userCtx.user) {
+      setError('User not logged in');
+      return;
+    }
     setSubmitting(true);
     const feedbackToCreate: FeedbackCreate = {
       attempt_id: attemptId,
-      user_id: '', // User ID should be provided as required or obtained from context
+      user_id: userCtx.user.id, // User ID should be provided or obtained from context
       data: feedbackData,
     };
 
-    const res = await courseApi.createFeedback(feedbackToCreate);
-    if (cancelled) return;
-
-    if (res.error) {
-      setError(res.error);
+    const response = await courseApi.createFeedback(feedbackToCreate);
+    if (response.error) {
+      setError(response.error);
     } else {
-      // handle success (refresh data, close modal, etc.)
-      console.log('Feedback successfully created:', res.data);
+      // Handle success (refresh data, close modal, etc.)
+      console.log('Feedback successfully created:', response.data);
     }
     setSubmitting(false);
-    return () => (cancelled = true);
   };
 
+  const canSubmit = !submitting && feedbackData.feedback.trim() !== '';
+
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" gutterBottom>
-          Feedback Details
-        </Typography>
-        <TextField
-          label="Feedback"
-          name="feedback"
-          value={feedbackData.feedback}
-          onChange={handleInputChange}
-          fullWidth
-          margin="dense"
-          InputProps={{ readOnly }}
-          multiline
-          rows={4}
-        />
-        <TextField
-          label="Plan"
-          name="plan"
-          value={feedbackData.plan}
-          onChange={handleInputChange}
-          fullWidth
-          margin="dense"
-          InputProps={{ readOnly }}
-          multiline
-          rows={4}
-        />
-        {!readOnly && (
-          <>
-            {error && <Typography color="error">{error}</Typography>}
-            <Button
-              onClick={handleSubmit}
+    <>
+      <TextField
+        label="Feedback"
+        name="feedback"
+        value={feedbackData.feedback}
+        onChange={handleInputChange}
+        fullWidth
+        margin="dense"
+        InputProps={{ readOnly }}
+        multiline
+        rows={FEEDBACK_ROWS}
+      />
+      {!readOnly && (
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={feedbackData.approved}
+              onChange={handleInputChange}
+              name="approved"
               color="primary"
-              variant="contained"
-              disabled={submitting}
-            >
-              {submitting ? <CircularProgress size={24} /> : 'Submit Feedback'}
-            </Button>
-          </>
-        )}
-      </CardContent>
-    </Card>
+            />
+          }
+          label="Approve Work"
+        />
+      )}
+      {error && <Typography color="error">{error}</Typography>}
+      {!readOnly && (
+        <Box display="flex" justifyContent="flex-end" mt={2}>
+          <Button onClick={handleSubmit} color="primary" disabled={!canSubmit}>
+            {submitting ? <CircularProgress size={24} /> : 'Submit Feedback'}
+          </Button>
+        </Box>
+      )}
+    </>
   );
 };
 
