@@ -3,7 +3,7 @@ terraform {
     bucket         = "dangbert-tf-backend"
     dynamodb_table = "dangbert-tf-backend-lock"
     region         = "us-west-2"
-    key            = "thesis/DEV/terraform.tfstate"
+    key            = "thesis/PRD/terraform.tfstate"
   }
 
   required_providers {
@@ -70,12 +70,12 @@ module "auth0_tenant" {
   domain   = var.auth0_provider.domain
   env_name = local.env_name
   # should match DEV_HOST_PORT in docker-compose.dev.yml
-  site_url = "http://localhost:2222"
+  site_url = "https://ezfeedback.engbert.me"
 
   tf_client_id         = var.auth0_provider.client_id
   email_support        = "d.engbert@student.vu.nl"
   disable_signup       = false
-  additional_audiences = ["http://localhost:8000/"]
+  additional_audiences = []
 
   google_oauth = var.google_oauth
 }

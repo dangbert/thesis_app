@@ -19,7 +19,8 @@
   * In your project under `Credentials > OAuth2.0 Client IDs`, be sure to add your "https://CHANGE_ME.eu.auth0.com/login/callback" (substituting in your Auth0 domain name) under "Authorized redirect URIs."
 
 5. Instantiate an instance of the `modules/auth0-tenant` module, placing the credentials copied in step 2 in a terraform.tfvars file.
-    * see `instances/DEV` for a complete example which also creates a deployment server!  As a starting point you can also `cp terraform.tfvars.sample terraform.tfvars`
+    * see `instances/DEV` for an example that manages just an auth0 tenant (no server).  As a starting point you can also `cp terraform.tfvars.sample terraform.tfvars`
+    * see `instances/PRD` for a complete example which also creates a deployment server!
     * And just run `terraform init && terraform apply` to start managing your tenant with Terraform :) and to deploy a server which can be manually setup via ssh for hosting the site.
 
 6. DNS Setup:
