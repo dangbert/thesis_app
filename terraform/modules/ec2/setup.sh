@@ -77,7 +77,7 @@ function setup_yum {
 function setup_apt {
   ensure_ssh_keys
   sudo apt update
-  sudo apt install -y git rsync
+  sudo apt install -y git rsync ncdu tmux
   ensure_docker_apt
 }
 
@@ -94,6 +94,8 @@ function ensure_docker_apt {
     sudo apt update
     sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin #docker-compose
 
+    sudo usermod -aG docker $USER
+    echo "rebooting is likely required to run docker without sudo"
     sudo systemctl enable docker && sudo systemctl start docker
   else
      echo "docker already installed ✅"

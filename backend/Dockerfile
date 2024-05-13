@@ -33,3 +33,5 @@ RUN pip install --no-cache-dir --upgrade -r requirements_prod.txt
 RUN apt remove -y gcc && apt autoremove -y && pip uninstall -y poetry && rm -f requirements_prod.txt
 # copy whole backend folder
 COPY ./ .
+
+ENTRYPOINT ["/bin/bash", "./launch_prod.sh"]
