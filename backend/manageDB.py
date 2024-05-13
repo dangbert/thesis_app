@@ -80,7 +80,9 @@ def init_db(createTables: bool = False):
     if database.db_exists():
         logger.info("DB already exists!")
     else:
+        logger.info("creating initial (empty) database")
         database.create_db()
+        logger.info("empty database initialized!")
 
     if not createTables:
         return
