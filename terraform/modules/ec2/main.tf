@@ -42,10 +42,10 @@ resource "aws_instance" "this" {
   # copy setup.sh to EC2 for use there
   provisioner "file" {
     source      = "${path.module}/setup.sh"
-    destination = "/home/ec2-user/setup.sh"
+    destination = "/home/${var.server_user}/setup.sh"
     connection {
       type        = "ssh"
-      user        = "ec2-user"
+      user        = var.server_user
       private_key = file("${var.key_name}.pem")
       host        = self.public_ip
       agent       = local.provisioner_agent
@@ -57,7 +57,7 @@ resource "aws_instance" "this" {
     script = "${path.module}/setup.sh"
     connection {
       type        = "ssh"
-      user        = "ec2-user"
+      user        = var.server_user
       private_key = file("${var.key_name}.pem")
       host        = self.public_ip
       agent       = local.provisioner_agent

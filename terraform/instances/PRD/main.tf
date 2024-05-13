@@ -91,6 +91,9 @@ module "ec2" {
   namespace = local.namespace
   key_name  = module.ssh_key[0].key_name
 
+  # ubuntu 24.04 LTS, amd64, eu-west-1 (from https://cloud-images.ubuntu.com/locator/ec2/)
+  ami_id        = "ami-0776c814353b4814d"
+  server_user   = "ubuntu"
   instance_type = "t2.micro"
   volume_size   = 45
   ingress_ports = [22, 443, 80]
@@ -105,8 +108,8 @@ output "auth0" {
 output "ec2" {
   value = !var.create_ec2 ? {} : {
     ssh_cmds = {
-      ssh = "ssh -i ${module.ssh_key[0].key_name}.pem ec2-user@${module.ec2[0].public_ip}"
-      scp = "scp -i ${module.ssh_key[0].key_name}.pem file.txt ec2-user@${module.ec2[0].public_ip}:"
+      ssh = "ssh -i ${module.ssh_key[0].key_name}.pem ${module.ec2[0].server_user}@${module.ec2[0].public_ip}"
+      scp = "scp -i ${module.ssh_key[0].key_name}.pem file.txt ${module.ec2[0].server_user}@${module.ec2[0].public_ip}:"
     }
     aws_cmds = {
       stop   = "aws ec2 stop-instances --instance-ids ${module.ec2[0].instance_id} --region ${local.aws.region} --profile ${local.aws.profile}"

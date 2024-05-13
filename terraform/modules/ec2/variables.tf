@@ -18,6 +18,12 @@ variable "ami_id" {
   description = "ID of desired Amazon Machine Image to use (omit for automatic selection). "
 }
 
+variable "server_user" {
+  default     = "ec2-user"
+  type        = string
+  description = "Name of default user on EC2 instance (set to 'ubuntu' if appropriate for the var.ami_id)."
+}
+
 variable "volume_size" {
   default     = 30
   type        = number

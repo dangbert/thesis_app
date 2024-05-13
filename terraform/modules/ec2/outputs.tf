@@ -22,3 +22,8 @@ output "ami_id" {
   value       = local.ami_id
   description = "ID of Amazon Machine Image that was used for this EC2 instance."
 }
+
+output "server_user" {
+  value       = var.server_user
+  description = "mirrors var.server_user"
+}
