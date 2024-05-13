@@ -16,7 +16,7 @@
     * Also under "Authentication > Social" feel free to delete the "google-oauth2" connection as we'll create it later with terraform (otherwise you'll have to `terraform import module.auth0_tenant.auth0_connection.google`) later.
 
 4. Follow the [Google Social Connection installation steps here](https://marketplace.auth0.com/integrations/google-social-connection), creating your project on https://console.cloud.google.com
-  * In your project under `Credentials > OAuth2.0 Client IDs`, be sure to add your "https://CHANGE_ME.eu.auth0.com/login/callback" (substituting in your Auth0 domain name) under "Authorized redirect URIs."
+  * In your project under `Credentials > OAuth2.0 Client IDs`, be sure to add your "https://CHANGE_ME.eu.auth0.com/login/callback" (substituting in your Auth0 domain name) under "Authorized redirect URIs.
 
 5. Instantiate an instance of the `modules/auth0-tenant` module, placing the credentials copied in step 2 in a terraform.tfvars file.
     * see `instances/DEV` for an example that manages just an auth0 tenant (no server).  As a starting point you can also `cp terraform.tfvars.sample terraform.tfvars`
