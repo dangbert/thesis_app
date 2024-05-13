@@ -25,3 +25,5 @@
 6. DNS Setup:
   * add an "A Record" pointing to the server's IP (visible in `terraform output`) on your domain provider's website.
   * ssh into the server, and run `bash ~/setup.sh -i` to install certbot and create your SSL certificates.
+
+7. Then follow the production instructions in [../docker/README.md](../docker/README.md) to launch the site!

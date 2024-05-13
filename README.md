@@ -6,19 +6,10 @@ This repo corresponds to my VU A.I. Master's thesis project.
 
 ### Website
 
-Dev server:
+For instructions on running the website locally see [./docker/README.md](./docker/README.md)
 
-````bash
-cd docker
-# copy sample env file and edit as needed
-cp .env.sample .env
 
-# build and launch dev site
-alias dcd='docker compose -f docker-compose.yml -f docker-compose.dev.yml'
-dcd build && dcd up -d
-````
-
-Now you can visit the site running on http://localhost:2222
+For instructions on how to deploy the ezfeedback site for production use, see [../terraform/README.md](../terraform/README.md)!
 
 ### Experiments
 Install dependencies:
@@ -58,6 +49,3 @@ sbatch jobs/launch_jupyter.job
 ````
 </details>
 
-
-## Site Deployment Steps
-For instructions on how to deploy the ezfeedback site/tool, see [../terraform/README.md](../terraform/README.md)!
