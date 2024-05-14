@@ -18,7 +18,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 
 import MenuIcon from '@mui/icons-material/Menu';
 import makeStyles from '@mui/styles/makeStyles';
-import AssignmentView from './AssignmentView';
+import CourseView from './CourseView';
 
 import { useUserContext } from '../providers';
 import * as models from '../models';
@@ -26,12 +26,11 @@ import * as courseApi from '../api/courses';
 
 const HomePage = () => {
   const [courseList, setCourseList] = useState<models.CoursePublic[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState<boolean>(true);
   const [courseIdx, setCourseIdx] = useState<number>(-1);
-  const [asList, setAsList] = useState<models.AssignmentPublic[]>([]); // assignments for current course
-  const [asIdx, setAsIdx] = useState<number>(-1); // curent assignment index
   const userCtx = useUserContext();
-  const classes = useStyles();
   const theme = useTheme();
+  const classes = useStyles(theme);
   const [userMenuEl, setUserMenuEl] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -57,72 +56,26 @@ const HomePage = () => {
     let cancel = false;
     (async () => {
       console.log('requesting course list');
+      setLoadingCourses(true);
       const res = await courseApi.listCourses();
       if (cancel) return;
+      setLoadingCourses(false);
       if (res.error) {
         console.error(res.error);
         setCourseList([]);
       } else {
         console.log('fetched course list\n', res.data);
-        setCourseList(res.data);
         setCourseIdx(res.data.length > 0 ? 0 : -1);
+        setCourseList(res.data);
       }
       return () => (cancel = true);
     })();
   }, []);
 
-  // load assignments for current course
-  useEffect(() => {
-    let cancel = false;
-    (async () => {
-      if (courseIdx < 0 || courseIdx >= courseList.length) {
-        setAsList([]);
-        return;
-      }
-      const courseId = courseList[courseIdx].id;
-      console.log(`requesting assignment list for course ${courseId}`);
-      const res = await courseApi.listAssignments(courseId);
-      if (cancel) return;
-      if (res.error) {
-        console.error(res.error);
-        setAsList([]);
-      } else {
-        console.log('fetched assignment list\n', res.data);
-        setAsList(res.data);
-        setAsIdx(res.data.length > 0 ? 0 : -1);
-      }
-
-      return () => (cancel = true);
-    })();
-  }, [
-    courseIdx,
-    // cur course ID or -1
-    courseIdx >= 0 && courseIdx < courseList.length
-      ? courseList[courseIdx].id
-      : -1,
-  ]);
-
   const curCourse =
     courseIdx > -1 && courseIdx < courseList.length
       ? courseList[courseIdx]
       : null;
-  const asData = asIdx > -1 && asIdx < asList.length ? asList[asIdx] : null;
-
-  const handleCreateAs = async () => {
-    if (!userCtx.user || !curCourse) return;
-    console.log('creating assignment');
-    const dummyAs: models.AssignmentCreate = {
-      name: 'dummy assignment',
-      about: '**more info to come**\n:)',
-    };
-    const response = await courseApi.createAssignment(curCourse.id, dummyAs);
-    if (!response.error) {
-      console.log('Assignment created:', response.data);
-      setAsList((prev) => [...prev, response.data]);
-    } else {
-      console.error('Error creating assignment:', response.error);
-    }
-  };
 
   const handleLogout = async () => {
     const res = await courseApi.logout();
@@ -134,9 +87,17 @@ const HomePage = () => {
     }
   };
 
-  if (!userCtx.user) return; // TODO: redirect to login page?
+  if (!userCtx.user) {
+    return (
+      <>
+        <div>not logged in...</div>
+        <Button variant="contained" href="/join">
+          Onboard now!
+        </Button>
+      </>
+    );
+  }
 
-  const themePrimaryColor = theme.palette.primary.main;
   return (
     <div className={classes.fullHeightDiv}>
       {/* header bar */}
@@ -145,7 +106,10 @@ const HomePage = () => {
           {/* <IconButton edge="start" color="inherit" aria-label="menu">
             <MenuIcon />
           </IconButton> */}
-          <Typography variant="h6" style={{ flexGrow: 1, marginLeft: '5px' }}>
+          <Typography
+            variant="h6"
+            style={{ flexGrow: 1, marginLeft: theme.spacing(2) }}
+          >
             Ezfeedback
           </Typography>
           <div>
@@ -181,46 +145,16 @@ const HomePage = () => {
       </AppBar>
 
       {/* main content */}
-      <Typography variant="h1" gutterBottom>
-        Welcome Home {userCtx.user?.name}
-      </Typography>
-      <Typography variant="body1">
-        there are {courseList.length} courses + {asList.length} assignments
-      </Typography>
-      <br />
 
-      <Button variant="contained" onClick={handleCreateAs}>
-        Create Assignment
-      </Button>
-
-      <Button variant="contained" href="/join">
-        Onboard now!
-      </Button>
-      <Link href="/join">Onboard!</Link>
-
-      <div style={{ border: '2px solid purple' }}>
-        {/* <AssignmentView
-          name="Smart"
-          about="This is the first assignment"
-          id="f46eb7bd-ddbe-4553-b72f-d4f35d08c5f8"
-        /> */}
-
+      <div className={classes.centeredContent}>
         {/*map courselist to simple list of names */}
-        {courseList.map((course) => (
-          <div key={course.id}>
-            <Typography variant="h3">{course.name}</Typography>
-            <Typography variant="body1">{course.about}</Typography>
-          </div>
-        ))}
-        <hr />
-        {asData && (
-          <>
-            <Typography variant="h3" gutterBottom>
-              Your Assignment:
-            </Typography>
-            <AssignmentView asData={asData} />
-          </>
-        )}
+        {loadingCourses && 'loading courses...'}
+
+        {!loadingCourses &&
+          courseList.length === 0 &&
+          "You're not enrolled in any courses yet..."}
+
+        {curCourse && <CourseView course={curCourse} />}
       </div>
     </div>
   );
@@ -272,6 +206,17 @@ const useStyles = makeStyles((theme) => ({
     padding: 0,
     overflow: 'hidden', // Optional: to manage overflow of child components
     border: '2px dashed red',
+  },
+  centeredContent: {
+    display: 'flex',
+    // justifyContent: 'center',
+    alignItems: 'center',
+    padding: '20px',
+    margin: 'auto',
+    // TODO: use breakpoitn
+    //maxWidth: `${theme.breakpoints.values.lg}px`,
+    maxWidth: `1500px`,
+    // border: '2px dashed green',
   },
 }));
 

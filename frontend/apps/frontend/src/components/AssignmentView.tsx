@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button } from '@mui/material';
-import Snackbar from '@mui/material/Snackbar';
+import { Button, Typography, Snackbar } from '@mui/material';
 import AttemptCreateModal from './AttemptCreateModal';
 import AttemptView from './AttemptView';
 import AttemptHistory from './AttemptHistory';
@@ -47,10 +46,7 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
     })();
   }, [asData.id]);
 
-  if (!userCtx.user) {
-    return <div>not logged in...</div>;
-  }
-
+  if (!userCtx.user) return null;
   return (
     <div>
       <Snackbar
@@ -60,9 +56,14 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
         message={snackbarTxt}
       />
 
-      <div>
-        welcome {userCtx.user.name} to the assignment {asData.name} (you have
-        made {attempts.length} attempts)
+      <Typography variant="h4" component="h2">
+        {asData.name}
+      </Typography>
+      <Typography variant="body1" color="textSecondary" component="p">
+        {asData.about}
+      </Typography>
+      <div style={{ marginTop: '22px' }}>
+        You have made {attempts.length} attempts so far on this assignment.
       </div>
       {!creatingAttempt && (
         <Button variant="contained" onClick={() => setCreatingAttempt(true)}>
@@ -81,12 +82,12 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
         />
       )}
 
-      {attempts.length && viewAttemptIdx === -1 && (
+      {attempts.length > 0 && viewAttemptIdx === -1 && (
         <Button variant="contained" onClick={() => setViewAttemptIdx(0)}>
           View Last attempt
         </Button>
       )}
-      {attempts.length && viewAttemptIdx > -1 && (
+      {attempts.length > 0 && viewAttemptIdx > -1 && (
         <AttemptView
           attempt={attempts[viewAttemptIdx]}
           open={true}
@@ -99,7 +100,6 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
         />
       )}
 
-      <hr />
       <AttemptHistory attempts={attempts} />
     </div>
   );
