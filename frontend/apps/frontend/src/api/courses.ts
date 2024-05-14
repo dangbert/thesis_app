@@ -1,9 +1,18 @@
 import { jsonOrError, API_PATH } from './common';
 import * as models from '../models';
 
-const coursePath = `${API_PATH}/course`;
+// MARK: auth
+const authPath = `${API_PATH}/auth`;
+export const logout = async () => {
+  return await jsonOrError(
+    fetch(`${authPath}/logout`, {
+      method: 'GET',
+    })
+  );
+};
 
 // MARK: courses
+const coursePath = `${API_PATH}/course`;
 export const listCourses = async () => {
   return await jsonOrError(fetch(`${coursePath}/`, { method: 'GET' }));
 };

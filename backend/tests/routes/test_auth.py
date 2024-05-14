@@ -58,7 +58,8 @@ def test_logout(client: TestClient, session):
     assert res.is_redirect
     assert (
         res.headers["location"]
-        == f"https://{settings.auth0_domain}/v2/logout?returnTo=http%3A%2F%2Ftestserver%2F&client_id={settings.auth0_client_id}"
+        == f"https://{settings.auth0_domain}/v2/logout?returnTo=http%3A%2F%2Flocalhost%3A2222%2F&client_id={settings.auth0_client_id}"
+        # == f"https://{settings.auth0_domain}/v2/logout?returnTo=http%3A%2F%2Ftestserver%2F&client_id={settings.auth0_client_id}"
     )
     assert res.headers["set-cookie"].startswith("session=null;")
     # assert res.json() == {"detail": "Logged out"}

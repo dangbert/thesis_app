@@ -15,6 +15,7 @@ import HomePage from './HomePage';
 
 import { IUserProviderContext, UserContext } from '../providers';
 import * as models from '../models';
+import '../app.css';
 
 const StyledApp = styled.div`
   // Your style here
@@ -39,37 +40,37 @@ export function App() {
 
   return (
     <BrowserRouter>
-      <StyledApp>
-        <CustomThemeContext.Provider value={customThemeCtx}>
-          {/* still using ThemeProvider for the sake of mui's components */}
-          <ThemeProvider theme={customThemeCtx.theme}>
-            <UserContext.Provider value={userContext}>
-              <CssBaseline enableColorScheme={true} />
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/join" element={<Onboard />} />
-                <Route
-                  path="/test"
-                  element={
-                    <Typography variant="h2" gutterBottom>
-                      Testing
-                    </Typography>
-                  }
-                />
+      {/* <StyledApp> */}
+      <CustomThemeContext.Provider value={customThemeCtx}>
+        {/* still using ThemeProvider for the sake of mui's components */}
+        <ThemeProvider theme={customThemeCtx.theme}>
+          <UserContext.Provider value={userContext}>
+            <CssBaseline enableColorScheme={true} />
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/join" element={<Onboard />} />
+              <Route
+                path="/test"
+                element={
+                  <Typography variant="h2" gutterBottom>
+                    Testing
+                  </Typography>
+                }
+              />
 
-                <Route
-                  path="*"
-                  element={
-                    <Typography variant="h1" gutterBottom>
-                      Fallback page
-                    </Typography>
-                  }
-                />
-              </Routes>
-            </UserContext.Provider>
-          </ThemeProvider>
-        </CustomThemeContext.Provider>
-      </StyledApp>
+              <Route
+                path="*"
+                element={
+                  <Typography variant="h1" gutterBottom>
+                    Fallback page
+                  </Typography>
+                }
+              />
+            </Routes>
+          </UserContext.Provider>
+        </ThemeProvider>
+      </CustomThemeContext.Provider>
+      {/* </StyledApp> */}
     </BrowserRouter>
   );
 }

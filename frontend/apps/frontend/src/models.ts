@@ -23,6 +23,8 @@ export interface UserPublic extends BaseFields {
   sub: string;
   name: string;
   email: string;
+  // TODO: store in DB
+  picture?: string;
 }
 
 export interface CourseCreate {

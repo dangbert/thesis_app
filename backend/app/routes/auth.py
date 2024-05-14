@@ -22,6 +22,7 @@ settings = get_settings()
 LOGIN_URL = (
     f"{settings.site_url}{settings.api_v1_str}/auth/login"  # request.url_for("login")
 )
+BASE_URL = f"{settings.site_url}/"
 
 oauth = OAuth()
 oauth.register(
@@ -133,7 +134,8 @@ async def logout(request: Request) -> str:
     # Clear user session, effectively logging out the user
     request.session.clear()
     # Redirect user to Auth0 logout, and return them to /
-    return auth0_logout_url(return_to=request.base_url)
+    # return auth0_logout_url(return_to=request.base_url)
+    return auth0_logout_url(return_to=URL(BASE_URL))
 
 
 @router.get(
