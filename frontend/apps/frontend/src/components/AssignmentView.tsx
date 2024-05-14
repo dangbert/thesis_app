@@ -9,7 +9,6 @@ import * as models from '../models';
 import * as courseApi from '../api/courses';
 import { useUserContext } from '../providers';
 
-const DUMMY_ID = 'cc2d7ce4-170f-4817-b4a9-76e11d5f9c56';
 interface IAssignmentViewProps {
   asData: AssignmentPublic;
   // dueDate: string;
@@ -62,7 +61,7 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
       <Typography variant="body1" color="textSecondary" component="p">
         {asData.about}
       </Typography>
-      <div style={{ marginTop: '22px' }}>
+      <div style={{ marginTop: '12px' }}>
         You have made {attempts.length} attempts so far on this assignment.
       </div>
       {!creatingAttempt && (

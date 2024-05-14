@@ -33,20 +33,21 @@ const HomePage = () => {
   const classes = useStyles(theme);
   const [userMenuEl, setUserMenuEl] = useState<HTMLElement | null>(null);
 
+  // TODO: referesh user data on a timer?
   useEffect(() => {
-    const dummyUser = {
-      created_at: '2024-05-12T13:13:47.346969Z',
-      updated_at: undefined,
-      sub: 'auth0|4005879303709086033',
-      name: 'Dan Engbert',
-      email: 'd.engbert@student.vu.nl',
-      id: '6b3c87e9-7ad2-407b-bb29-c8ab919bda5d',
-      profileUrl: undefined,
-    };
-    userCtx.onChange(dummyUser);
-
-    let cancel = false;
     (async () => {
+      let cancel = false;
+      const res = await courseApi.getCurUser();
+      if (cancel) return;
+      if (res.error) {
+        console.error(`failed to load current user: ${res.error}`);
+      } else {
+        console.log('fetched attempt list\n', res.data);
+        console.log('loaded user:');
+        console.log(res.data);
+        userCtx.onChange(res.data);
+      }
+
       return () => (cancel = true);
     })();
   }, []);

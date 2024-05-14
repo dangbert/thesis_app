@@ -11,6 +11,14 @@ export const logout = async () => {
   );
 };
 
+export const getCurUser = async () => {
+  return await jsonOrError(
+    fetch(`${authPath}/me`, {
+      method: 'GET',
+    })
+  );
+};
+
 // MARK: courses
 const coursePath = `${API_PATH}/course`;
 export const listCourses = async () => {
