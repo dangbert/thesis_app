@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from app.deps import SessionDep
+from app.deps import SessionDep, AuthUserDep
 from app.models.course import (
     Course,
     CourseCreate,
@@ -22,7 +22,7 @@ def get_course_or_fail(course_id: UUID, session: SessionDep) -> Course:
 
 ### courses
 @router.get("/")
-async def list_courses(session: SessionDep) -> list[CoursePublic]:
+async def list_courses(user: AuthUserDep, session: SessionDep) -> list[CoursePublic]:
     courses = session.query(Course).all()
     return [course.to_public() for course in courses]
 

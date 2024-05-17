@@ -29,6 +29,11 @@ class Settings(BaseSettings):
     # model_config = SettingsConfigDict(env_file="test.env", extra="ignore")
     model_config = SettingsConfigDict()
     env: Literal["TEST", "DEV", "PRD"]
+
+    @property
+    def is_production(self) -> bool:
+        return self.env == "PRD"
+
     api_v1_str: str = "/api/v1"
     server_name: str  # e.g. "http://localhost:8000" or "example.com"
 

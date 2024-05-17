@@ -67,6 +67,7 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=settings.secret_key,
     max_age=settings.session_expiration_secs,
+    https_only=settings.is_production,
 )
 
 # https://fastapi.tiangolo.com/tutorial/cors/

@@ -1,14 +1,41 @@
 """Utilities for creating dummy data for testing."""
 
+from fastapi.testclient import TestClient
+import app.models as models
 from app.models import User, Course, Assignment, Attempt, File
 from app.hardcoded import SMARTData, FeedbackData
 from app.settings import get_settings
 from sqlalchemy.orm import Session
 from uuid import UUID
+import base64
+import json
 from typing import Any, Optional
+import itsdangerous
+import httpx
 
 
 DUMMY_ID = UUID("cc2d7ce4-170f-4817-b4a9-76e11d5f9c56")
+
+settings = get_settings()
+
+
+def assert_not_authenticated(res: httpx.Response):
+    assert isinstance(res, httpx.Response)
+    assert res.status_code == 401 and res.json()["detail"] == "Not authenticated"
+
+
+def login_user(client: TestClient, user: models.User):
+    """Helper function to get a session cookie on the client."""
+    session = {"user": {"sub": user.sub, "name": user.name, "email": user.email}}
+    # mirrors what starlette.middleware.sessions.SessionMiddleware does:
+    session_data = base64.b64encode(json.dumps(session).encode())
+    signer = itsdangerous.TimestampSigner(settings.secret_key)
+    cookie_data = signer.sign(session_data).decode()
+    client.cookies.set("session", cookie_data)
+
+
+def logout_user(client: TestClient):
+    client.cookies.clear()
 
 
 def make_user(

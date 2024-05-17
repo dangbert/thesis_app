@@ -8,13 +8,23 @@ from app.models.course import (
     AssignmentPublic,
 )
 from tests.dummy import DUMMY_ID, make_course, make_assignment
+import tests.dummy as dummy
 
 
 ### courses
 def test_list_courses(client, settings, session):
+    user = dummy.make_user(session)
+    # auth sanity checks
+    dummy.assert_not_authenticated(client.get(f"{settings.api_v1_str}/course/"))
+    dummy.login_user(client, user)
+    dummy.logout_user(client)
+    dummy.assert_not_authenticated(client.get(f"{settings.api_v1_str}/course/"))
+
+    dummy.login_user(client, user)
     res = client.get(f"{settings.api_v1_str}/course/")
     assert res.status_code == 200 and res.json() == []
 
+    # TODO: ensure users can only access courses they belong to
     course = make_course(session)
     res = client.get(f"{settings.api_v1_str}/course/")
     assert res.status_code == 200

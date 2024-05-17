@@ -1,38 +1,15 @@
 from sqlalchemy import select
-from app.models.course import (
-    Course,
-    CourseCreate,
-    CoursePublic,
-    Assignment,
-    AssignmentCreate,
-    AssignmentPublic,
-)
 from app.settings import get_settings
 from tests.dummy import DUMMY_ID, make_course, make_assignment
 from fastapi.testclient import TestClient
 from starlette.responses import RedirectResponse
-import base64
-import itsdangerous
-import json
 import app.models as models
 import app.models.schemas as schemas
 import tests.dummy as dummy
 import pytest_mock
-import pytest
-import unittest.mock
 from app.routes.auth import oauth, USE_CONNECTION, LOGIN_URL
 
 settings = get_settings()
-
-
-def set_session_cookie_on_client(client: TestClient, user: models.User):
-    """Helper function to get a session cookie on the client."""
-    session = {"user": {"sub": user.sub, "name": user.name, "email": user.email}}
-    # mirrors what starlette.middleware.sessions.SessionMiddleware does:
-    session_data = base64.b64encode(json.dumps(session).encode())
-    signer = itsdangerous.TimestampSigner(settings.secret_key)
-    cookie_data = signer.sign(session_data).decode()
-    client.cookies.set("session", cookie_data)
 
 
 def test_login(client: TestClient, session, mocker: pytest_mock.MockerFixture):
@@ -45,16 +22,14 @@ def test_login(client: TestClient, session, mocker: pytest_mock.MockerFixture):
         mocker.ANY,
         "http://localhost:2222/api/v1/auth/callback",
         connection=USE_CONNECTION,
-        # response_type="code",
     )
     assert res.is_redirect
 
 
 def test_logout(client: TestClient, session):
     user = dummy.make_user(session)
-    set_session_cookie_on_client(client, user)
+    dummy.login_user(client, user)
     res = client.get(f"{settings.api_v1_str}/auth/logout")
-    # note default TestClientbase_url is "http://testserver"
     assert res.is_redirect
     assert (
         res.headers["location"]
@@ -82,6 +57,7 @@ def test_callback(
         }
     }
 
+    # note default TestClientbase_url is "http://testserver"
     client.cookies.clear()  # User is not logged in
     client.headers = {"Referer": "http://testserver/"}  # type: ignore [assignment]
     res = client.get(f"{settings.api_v1_str}/auth/callback")
@@ -129,7 +105,7 @@ def test_me(client: TestClient, session):
     assert res.is_redirect
     assert res.headers["location"] == LOGIN_URL
 
-    set_session_cookie_on_client(client, user)
+    dummy.login_user(client, user)
     res = client.get(f"{settings.api_v1_str}/auth/me")
     assert res.status_code == 200
     assert schemas.UserPublic(**res.json()) == user.to_public()
