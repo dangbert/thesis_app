@@ -28,7 +28,9 @@ async def list_courses(user: AuthUserDep, session: SessionDep) -> list[CoursePub
 
 
 @router.get("/{course_id}")
-async def get_course(course_id: UUID, session: SessionDep) -> CoursePublic:
+async def get_course(
+    user: AuthUserDep, course_id: UUID, session: SessionDep
+) -> CoursePublic:
     return get_course_or_fail(course_id, session).to_public()
 
 
@@ -43,7 +45,7 @@ async def create_course(body: CourseCreate, session: SessionDep) -> CoursePublic
 ### assignments
 @router.get("/{course_id}/assignment")
 async def list_assignments(
-    course_id: UUID, session: SessionDep
+    user: AuthUserDep, course_id: UUID, session: SessionDep
 ) -> list[AssignmentPublic]:
     course = get_course_or_fail(course_id, session)
     assignments = course.assignments
@@ -52,7 +54,7 @@ async def list_assignments(
 
 @router.get("/{course_id}/assignment/{assignment_id}")
 async def get_assignment(
-    course_id: UUID, assignment_id: UUID, session: SessionDep
+    user: AuthUserDep, course_id: UUID, assignment_id: UUID, session: SessionDep
 ) -> AssignmentPublic:
     get_course_or_fail(course_id, session).to_public()
     a1 = (
@@ -67,7 +69,7 @@ async def get_assignment(
 
 @router.put("/{course_id}/assignment", status_code=201)
 async def create_assignment(
-    course_id: UUID, body: AssignmentCreate, session: SessionDep
+    user: AuthUserDep, course_id: UUID, body: AssignmentCreate, session: SessionDep
 ) -> AssignmentPublic:
     get_course_or_fail(course_id, session).to_public()
     assignment = Assignment(name=body.name, about=body.about, course_id=course_id)

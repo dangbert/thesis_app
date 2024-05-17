@@ -1,7 +1,7 @@
 import os
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from starlette.responses import FileResponse
-from app.deps import SessionDep
+from app.deps import SessionDep, AuthUserDep
 from app.settings import get_settings
 from app.models.course import (
     File as FileModel,
@@ -16,9 +16,8 @@ router = APIRouter()
 # https://fastapi.tiangolo.com/tutorial/request-files/#uploadfile-with-additional-metadata
 @router.put("/", status_code=201)
 async def upload_file(
+    user: AuthUserDep,
     file: UploadFile,
-    # TODO: read user from cookies!
-    user_id: Annotated[UUID, Form()],
     session: SessionDep,
 ) -> FilePublic:
     Annotated[UploadFile, File(description="A file read as UploadFile")]
@@ -28,11 +27,11 @@ async def upload_file(
         raise HTTPException(status_code=400, detail="expected a file upload")
 
     if "." not in file.filename:
-        raise HTTPException(status_code=400, detail="file extension not found")
+        raise HTTPException(status_code=400, detail="no file extension in filename")
     ext = file.filename.split(".")[-1]
     db_file = FileModel(
         filename=file.filename,
-        user_id=user_id,
+        user_id=user.id,
         ext=ext,
     )
     session.add(db_file)
@@ -54,7 +53,9 @@ async def upload_file(
 
 
 @router.get("/{file_id}", response_class=FileResponse)
-async def read_file(file_id: UUID, session: SessionDep) -> FileResponse:
+async def read_file(
+    user: AuthUserDep, file_id: UUID, session: SessionDep
+) -> FileResponse:
     # Fetch file record from the database to verify existence and get filename
     db_file = session.query(FileModel).filter(FileModel.id == file_id).first()
     if not db_file:

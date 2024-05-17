@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from app.deps import SessionDep
+from app.deps import SessionDep, AuthUserDep
 from app.models.schemas import FeedbackCreate
 from app.models.course import (
     Course,
@@ -31,7 +31,7 @@ def get_assignment_or_fail(assignment_id: UUID, session: SessionDep) -> Assignme
 
 @router.get("/")
 async def list_attempts(
-    assignment_id: UUID, session: SessionDep
+    user: AuthUserDep, assignment_id: UUID, session: SessionDep
 ) -> list[AttemptPublic]:
     get_assignment_or_fail(assignment_id, session)
     attempts = (
@@ -44,7 +44,9 @@ async def list_attempts(
 
 
 @router.get("/{attempt_id}")
-async def get_attempt(attempt_id: UUID, session: SessionDep) -> AttemptPublic:
+async def get_attempt(
+    user: AuthUserDep, attempt_id: UUID, session: SessionDep
+) -> AttemptPublic:
     attempt = session.get(Attempt, attempt_id)
     if not attempt:
         raise HTTPException(status_code=404, detail="Attempt not found")
@@ -53,7 +55,7 @@ async def get_attempt(attempt_id: UUID, session: SessionDep) -> AttemptPublic:
 
 @router.put("/", status_code=201)
 async def create_attempt(
-    assignment_id: UUID, body: AttemptCreate, session: SessionDep
+    user: AuthUserDep, assignment_id: UUID, body: AttemptCreate, session: SessionDep
 ) -> AttemptPublic:
     get_assignment_or_fail(assignment_id, session)
     try:
@@ -64,7 +66,7 @@ async def create_attempt(
         )
 
     attempt = Attempt(
-        assignment_id=assignment_id, user_id=body.user_id, data=smart_data.model_dump()
+        assignment_id=assignment_id, user_id=user.id, data=smart_data.model_dump()
     )
     session.add(attempt)
     session.commit()
@@ -73,7 +75,7 @@ async def create_attempt(
 
 @router.put("/{attempt_id}/feedback", status_code=201)
 async def create_feedback(
-    attempt_id: UUID, body: FeedbackCreate, session: SessionDep
+    user: AuthUserDep, attempt_id: UUID, body: FeedbackCreate, session: SessionDep
 ) -> FeedbackPublic:
     attempt = session.get(Attempt, attempt_id)
     if not attempt:
@@ -82,11 +84,12 @@ async def create_feedback(
     try:
         FeedbackData(**body.data)
     except ValidationError:
-        raise HTTPException(status_code=400, detail="Feedback data in incorrect format")
+        raise HTTPException(
+            status_code=400, detail="Feedback data provided in incorrect format"
+        )
 
-    # TODO: get user from cookies
     feedback = Feedback(
-        attempt_id=attempt_id, user_id=body.user_id, is_ai=False, data=body.data
+        attempt_id=attempt_id, user_id=user.id, is_ai=False, data=body.data
     )
     session.add(feedback)
     session.flush()  # to get ID

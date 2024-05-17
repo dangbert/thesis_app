@@ -16,6 +16,7 @@ def test_list_courses(client, settings, session):
     user = dummy.make_user(session)
     # auth sanity checks
     dummy.assert_not_authenticated(client.get(f"{settings.api_v1_str}/course/"))
+    # here we do an extra check to test that the login/logout helpers work as intended
     dummy.login_user(client, user)
     dummy.logout_user(client)
     dummy.assert_not_authenticated(client.get(f"{settings.api_v1_str}/course/"))
@@ -39,6 +40,12 @@ def test_list_courses(client, settings, session):
 
 
 def test_get_assignment(client, settings, session):
+    user = dummy.make_user(session)
+    dummy.assert_not_authenticated(
+        client.get(f"{settings.api_v1_str}/course/{DUMMY_ID}/assignment/{DUMMY_ID}")
+    )
+
+    dummy.login_user(client, user)
     res = client.get(
         f"{settings.api_v1_str}/course/{DUMMY_ID}/assignment/{DUMMY_ID}",
     )
@@ -67,6 +74,12 @@ def test_get_assignment(client, settings, session):
 
 
 def test_create_assignment(client, settings, session):
+    user = dummy.make_user(session)
+    dummy.assert_not_authenticated(
+        client.put(f"{settings.api_v1_str}/course/{DUMMY_ID}/assignment")
+    )
+
+    dummy.login_user(client, user)
     obj = AssignmentCreate(name="Test Assignment", about="This is a test assignment.")
     res = client.put(
         f"{settings.api_v1_str}/course/{DUMMY_ID}/assignment",

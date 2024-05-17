@@ -53,12 +53,12 @@ class AssignmentPublic(AssignmentCreate, DateFields):
 
 class AttemptCreate(BaseModel):
     assignment_id: UUID
-    user_id: UUID
     data: dict[str, Any]
 
 
 class AttemptPublic(AttemptCreate, DateFields):
     id: UUID
+    user_id: UUID
     feedback: list["FeedbackPublic"]
 
 
@@ -70,7 +70,6 @@ class FilePublic(DateFields):
 
 class FeedbackCreate(BaseModel):
     attempt_id: UUID
-    user_id: Optional[UUID]
     data: dict[str, Any]
 
 

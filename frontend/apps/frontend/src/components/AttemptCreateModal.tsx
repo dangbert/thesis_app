@@ -54,7 +54,6 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
     setSubmitting(true);
     const attemptData: AttemptCreate = {
       assignment_id: asData.id,
-      user_id: userCtx.user.id,
       data,
     };
 

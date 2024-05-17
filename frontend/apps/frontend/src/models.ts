@@ -43,8 +43,6 @@ export interface AssignmentPublic extends AssignmentCreate, BaseFields {}
 
 export interface AttemptCreate {
   assignment_id: string;
-  // TODO: no need to store user_id it should be in the cookie
-  user_id: string;
   /* eslint-disable  @typescript-eslint/no-explicit-any */
   data: SMARTData; // | { [key: string]: any };
 }
@@ -60,7 +58,6 @@ export interface FilePublic extends BaseFields {
 
 export interface FeedbackCreate {
   attempt_id: string;
-  user_id: string;
   data: FeedbackData;
 }
 

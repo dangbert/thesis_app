@@ -3,6 +3,8 @@ from app.models.course import (
     Attempt,
     AttemptCreate,
     AttemptPublic,
+    Feedback,
+    FeedbackPublic,
 )
 import app.models.schemas as schemas
 from app.hardcoded import SMARTData, FeedbackData
@@ -22,7 +24,13 @@ def test_list_attempts(client, settings, session):
     user = make_user(session)
     c1 = make_course(session)
     as1 = make_assignment(session, c1.id)
+    dummy.assert_not_authenticated(
+        client.get(
+            f"{settings.api_v1_str}/attempt/", params={"assignment_id": DUMMY_ID}
+        )
+    )
 
+    dummy.login_user(client, user)
     res = client.get(
         f"{settings.api_v1_str}/attempt/", params={"assignment_id": DUMMY_ID}
     )
@@ -41,7 +49,11 @@ def test_get_attempt(client, settings, session):
     c1 = make_course(session)
     as1 = make_assignment(session, c1.id)
     at1 = make_attempt(session, as1.id, user.id)
+    dummy.assert_not_authenticated(
+        client.get(f"{settings.api_v1_str}/attempt/{DUMMY_ID}")
+    )
 
+    dummy.login_user(client, user)
     res = client.get(f"{settings.api_v1_str}/attempt/{DUMMY_ID}")
     assert res.status_code == 404 and res.json()["detail"] == "Attempt not found"
     res = client.get(f"{settings.api_v1_str}/attempt/{at1.id}")
@@ -52,8 +64,10 @@ def test_create_attempt(client, settings, session):
     user = make_user(session)
     c1 = make_course(session)
     as1 = make_assignment(session, c1.id)
+    dummy.assert_not_authenticated(client.put(f"{settings.api_v1_str}/attempt/"))
 
-    obj = AttemptCreate(user_id=user.id, assignment_id=as1.id, data={"hello": "world"})
+    dummy.login_user(client, user)
+    obj = AttemptCreate(assignment_id=as1.id, data={"hello": "world"})
     res = client.put(
         f"{settings.api_v1_str}/attempt/",
         json=json.loads(obj.model_dump_json()),
@@ -73,9 +87,7 @@ def test_create_attempt(client, settings, session):
         and res.json()["detail"] == "Data format not in SMARTData format"
     )
 
-    obj = AttemptCreate(
-        user_id=user.id, assignment_id=as1.id, data=example_smart_data.model_dump()
-    )
+    obj = AttemptCreate(assignment_id=as1.id, data=example_smart_data.model_dump())
     res = client.put(
         f"{settings.api_v1_str}/attempt/",
         # this is a hack to get obj as a dict where UUID is serialized to str
@@ -84,7 +96,10 @@ def test_create_attempt(client, settings, session):
     )
     assert res.status_code == 201
     created = session.get(Attempt, res.json()["id"])
-    assert AttemptPublic(**res.json()) == created.to_public()
+    assert (
+        AttemptPublic(**res.json()) == created.to_public()
+        and created.user_id == user.id
+    )
 
 
 def test_create_feedback(client, settings, session):
@@ -92,10 +107,13 @@ def test_create_feedback(client, settings, session):
     as1 = make_assignment(session, course.id)
     user = make_user(session)
     at1 = make_attempt(session, as1.id, user.id)
+    dummy.assert_not_authenticated(
+        client.put(f"{settings.api_v1_str}/attempt/{at1.id}/feedback")
+    )
 
+    dummy.login_user(client, user)
     obj = schemas.FeedbackCreate(
         attempt_id=at1.id,
-        user_id=user.id,
         data=dummy.example_feedback_data.model_dump(),
     )
 
@@ -108,4 +126,10 @@ def test_create_feedback(client, settings, session):
     assert (
         len(at1.feedback) == 1
         and FeedbackData(**at1.feedback[0].data) == dummy.example_feedback_data
+    )
+
+    created = session.get(Feedback, res.json()["id"])
+    assert (
+        created.to_public() == FeedbackPublic(**res.json())
+        and created.user_id == user.id
     )

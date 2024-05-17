@@ -1,4 +1,4 @@
-"""Utilities for creating dummy data for testing."""
+"""Utilities for creating/using dummy data for testing."""
 
 from fastapi.testclient import TestClient
 import app.models as models
@@ -21,7 +21,8 @@ settings = get_settings()
 
 def assert_not_authenticated(res: httpx.Response):
     assert isinstance(res, httpx.Response)
-    assert res.status_code == 401 and res.json()["detail"] == "Not authenticated"
+    assert res.status_code == 401
+    assert res.json()["detail"] == "Not authenticated"
 
 
 def login_user(client: TestClient, user: models.User):

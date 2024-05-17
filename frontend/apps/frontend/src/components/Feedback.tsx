@@ -53,7 +53,6 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
     setSubmitting(true);
     const feedbackToCreate: FeedbackCreate = {
       attempt_id: attemptId,
-      user_id: userCtx.user.id, // User ID should be provided or obtained from context
       data: feedbackData,
     };
 

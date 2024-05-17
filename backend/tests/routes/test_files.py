@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 from tests.dummy import make_user, make_file
+import tests.dummy as dummy
 from app.models.course import File
 from app.models.schemas import FilePublic
 from io import BytesIO
@@ -10,7 +11,6 @@ def test_file_upload(client: TestClient, settings, session):
     user = make_user(session)
     file_content = b"Hello, World!"
     file_name = "testfile.txt"
-
     # Prepare data for sending as multipart including file and form fields
     data = {
         "file": (file_name, BytesIO(file_content), "text/plain"),
@@ -19,12 +19,13 @@ def test_file_upload(client: TestClient, settings, session):
             str(user.id),
         ),  # Passing user_id as part of the form data for now
     }
+    dummy.assert_not_authenticated(client.put(f"{settings.api_v1_str}/file/"))
 
+    dummy.login_user(client, user)
     res = client.put(
         f"{settings.api_v1_str}/file/",
         files=data,  # type: ignore [arg-type]
     )
-
     assert res.status_code == 201, f"Expected status code 201, got {res.status_code}"
     res_file = FilePublic(**res.json())
     file = session.get(File, res_file.id)
@@ -43,14 +44,13 @@ def test_file_download(client: TestClient, session):
     user = make_user(session)
     content = b"blah blah blah!"
     file = make_file(session, user.id, content=content)
-
     read_url = file.to_public().read_url
-    # Test the download endpoint
+    dummy.assert_not_authenticated(client.get(read_url))
+
+    dummy.login_user(client, user)
     res = client.get(read_url)
 
     assert res.status_code == 200, f"Expected status code 200, got {res.status_code}"
     assert (
         res.content == content
     ), "The downloaded file content does not match the expected content."
-
-    #
