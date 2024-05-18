@@ -17,13 +17,9 @@ model:
 checkpointer:
   _component_: torchtune.utils.FullModelHFCheckpointer
   checkpoint_dir: ${MODEL_DIR}
-  checkpoint_files: [
-    # TODO: had to hardcode checkpoint 3 for now
-    hf_model_0001_3.pt,
-    hf_model_0002_3.pt,
-    # hf_model_0001_${CHKP_NUM}.pt,
-    # hf_model_0002_${CHKP_NUM}.pt,
-  ]
+  checkpoint_files:
+    - hf_model_0001_${CHKP_NUM}.pt
+    - hf_model_0002_${CHKP_NUM}.pt
   output_dir: ${MODEL_DIR}
   model_type: LLAMA2
 
