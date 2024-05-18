@@ -4,9 +4,10 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 import itertools
+import os
 import sys
 import time
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional, Tuple
 
 import torch
 from omegaconf import DictConfig
@@ -16,10 +17,20 @@ from torch import nn
 from torchtune import config, utils
 from torchtune.data import AlpacaInstructTemplate
 
+import pandas as pd
+from jinja2 import Environment, FileSystemLoader
+from openai.types.chat.chat_completion import ChatCompletion
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+EXPERIMENTS_DIR = os.path.realpath(os.path.join(SCRIPT_DIR, ".."))
+sys.path.append(EXPERIMENTS_DIR)
+from AbstractModel import AbstractModel, IPrompt
+import config as projconfig
+
 logger = utils.get_logger("DEBUG")
 
 
-class InferenceRecipe:
+class InferenceRecipe(AbstractModel):
     """
     Recipe for generating tokens from a dense Transformer-based LLM.
 
@@ -39,6 +50,8 @@ class InferenceRecipe:
         self._dtype = utils.get_dtype(dtype=cfg.dtype)
         self._quantizer = config.instantiate(cfg.quantizer)
         self._quantization_mode = utils.get_quantizer_mode(self._quantizer)
+
+        self.alpaca_template = AlpacaInstructTemplate()
 
         utils.set_seed(seed=cfg.seed)
 
@@ -82,9 +95,17 @@ class InferenceRecipe:
 
         return model
 
+    def __call__(
+        self,
+        prompts: List[IPrompt],
+        cfg: DictConfig,
+    ) -> Tuple[List[str], List[ChatCompletion]]:
+        raw_outputs = [self.generate(cfg, prompt) for prompt in prompts]
+        return raw_outputs, None
+
     @torch.no_grad()
-    def generate(self, cfg: DictConfig):
-        tokens = self._tokenizer.encode(cfg.prompt, add_bos=True, add_eos=False)
+    def generate(self, cfg: DictConfig, prompt: str):
+        tokens = self._tokenizer.encode(prompt, add_bos=True, add_eos=False)
         prompt = torch.tensor(tokens, dtype=torch.int, device=self._device)
 
         custom_generate_next_token = None
@@ -121,7 +142,8 @@ class InferenceRecipe:
         )
         t = time.perf_counter() - t0
 
-        logger.info(self._tokenizer.decode(generated_tokens))
+        raw_output = self._tokenizer.decode(generated_tokens) 
+        logger.info(raw_output)
 
         model_size = sum(
             [
@@ -139,10 +161,37 @@ class InferenceRecipe:
         )
         logger.info(f"Bandwidth achieved: {model_size * tokens_sec / 1e9:.02f} GB/s")
         logger.info(f"Memory used: {torch.cuda.max_memory_allocated() / 1e9:.02f} GB")
+        return raw_output
+
+def benchmark_fluency(cfg: DictConfig) -> float:
+    fname = os.path.join(projconfig.DATASETS_DIR, "synthetic_smart/v4/feedback_gpt-3.5-turbo-0125.csv")
+    env = Environment(loader=FileSystemLoader(os.path.join(EXPERIMENTS_DIR, "prompts")))
+    fluency_template = env.get_template("fluency_score.jinja2")
+    df = pd.read_csv(fname)
+
+    recipe = InferenceRecipe(cfg=cfg)
+    recipe.setup(cfg=cfg)
+    prompts = [recipe.alpaca_template.format({"instruction": prompt}) for prompt in df["prompt"].tolist()]
+
+    outputs, _ = recipe(prompts, cfg=cfg)
+    df["output_llama2"] = outputs
+    df.to_csv("tmp.csv")
+    breakpoint()
+    print()
+
+    # TODO: now run GPT3 with these outputs + fluency_template
+    # fluency_template.render({"question": "provide feedback in Dutch on a student's assignment.", "answer": "nm y tu"})
+
+class Llama2Local(AbstractModel):
+    def __init__(self):
+        pass
+
 
 
 @config.parse
 def main(cfg: DictConfig) -> None:
+    benchmark_fluency(cfg)
+
     t = AlpacaInstructTemplate()
     # reformat prompt to align with training format
     cfg.prompt = t.format({"instruction": cfg.prompt})
@@ -150,7 +199,7 @@ def main(cfg: DictConfig) -> None:
     config.log_config(recipe_name="InferenceRecipe", cfg=cfg)
     recipe = InferenceRecipe(cfg=cfg)
     recipe.setup(cfg=cfg)
-    recipe.generate(cfg=cfg)
+    recipe.generate(cfg=cfg, prompt=cfg.prompt)
 
 
 if __name__ == "__main__":
