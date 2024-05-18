@@ -11,8 +11,8 @@ tune download meta-llama/Llama-2-7b-hf  --output-dir "$EXP_DIR/model"
 
 tune run lora_finetune_single_device --config ./llama2_7B_qlora_single_device.yaml
 
-# attempt generation (runs but not working well)
-tune run generate --config ./generation.yaml prompt="write an informative response that appropriately completes the request. ### Instruction:\nVertel me een kort verhaal over de dag van een student die aan zijn scriptie werkt.\n### Response:\n"
+# generate output using finetuned model on a given prompt
+tune run ./generate.py --config ./generation.yaml CHKP_NUM=3 prompt="Vertel me een kort verhaal over de dag van een student die aan zijn scriptie werkt."
 ````
 
 
@@ -24,7 +24,7 @@ tune cp llama2/7B_qlora_single_device ./llama2_7B_qlora_single_device.yaml
 
 tune cp generation generation.yaml 
 # seems we can also just copy python files from the torchtune codebase!
-# tune cp generate generate.py
+tune cp generate generate.py
 ````
 
 

@@ -14,6 +14,7 @@ from omegaconf import DictConfig
 from torch import nn
 
 from torchtune import config, utils
+from torchtune.data import AlpacaInstructTemplate
 
 logger = utils.get_logger("DEBUG")
 
@@ -142,6 +143,10 @@ class InferenceRecipe:
 
 @config.parse
 def main(cfg: DictConfig) -> None:
+    t = AlpacaInstructTemplate()
+    # reformat prompt to align with training format
+    cfg.prompt = t.format({"instruction": cfg.prompt})
+
     config.log_config(recipe_name="InferenceRecipe", cfg=cfg)
     recipe = InferenceRecipe(cfg=cfg)
     recipe.setup(cfg=cfg)
