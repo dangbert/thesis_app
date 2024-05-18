@@ -3,18 +3,28 @@
 # To launch, run the following command from root torchtune directory:
 #    tune run generate --config generation
 
+# my custom vars:
+EXP_DIR: "./llama2_7B"
+MODEL_DIR: ${EXP_DIR}/model
+# choose checkpoint num to differentiate between various checkpoints
+# e.g. checkpoint #3 is made up of: hf_model_0001_3.pt, hf_model_0002_3.pt (adapter_3.pt is also relevant but I think already used to create the other weight files)
+CHKP_NUM: 3
+
 # Model arguments
 model:
   _component_: torchtune.models.llama2.llama2_7b
 
 checkpointer:
   _component_: torchtune.utils.FullModelHFCheckpointer
-  checkpoint_dir: /tmp/Llama-2-7b-hf/
+  checkpoint_dir: ${MODEL_DIR}
   checkpoint_files: [
-    pytorch_model-00001-of-00002.bin,
-    pytorch_model-00002-of-00002.bin,
+    # TODO: had to hardcode checkpoint 3 for now
+    hf_model_0001_3.pt,
+    hf_model_0002_3.pt,
+    # hf_model_0001_${CHKP_NUM}.pt,
+    # hf_model_0002_${CHKP_NUM}.pt,
   ]
-  output_dir: /tmp/Llama-2-7b-hf/
+  output_dir: ${MODEL_DIR}
   model_type: LLAMA2
 
 device: cuda
@@ -25,7 +35,7 @@ seed: 1234
 # Tokenizer arguments
 tokenizer:
   _component_: torchtune.models.llama2.llama2_tokenizer
-  path: /tmp/Llama-2-7b-hf/tokenizer.model
+  path: ${MODEL_DIR}/tokenizer.model
 
 # Generation arguments; defaults taken from gpt-fast
 prompt: "Hello, my name is"

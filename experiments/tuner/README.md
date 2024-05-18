@@ -10,10 +10,13 @@ mkdir -p "$EXP_DIR/model" "$EXP_DIR/output"
 tune download meta-llama/Llama-2-7b-hf  --output-dir "$EXP_DIR/model"
 
 tune run lora_finetune_single_device --config ./llama2_7B_qlora_single_device.yaml
+
+# attempt generation (runs but not working well)
+tune run generate --config ./generation.yaml prompt="write an informative response that appropriately completes the request. ### Instruction:\nVertel me een kort verhaal over de dag van een student die aan zijn scriptie werkt.\n### Response:\n"
 ````
 
 
-initial setup notes:
+initial setup steps for reproducibility:
 ````bash
 # note that the .yaml file was initially made from a modified version of a default recipe:
 tune ls # view available "recipes"
