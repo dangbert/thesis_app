@@ -62,14 +62,17 @@ def test_attempt_feedback(session):
     )
     session.add(feedback)
     session.commit()
-    session.add(models.AttemptFeedback(attempt_id=at1.id, feedback_id=feedback.id))
+    session.add(models.AttemptFeedbackLink(attempt_id=at1.id, feedback_id=feedback.id))
     session.commit()
 
     assert len(at1.feedbacks) == 1 and at1.feedbacks[0].id == feedback.id
 
 
 def test_user_can_view(session):
-    """Sanity checks for user.can_view method to ensure proper access control."""
+    """
+    Sanity checks for user.can_view method to ensure proper access control.
+    NOTE: not testing file access here but this is done implicitly in test_files.py
+    """
     course = make_course(session)
     as1 = make_assignment(session, course.id)
     student1 = make_user(session)

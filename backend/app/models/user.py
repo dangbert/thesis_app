@@ -106,12 +106,12 @@ class User(Base):
             session, attempt.assignment
         ):
             logger.debug(
-                f"User {self.email} can view attempt {attempt}: due to ownership ({edit=})"
+                f"User {self.email} can view attempt {attempt.id}: due to ownership ({edit=})"
             )
             return True
         if self._can_view_assignment(session, attempt.assignment, edit=True):
             logger.debug(
-                f"User {self.email} can view attempt {attempt}: due to assignment EDIT access ({edit=})"
+                f"User {self.email} can view attempt {attempt.id}: due to assignment EDIT access ({edit=})"
             )
             return True
         return False
@@ -123,7 +123,7 @@ class User(Base):
         if self._can_view_attempt(session, feedback.attempt, edit=edit):
             if not edit:
                 logger.debug(
-                    f"User {self.email} can view feedback {feedback}: due to attempt access ({edit=})"
+                    f"User {self.email} can view feedback {feedback.id}: due to attempt access ({edit=})"
                 )
                 return True
             # (user) feedback can only be edited by those with edit access to the assigment (a.k.a. teachers)
@@ -138,7 +138,7 @@ class User(Base):
     ) -> bool:
         if self.id == file.user_id:
             logger.debug(
-                f"User {self.email} can view file {file}: due to ownership ({edit=})"
+                f"User {self.email} can view file {file.id}: due to ownership ({edit=})"
             )
             return True
         # these aren't necessarily efficient queries but sufficient for this project
@@ -146,22 +146,26 @@ class User(Base):
             self._can_view_course(session, course, edit) for course in file.courses
         ]:
             logger.debug(
-                f"User {self.email} can view file {file}: due to course access ({edit=})"
+                f"User {self.email} can view file {file.id}: due to course access ({edit=})"
             )
+            return True
+
         if True in [
             self._can_view_assignment(session, assignment, edit)
             for assignment in file.assignments
         ]:
             logger.debug(
-                f"User {self.email} can view file {file}: due to assignment access ({edit=})"
+                f"User {self.email} can view file {file.id}: due to assignment access ({edit=})"
             )
+            return True
 
         if True in [
             self._can_view_attempt(session, attempt, edit) for attempt in file.attempts
         ]:
             logger.debug(
-                f"User {self.email} can view file {file}: due to attempt access ({edit=})"
+                f"User {self.email} can view file {file.id}: due to attempt access ({edit=})"
             )
+            return True
 
         return False
 

@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from starlette.responses import FileResponse
 from app.deps import SessionDep, AuthUserDep
 from app.settings import get_settings
+from app.models.user import User
 from app.models.course import (
     File as FileModel,
     FilePublic,
@@ -11,6 +12,16 @@ from uuid import UUID
 from typing import Annotated
 
 router = APIRouter()
+
+FILE_NOT_FOUND = "File not found or not authorized"
+
+
+def get_file_or_fail(session: SessionDep, file_id: UUID, user: User) -> FileModel:
+    """Get's a file by ID, or raises a 404 if it doesn't exist or the user doesn't have access."""
+    file = session.query(FileModel).filter(FileModel.id == file_id).first()
+    if not file or (file and not user.can_view(session, file)):
+        raise HTTPException(status_code=404, detail=FILE_NOT_FOUND)
+    return file
 
 
 # https://fastapi.tiangolo.com/tutorial/request-files/#uploadfile-with-additional-metadata
@@ -56,10 +67,7 @@ async def upload_file(
 async def read_file(
     user: AuthUserDep, file_id: UUID, session: SessionDep
 ) -> FileResponse:
-    # Fetch file record from the database to verify existence and get filename
-    db_file = session.query(FileModel).filter(FileModel.id == file_id).first()
-    if not db_file:
-        raise HTTPException(status_code=404, detail="File not found")
+    db_file = get_file_or_fail(session, file_id, user)
 
     if not os.path.isfile(db_file.disk_path):
         raise HTTPException(status_code=404, detail="File not found on disk")

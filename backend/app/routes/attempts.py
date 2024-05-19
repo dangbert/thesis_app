@@ -12,7 +12,7 @@ from app.models.course import (
     Attempt,
     AttemptCreate,
     AttemptPublic,
-    AttemptFeedback,
+    AttemptFeedbackLink,
     FeedbackPublic,
     Feedback,
 )
@@ -97,6 +97,6 @@ async def create_feedback(
     )
     session.add(feedback)
     session.flush()  # to get ID
-    session.add(AttemptFeedback(attempt_id=attempt.id, feedback_id=feedback.id))
+    session.add(AttemptFeedbackLink(attempt_id=attempt.id, feedback_id=feedback.id))
     session.commit()
     return feedback.to_public()

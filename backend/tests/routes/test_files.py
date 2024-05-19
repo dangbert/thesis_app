@@ -1,8 +1,10 @@
 from fastapi.testclient import TestClient
 from tests.dummy import make_user, make_file
 import tests.dummy as dummy
-from app.models.course import File
+import app.models as models
+from app.models.course import File, CourseRole
 from app.models.schemas import FilePublic
+from app.routes.files import FILE_NOT_FOUND
 from io import BytesIO
 import os
 
@@ -41,16 +43,31 @@ def test_file_upload(client: TestClient, settings, session):
 
 
 def test_file_download(client: TestClient, session):
-    user = make_user(session)
+    user1 = make_user(session)
+    user2 = make_user(session, email="user2@example.com")
+    course = dummy.make_course(session)
+    as1 = dummy.make_assignment(session, course.id)
+    attempt = dummy.make_attempt(session, as1.id, user2.id)
+
+    # create file, attach to attempt
     content = b"blah blah blah!"
-    file = make_file(session, user.id, content=content)
+    file = make_file(session, user2.id, content=content, attempt_id=attempt.id)
     read_url = file.to_public().read_url
     dummy.assert_not_authenticated(client.get(read_url))
 
-    dummy.login_user(client, user)
-    res = client.get(read_url)
+    # user1 and (future) prof can't view the file
+    prof = make_user(session, email="prof@example.com")
+    for bad_user in [user1, prof]:
+        dummy.login_user(client, bad_user)
+        res = client.get(read_url)
+        assert res.status_code == 404 and res.json() == {"detail": FILE_NOT_FOUND}
 
-    assert res.status_code == 200, f"Expected status code 200, got {res.status_code}"
-    assert (
-        res.content == content
-    ), "The downloaded file content does not match the expected content."
+    # user2 can view own file, as well as the prof
+    prof.enroll(session, course, role=CourseRole.TEACHER)
+    for allowed_user in [user2, prof]:
+        dummy.login_user(client, allowed_user)
+        res = client.get(read_url)
+        assert res.status_code == 200
+        assert (
+            res.content == content
+        ), "The downloaded file content does not match the expected content."

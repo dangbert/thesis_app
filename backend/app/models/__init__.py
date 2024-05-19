@@ -6,11 +6,12 @@ from .course import (
     CourseUserLink,
     Assignment,
     Attempt,
-    CourseFile,
-    AssignmentFile,
+    AttemptFileLink,
+    CourseFileLink,
+    AssignmentFileLink,
     File,
     Feedback,
-    AttemptFeedback,
+    AttemptFeedbackLink,
 )
 
 # importing Base here (after all models are imported) for alembic

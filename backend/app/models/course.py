@@ -117,7 +117,9 @@ class Attempt(Base):
         ForeignKey("file.id"),
     )
 
-    file: Mapped["File"] = relationship("File", back_populates="attempt")
+    files: Mapped[list["File"]] = relationship(
+        "File", secondary="attempt_file", back_populates="attempts"
+    )
 
     feedbacks: Mapped[list["Feedback"]] = relationship(
         "Feedback",
@@ -156,8 +158,8 @@ class File(Base):
         secondary="assignment_file",
         back_populates="files",
     )
-    attempt: Mapped[Optional["Attempt"]] = relationship(
-        "Attempt", back_populates="file"
+    attempts: Mapped[list["Attempt"]] = relationship(
+        "Attempt", secondary="attempt_file", back_populates="files"
     )
 
     def to_public(self) -> FilePublic:
@@ -178,7 +180,19 @@ class File(Base):
         return os.path.join(settings.file_dir, f"{self.id}.{self.ext}")
 
 
-class AssignmentFile(Base):
+class AttemptFileLink(Base):
+    __tablename__ = "attempt_file"
+    attempt_id: Mapped[UUID] = mapped_column(
+        PUUID(as_uuid=True),
+        ForeignKey("attempt.id"),
+    )
+    file_id: Mapped[UUID] = mapped_column(
+        PUUID(as_uuid=True),
+        ForeignKey("file.id"),
+    )
+
+
+class AssignmentFileLink(Base):
     __tablename__ = "assignment_file"
     assignment_id: Mapped[UUID] = mapped_column(
         PUUID(as_uuid=True),
@@ -190,7 +204,7 @@ class AssignmentFile(Base):
     )
 
 
-class CourseFile(Base):
+class CourseFileLink(Base):
     __tablename__ = "course_file"
     course_id: Mapped[UUID] = mapped_column(
         PUUID(as_uuid=True),
@@ -228,7 +242,7 @@ class Feedback(Base):
         )
 
 
-class AttemptFeedback(Base):
+class AttemptFeedbackLink(Base):
     __tablename__ = "attempt_feedback"
     attempt_id: Mapped[UUID] = mapped_column(
         PUUID(as_uuid=True),

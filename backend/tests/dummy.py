@@ -35,6 +35,7 @@ def assert_not_authenticated(res: httpx.Response):
 
 def login_user(client: TestClient, user: models.User):
     """Helper function to get a session cookie on the client."""
+    logout_user(client)  # clear any existing session
     session = {"user": {"sub": user.sub, "name": user.name, "email": user.email}}
     # mirrors what starlette.middleware.sessions.SessionMiddleware does:
     session_data = base64.b64encode(json.dumps(session).encode())
@@ -118,6 +119,7 @@ def make_file(
     filename: str = "dummyfile.txt",
     ext: str = ".txt",
     content: bytes = b"dummy file :)",
+    attempt_id: Optional[UUID] = None,
 ) -> File:
     file = File(
         filename=filename,
@@ -128,4 +130,9 @@ def make_file(
     session.commit()
     with open(file.disk_path, "wb") as f:
         f.write(content)
+
+    if attempt_id is not None:
+        file_link = models.AttemptFileLink(attempt_id=attempt_id, file_id=file.id)
+        session.add(file_link)
+        session.commit()
     return file
