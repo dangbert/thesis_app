@@ -2,7 +2,15 @@
 
 from fastapi.testclient import TestClient
 import app.models as models
-from app.models import User, Course, Assignment, Attempt, File
+from app.models import (
+    User,
+    Course,
+    CourseRole,
+    Assignment,
+    Attempt,
+    File,
+    CourseUserLink,
+)
 from app.hardcoded import SMARTData, FeedbackData
 from app.settings import get_settings
 from sqlalchemy.orm import Session
@@ -47,6 +55,33 @@ def make_user(
     session.add(user)
     session.commit()
     return user
+
+
+def enroll_as(session: Session, user: User, course: Course, role: Optional[CourseRole]):
+    """
+    Enroll given user in course with a given role.
+    Removes user access if role is None.
+    """
+
+    link = (
+        session.query(CourseUserLink)
+        .filter_by(user_id=user.id, course_id=course.id)
+        .first()
+    )
+    if link and not role:
+        session.delete(link)
+        session.commit()
+        return
+
+    if link is None:
+        link = CourseUserLink(user_id=user.id, course_id=course.id, role=role)
+        session.add(link)
+        session.commit()
+        return
+
+    assert role is not None  # helps mypy
+    link.role = role
+    session.commit()
 
 
 def make_course(session: Session, name="Test Course") -> Course:

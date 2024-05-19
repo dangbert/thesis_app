@@ -18,6 +18,7 @@ from uuid import UUID
 import os
 from typing import Optional, Any
 import secrets
+import enum
 
 
 class Course(Base):
@@ -50,7 +51,25 @@ class Course(Base):
         )
 
 
-# class RoleEnum()
+class CourseRole(enum.Enum):
+    STUDENT = "student"
+    TEACHER = "teacher"
+
+
+class CourseUserLink(Base):
+    __tablename__ = "course_user_link"
+    course_id: Mapped[UUID] = mapped_column(
+        PUUID(as_uuid=True),
+        ForeignKey("course.id"),
+    )
+    user_id: Mapped[UUID] = mapped_column(
+        PUUID(as_uuid=True),
+        ForeignKey("user.id"),
+    )
+    role: Mapped[CourseRole]
+
+    course: Mapped["Course"] = relationship("Course")
+    user: Mapped["User"] = relationship("User")
 
 
 class Assignment(Base):
