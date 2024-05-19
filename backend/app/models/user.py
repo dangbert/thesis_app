@@ -65,8 +65,6 @@ class User(Base):
     ) -> bool:
         """
         Entry point for checking User acesss management.
-        TODO: technically users removed from a course shouldn't view their own attempts or feedback they provided.
-        (minor enough to ignore for this project)
         """
         if isinstance(obj, Course):
             return self._can_view_course(session, obj, edit)
@@ -103,8 +101,10 @@ class User(Base):
     def _can_view_attempt(
         self, session: Session, attempt: "Attempt", edit: bool = False
     ) -> bool:
-        # attempt owners and course teachers can view
-        if self.id == attempt.user_id:
+        # attempt owners (still part of course) and course teachers can view
+        if self.id == attempt.user_id and self._can_view_assignment(
+            session, attempt.assignment
+        ):
             logger.debug(
                 f"User {self.email} can view attempt {attempt}: due to ownership ({edit=})"
             )

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from app.deps import SessionDep, AuthUserDep
 from app.models.schemas import FeedbackCreate
+from app.models import User
 from app.models.course import (
     Course,
     CourseCreate,
@@ -15,41 +16,44 @@ from app.models.course import (
     FeedbackPublic,
     Feedback,
 )
+from app.routes.courses import get_assignment_or_fail
 from app.hardcoded import SMARTData, FeedbackData
 from uuid import UUID
 from pydantic import ValidationError
 
 router = APIRouter()
 
+ATTEMPT_NOT_FOUND = "Attempt not found or unauthorized"
 
-def get_assignment_or_fail(assignment_id: UUID, session: SessionDep) -> Assignment:
-    assignment = session.get(Assignment, assignment_id)
-    if not assignment:
-        raise HTTPException(status_code=404, detail="Assignment not found")
-    return assignment
+
+def get_attempt_or_fail(session: SessionDep, attempt_id: UUID, user: User) -> Attempt:
+    attempt = session.get(Attempt, attempt_id)
+    if not attempt or (attempt and not user.can_view(session, attempt)):
+        raise HTTPException(status_code=404, detail=ATTEMPT_NOT_FOUND)
+    return attempt
 
 
 @router.get("/")
 async def list_attempts(
     user: AuthUserDep, assignment_id: UUID, session: SessionDep
 ) -> list[AttemptPublic]:
-    get_assignment_or_fail(assignment_id, session)
+    get_assignment_or_fail(session, assignment_id, user)
     attempts = (
         session.query(Attempt)
         .filter_by(assignment_id=assignment_id)
         .order_by(Attempt.created_at.desc())
         .all()
     )
-    return [attempt.to_public() for attempt in attempts]
+    return [
+        attempt.to_public() for attempt in attempts if user.can_view(session, attempt)
+    ]
 
 
 @router.get("/{attempt_id}")
 async def get_attempt(
     user: AuthUserDep, attempt_id: UUID, session: SessionDep
 ) -> AttemptPublic:
-    attempt = session.get(Attempt, attempt_id)
-    if not attempt:
-        raise HTTPException(status_code=404, detail="Attempt not found")
+    attempt = get_attempt_or_fail(session, attempt_id, user)
     return attempt.to_public()
 
 
@@ -57,9 +61,9 @@ async def get_attempt(
 async def create_attempt(
     user: AuthUserDep, assignment_id: UUID, body: AttemptCreate, session: SessionDep
 ) -> AttemptPublic:
-    get_assignment_or_fail(assignment_id, session)
+    get_assignment_or_fail(session, assignment_id, user)
     try:
-        smart_data = SMARTData(**body.data)  # verify this format
+        smart_data = SMARTData(**body.data)
     except ValidationError:
         raise HTTPException(
             status_code=400, detail="Data format not in SMARTData format"

@@ -22,7 +22,7 @@ def get_course_or_fail(session: SessionDep, course_id: UUID, user: User) -> Cour
     """Get's a course by ID, or raises a 404 if it doesn't exist or the user doesn't have access."""
     course = session.get(Course, course_id)
     if not course or (course and not user.can_view(session, course)):
-        raise HTTPException(status_code=404, detail="Course not found or unauthorized")
+        raise HTTPException(status_code=404, detail=COURSE_NOT_FOUND)
     return course
 
 

@@ -5,8 +5,11 @@ from app.models.course import (
     AttemptPublic,
     Feedback,
     FeedbackPublic,
+    CourseRole,
 )
 import app.models.schemas as schemas
+from app.routes.courses import ASSIGNMENT_NOT_FOUND
+from app.routes.attempts import ATTEMPT_NOT_FOUND
 from app.hardcoded import SMARTData, FeedbackData
 from tests.dummy import (
     DUMMY_ID,
@@ -32,10 +35,11 @@ def test_list_attempts(client, settings, session):
 
     dummy.login_user(client, user)
     res = client.get(
-        f"{settings.api_v1_str}/attempt/", params={"assignment_id": DUMMY_ID}
+        f"{settings.api_v1_str}/attempt/", params={"assignment_id": as1.id}
     )
-    assert res.status_code == 404 and res.json()["detail"] == "Assignment not found"
+    assert res.status_code == 404 and res.json()["detail"] == ASSIGNMENT_NOT_FOUND
 
+    user.enroll(session, c1, CourseRole.STUDENT)
     at1 = make_attempt(session, as1.id, user.id)
     res = client.get(
         f"{settings.api_v1_str}/attempt/", params={"assignment_id": as1.id}
@@ -45,17 +49,19 @@ def test_list_attempts(client, settings, session):
 
 
 def test_get_attempt(client, settings, session):
-    user = make_user(session)
+    user1 = make_user(session)
     c1 = make_course(session)
     as1 = make_assignment(session, c1.id)
-    at1 = make_attempt(session, as1.id, user.id)
+    at1 = make_attempt(session, as1.id, user1.id)
     dummy.assert_not_authenticated(
         client.get(f"{settings.api_v1_str}/attempt/{DUMMY_ID}")
     )
 
-    dummy.login_user(client, user)
-    res = client.get(f"{settings.api_v1_str}/attempt/{DUMMY_ID}")
-    assert res.status_code == 404 and res.json()["detail"] == "Attempt not found"
+    dummy.login_user(client, user1)
+    res = client.get(f"{settings.api_v1_str}/attempt/{at1.id}")
+    assert res.status_code == 404 and res.json()["detail"] == ATTEMPT_NOT_FOUND
+
+    user1.enroll(session, c1, CourseRole.STUDENT)
     res = client.get(f"{settings.api_v1_str}/attempt/{at1.id}")
     assert res.status_code == 200
 
@@ -71,11 +77,12 @@ def test_create_attempt(client, settings, session):
     res = client.put(
         f"{settings.api_v1_str}/attempt/",
         json=json.loads(obj.model_dump_json()),
-        params={"assignment_id": DUMMY_ID},
+        params={"assignment_id": as1.id},
     )
-    assert res.status_code == 404 and res.json()["detail"] == "Assignment not found"
+    assert res.status_code == 404 and res.json()["detail"] == ASSIGNMENT_NOT_FOUND
 
     # ensure only SMARTData format is accepted
+    user.enroll(session, c1, CourseRole.STUDENT)
     res = client.put(
         f"{settings.api_v1_str}/attempt/",
         # this is a hack to get obj as a dict where UUID is serialized to str
