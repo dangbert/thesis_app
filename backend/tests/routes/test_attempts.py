@@ -124,8 +124,8 @@ def test_create_feedback(client, settings, session):
     assert res.status_code == 201
     session.refresh(at1)
     assert (
-        len(at1.feedback) == 1
-        and FeedbackData(**at1.feedback[0].data) == dummy.example_feedback_data
+        len(at1.feedbacks) == 1
+        and FeedbackData(**at1.feedbacks[0].data) == dummy.example_feedback_data
     )
 
     created = session.get(Feedback, res.json()["id"])

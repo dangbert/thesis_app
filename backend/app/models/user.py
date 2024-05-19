@@ -31,13 +31,43 @@ class User(Base):
             **super().to_public().model_dump(),
         )
 
+    def enroll(self, session: Session, course: "Course", role: Optional["CourseRole"]):
+        """
+        Enroll user in given course with a given role.
+        Removes user access if role is None.
+        """
+
+        link = (
+            session.query(CourseUserLink)
+            .filter_by(user_id=self.id, course_id=course.id)
+            .first()
+        )
+        if not role:
+            if link:
+                session.delete(link)
+                session.commit()
+            return
+
+        if link is None:
+            link = CourseUserLink(user_id=self.id, course_id=course.id, role=role)
+            session.add(link)
+            session.commit()
+            return
+
+        link.role = role
+        session.commit()
+
     def can_view(
         self,
         session: Session,
         obj: Union["Course", "Assignment", "Attempt", "Feedback", "File"],
         edit: bool = False,
     ) -> bool:
-        """Entry point for checking User acesss management."""
+        """
+        Entry point for checking User acesss management.
+        TODO: technically users removed from a course shouldn't view their own attempts or feedback they provided.
+        (minor enough to ignore for this project)
+        """
         if isinstance(obj, Course):
             return self._can_view_course(session, obj, edit)
         elif isinstance(obj, Assignment):
@@ -91,10 +121,16 @@ class User(Base):
     ) -> bool:
         # attempt access implies feedback access
         if self._can_view_attempt(session, feedback.attempt, edit=edit):
-            logger.debug(
-                f"User {self.email} can view feedback {feedback}: due to attempt access ({edit=})"
+            if not edit:
+                logger.debug(
+                    f"User {self.email} can view feedback {feedback}: due to attempt access ({edit=})"
+                )
+                return True
+            # (user) feedback can only be edited by those with edit access to the assigment (a.k.a. teachers)
+            return not feedback.is_ai and self._can_view_assignment(
+                session, feedback.attempt.assignment, edit=True
             )
-            return True
+
         return False
 
     def _can_view_file(

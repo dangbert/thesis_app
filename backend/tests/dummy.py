@@ -57,33 +57,6 @@ def make_user(
     return user
 
 
-def enroll_as(session: Session, user: User, course: Course, role: Optional[CourseRole]):
-    """
-    Enroll given user in course with a given role.
-    Removes user access if role is None.
-    """
-
-    link = (
-        session.query(CourseUserLink)
-        .filter_by(user_id=user.id, course_id=course.id)
-        .first()
-    )
-    if link and not role:
-        session.delete(link)
-        session.commit()
-        return
-
-    if link is None:
-        link = CourseUserLink(user_id=user.id, course_id=course.id, role=role)
-        session.add(link)
-        session.commit()
-        return
-
-    assert role is not None  # helps mypy
-    link.role = role
-    session.commit()
-
-
 def make_course(session: Session, name="Test Course") -> Course:
     course = Course(name=name)
     session.add(course)
@@ -118,6 +91,25 @@ def make_attempt(
     session.add(attempt)
     session.commit()
     return attempt
+
+
+def make_feedback(
+    session: Session,
+    attempt_id: UUID,
+    data: Optional[dict[str, Any]] = None,
+    user_id: Optional[UUID] = None,
+) -> models.Feedback:
+    if data is None:
+        data = example_feedback_data.model_dump()
+    feedback = models.Feedback(
+        attempt_id=attempt_id,
+        user_id=user_id,
+        is_ai=user_id is None,
+        data=data,
+    )
+    session.add(feedback)
+    session.commit()
+    return feedback
 
 
 def make_file(

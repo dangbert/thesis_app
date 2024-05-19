@@ -119,14 +119,14 @@ class Attempt(Base):
 
     file: Mapped["File"] = relationship("File", back_populates="attempt")
 
-    feedback: Mapped[list["Feedback"]] = relationship(
+    feedbacks: Mapped[list["Feedback"]] = relationship(
         "Feedback",
         secondary="attempt_feedback",
         cascade="all, delete",
     )
 
     def to_public(self) -> AttemptPublic:
-        feed_objs = [feed.to_public() for feed in self.feedback]
+        feed_objs = [feed.to_public() for feed in self.feedbacks]
         feed_objs = sorted(feed_objs, key=lambda x: x.created_at)
 
         return AttemptPublic(
@@ -214,6 +214,8 @@ class Feedback(Base):
     )
     is_ai: Mapped[bool]
     data: Mapped[dict[str, Any]] = mapped_column(JSON)
+
+    attempt: Mapped["Attempt"] = relationship("Attempt", back_populates="feedbacks")
 
     def to_public(self) -> FeedbackPublic:
         return FeedbackPublic(
