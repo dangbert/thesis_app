@@ -57,7 +57,9 @@ router = APIRouter()
 # https://docs.authlib.org/en/latest/client/fastapi.html
 @router.get("/login", status_code=302)
 async def login(
-    request: Request, destination: Optional[str] = None
+    request: Request,
+    destination: Optional[str] = None,
+    invite_key: Optional[str] = None,
 ) -> RedirectResponse:
     """
     Redirects user to Auth0 login page. destination is the (optional) URL to redirect to after login.
@@ -69,6 +71,7 @@ async def login(
             status_code=400, detail="destination must be a relative path"
         )
     request.session["destination"] = destination  # remember for later
+    # TODO: validate invite_key and save in session
 
     # after login, have Auth0 redirect to the /callback endpoint
     redirect_uri = f"{settings.site_url}{settings.api_v1_str}/auth/callback"
