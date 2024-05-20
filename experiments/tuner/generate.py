@@ -25,6 +25,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 EXPERIMENTS_DIR = os.path.realpath(os.path.join(SCRIPT_DIR, ".."))
 sys.path.append(EXPERIMENTS_DIR)
 from AbstractModel import AbstractModel, IPrompt
+from gpt import GPTModel
 import config as projconfig
 
 logger = utils.get_logger("DEBUG")
@@ -164,6 +165,7 @@ class InferenceRecipe(AbstractModel):
         return raw_output
 
 def benchmark_fluency(cfg: DictConfig) -> float:
+    gpt = GPTModel(cfg.benchmark_judge)
     fname = os.path.join(projconfig.DATASETS_DIR, "synthetic_smart/v4/feedback_gpt-3.5-turbo-0125.csv")
     env = Environment(loader=FileSystemLoader(os.path.join(EXPERIMENTS_DIR, "prompts")))
     fluency_template = env.get_template("fluency_score.jinja2")
@@ -174,23 +176,46 @@ def benchmark_fluency(cfg: DictConfig) -> float:
     prompts = [recipe.alpaca_template.format({"instruction": prompt}) for prompt in df["prompt"].tolist()]
 
     outputs, _ = recipe(prompts, cfg=cfg)
+    outputs = [get_subresponse(output) for output in outputs]
     df["output_llama2"] = outputs
-    df.to_csv("tmp.csv")
-    breakpoint()
-    print()
+    outname = "tmp.csv"
+    df.to_csv(outname)
 
-    # TODO: now run GPT3 with these outputs + fluency_template
-    # fluency_template.render({"question": "provide feedback in Dutch on a student's assignment.", "answer": "nm y tu"})
+    def build_fluency_prompt(row: pd.Series) -> str:
+        return fluency_template.render({"question": "provide feedback in Dutch on a student's assignment.", "answer": row["output_llama2"]})
 
-class Llama2Local(AbstractModel):
-    def __init__(self):
-        pass
+    df["fluency_prompts"] = df.apply(build_fluency_prompt, axis=1).to_list()
+    df.to_csv(outname)
 
+    outputs, meta = gpt(df["fluency_prompts"].tolist(), temperature=0.2)
+    total_price = gpt.compute_price(meta)
+    print(f"total_price=${total_price:.4f}")
+
+    df["fluency_scores"] = [int(output) for output in outputs]
+    print(f"fluency scores (model={gpt.model_name}):")
+    print(df["fluency_scores"].describe())
+    df.to_csv(outname)
+    print(f"wrote '{outname}'")
+    return df["fluency_scores"].mean()
+
+
+def get_subresponse(output: str) -> str:
+    """
+    Get the relevant part of a response where the prompt is also included.
+    Assumes the prompt used the AplacaInstructTemplate
+    """
+    marker = "\n### Response:\n"
+    idx = output.find(marker)
+    if idx != -1:
+        return output[idx + len(marker):]
+    return output # fallback
 
 
 @config.parse
 def main(cfg: DictConfig) -> None:
-    benchmark_fluency(cfg)
+    if cfg.benchmark_fluency:
+        benchmark_fluency(cfg)
+        return
 
     t = AlpacaInstructTemplate()
     # reformat prompt to align with training format

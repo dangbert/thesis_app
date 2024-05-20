@@ -10,6 +10,10 @@ MODEL_DIR: ${EXP_DIR}/model
 # e.g. checkpoint #3 is made up of: hf_model_0001_3.pt, hf_model_0002_3.pt (adapter_3.pt is also relevant but I think already used to create the other weight files)
 CHKP_NUM: 3
 
+# when enabled, benchmarks the model's fluency rather than returning the response from a single output
+benchmark_fluency: true
+benchmark_judge: gpt-3.5-turbo-0125
+
 # Model arguments
 model:
   _component_: torchtune.models.llama2.llama2_7b

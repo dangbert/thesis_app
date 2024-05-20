@@ -12,7 +12,10 @@ tune download meta-llama/Llama-2-7b-hf  --output-dir "$EXP_DIR/model"
 tune run lora_finetune_single_device --config ./llama2_7B_qlora_single_device.yaml
 
 # generate output using finetuned model on a given prompt
-tune run ./generate.py --config ./generation.yaml CHKP_NUM=3 prompt="Vertel me een kort verhaal over de dag van een student die aan zijn scriptie werkt."
+tune run ./generate.py --config ./generation.yaml CHKP_NUM=3 benchmark_fluency=false prompt="Vertel me een kort verhaal over de dag van een student die aan zijn scriptie werkt."
+
+# benchmark fluency of model
+tune run ./generate.py --config ./generation.yaml CHKP_NUM=3 benchmark_fluency=true benchmark_judge=gpt-3.5-turbo-0125 # gpt-4-0125-preview
 ````
 
 
