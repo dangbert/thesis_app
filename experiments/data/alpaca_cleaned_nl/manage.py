@@ -24,7 +24,7 @@ from config import TaskTimer  # noqa
 DATASET_ID = "yahma/alpaca-cleaned"
 COL_NAMES = ["output", "input", "instruction"]  # columns to translate
 
-TRANSLATED_PATH = os.path.join(SCRIPT_DIR, "translated_dataset.json")
+TRANSLATED_PATH = os.path.join(SCRIPT_DIR, "translated_dataset.jsonl")
 # TRANSLATED_PATH = os.path.join(SCRIPT_DIR, "translated_dataset[100_samples].json")
 # TRANSLATED_PATH = "./tmp.json"
 TRANSLATED_DATASET_ID = "dangbert/alpaca-cleaned-nl"  # where to upload on hugging face
@@ -77,7 +77,6 @@ def main():
             f"uploading translated dataset to hugging face hub '{TRANSLATED_DATASET_ID}'"
         )
         # https://huggingface.co/docs/datasets/upload_dataset
-        breakpoint()
         with TaskTimer("push to hub"):
             tdataset.push_to_hub(TRANSLATED_DATASET_ID)
         return
@@ -161,7 +160,9 @@ def load_local_dataset(disk_path: str):
     assert os.path.exists(disk_path)
     tdataset: DatasetDict = load_dataset("json", data_files=disk_path, split="train")
     tdataset_dict = {c: tdataset[c] for c in tdataset.column_names}
-    logger.info(f"reloaded cached dataset from '{disk_path}'")
+    logger.info(
+        f"reloaded cached dataset from '{disk_path}' (with {len(tdataset)} samples)"
+    )
     return tdataset, tdataset_dict
 
 
@@ -172,7 +173,7 @@ def translate_dataset(dataset, disk_path: str, max_samples: int):
 
     max_samples: maximum number of samples to translate before quitting (one sample has len(COL_NAMES) columns
     """
-    assert disk_path.endswith(".json")
+    assert disk_path.endswith(".jsonl") or disk_path.endswith(".json")
 
     tdataset_dict: dict = {c: [] for c in COL_NAMES}  # translated dataset
     extra_cols = ["orig_index", "detected_source_lang"]
@@ -183,7 +184,8 @@ def translate_dataset(dataset, disk_path: str, max_samples: int):
     assert tdataset_dict.keys() == set(COL_NAMES + extra_cols)
 
     def flush_translated_dataset(tdataset_dict):
-        Dataset.from_dict(tdataset_dict).to_json(disk_path, indent=2)
+        # note: .to_json(disk_path, indent=2) makes it more readable but leads to problems reloading later :(
+        Dataset.from_dict(tdataset_dict).to_json(disk_path)
 
     translator = deepl.Translator(config.get_settings().deepl_api_key)
 

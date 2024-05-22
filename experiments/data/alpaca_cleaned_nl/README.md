@@ -9,4 +9,9 @@ This folder contains the code used to translate a sample of the [aplaca-cleaned]
 
 # translate up to 500 samples total (resumes from previous run if applicable)
 ./manage.py --translate --max-samples 500
+
+# afterwards you can upload the translated dataset
+
+huggingface-cli login # enter a token with write acesss to the dataset https://huggingface.co/settings/tokens
+./manage.py --upload
 ````
