@@ -17,8 +17,9 @@ from typing import Union
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 EXPERIMENTS_DIR = os.path.realpath(os.path.join(SCRIPT_DIR, "../.."))
 sys.path.append(EXPERIMENTS_DIR)
-import config  # noqa
-from config import TaskTimer  # noqa
+import data.alpaca_cleaned_nl.translate_utils as tutils  # noqa: E402
+import config  # noqa: E402
+from config import TaskTimer  # noqa: E402
 
 
 DATASET_ID = "yahma/alpaca-cleaned"
@@ -39,25 +40,25 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        "--translate",
-        "-t",
-        action="store_true",
-        help="Translate the dataset to Dutch",
+        "--dump-docx",
+        type=str,
+        nargs=3,
+        metavar=("filename", "start_index", "count"),
+        help="Dump source dataset entries to a docx file with the specified filename, starting from the specified index and count",
     )
-    parser.add_argument(
-        "--max-samples",
-        "-m",
-        type=int,
-        default=100,
-        help="max number of samples to translate",
-    )
-    parser.add_argument(
-        "--upload",
-        "-u",
-        action="store_true",
-        help="Upload translated dataset to hugging face hub",
-    )
+
     args = parser.parse_args()
+
+    if args.dump_docx:
+        filename, start_index, count = args.dump_docx
+        start_index, count = int(start_index), int(count)
+        assert not os.path.exists(filename), f"refusing to overwrite '{filename}'"
+        sdataset, orig_indices = get_shuffled_dataset()
+        sdataset = sdataset.add_column("orig_index", orig_indices)
+
+        # TOOD: use start_index and count
+        tutils.serialize_dataset(sdataset, filename, assert_sanity=False)
+        return
 
     if args.translate:
         sdataset, orig_indices = get_shuffled_dataset()

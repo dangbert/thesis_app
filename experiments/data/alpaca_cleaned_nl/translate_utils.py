@@ -40,22 +40,34 @@ def deserialize_sample(data_str: str) -> dict:
 
 def serialize_dataset(dataset, fname: str, assert_sanity: bool = False):
     """Serialize dataset to a text file or a Word (.docx) document."""
+    bad_count = 0
+
+    def process_item(item: dict):
+        nonlocal bad_count
+        cereal = serialize_sample(item)
+        if not deserialize_sample(cereal) == item:
+            bad_count += 1
+            if assert_sanity:
+                assert deserialize_sample(cereal) == item
+        return cereal
+
     if fname.endswith(".docx"):
         document = docx.Document()
         for item in dataset:
-            cereal = serialize_sample(item)
-            if assert_sanity:
-                assert deserialize_sample(cereal) == item
+            cereal = process_item(item)
             document.add_paragraph(cereal)
         document.save(fname)
-        return
 
-    with open(fname, "w") as f:
-        for item in dataset:
-            cereal = serialize_sample(item)
-            if assert_sanity:
-                assert deserialize_sample(cereal) == item
-            f.write(cereal + "\n")
+    else:
+        with open(fname, "w") as f:
+            for item in dataset:
+                cereal = process_item(item)
+                f.write(cereal + "\n")
+
+    if bad_count > 0:
+        logger.warning(
+            f"Failed to perfectly encode: {bad_count}/{len(dataset)} samples"
+        )
 
 
 def deserialize_dataset(fname: str) -> list[dict]:
