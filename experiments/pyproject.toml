@@ -63,6 +63,11 @@ module = "huggingface_hub.*"
 ignore_missing_imports = true
 follow_imports = "skip"
 
+[[tool.mypy.overrides]]
+module = "datasets.*"
+ignore_missing_imports = true
+follow_imports = "skip"
+
 [tool.ruff]
 exclude = ["repos", "datasets"]
 

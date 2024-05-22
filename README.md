@@ -14,6 +14,7 @@ For instructions on how to deploy the ezfeedback site for production use, see [.
 ### Experiments
 Install dependencies:
 ````bash
+cd experiments/
 pip install virtualenv
 virtualenv .venv
 . .venv/bin/activate

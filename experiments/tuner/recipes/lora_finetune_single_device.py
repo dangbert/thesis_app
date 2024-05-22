@@ -93,7 +93,6 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
     """
 
     def __init__(self, cfg: DictConfig) -> None:
-
         self._device = utils.get_device(device=cfg.device)
         # Reduced precision logic
         self._dtype = utils.get_dtype(cfg.dtype, device=self._device)
@@ -224,7 +223,7 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
         self._steps_per_epoch = (
             len(self._dataloader) // self._gradient_accumulation_steps
         )
-        steps_per_epoch = len(self._dataloader)
+        # steps_per_epoch = len(self._dataloader)
         if (
             self.max_steps_per_epoch is not None
             and self.max_steps_per_epoch < self._steps_per_epoch
@@ -400,7 +399,7 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
         ckpt_dict.update({utils.MODEL_KEY: merged_state_dict})
 
         # Construct the adapter weights
-        adapter_key_filter = lambda x: x in self.adapter_params
+        adapter_key_filter = lambda x: x in self.adapter_params  # noqa: E731
         adapter_state_dict = {
             k: v for k, v in self._model.state_dict().items() if adapter_key_filter(k)
         }

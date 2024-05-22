@@ -13,7 +13,11 @@ ruff check .
 echo -e "\nunit tests"
 pytest
 
-echo -e "\nmypy checks"
-mypy .
-
+# check if arg --skip-mypy
+if [ "$1" == "-n" ]; then
+    echo -e "\n-n flag detected, skipping mypy checks"
+else
+    echo -e "\nmypy checks"
+    mypy . #--cache-dir=/dev/null
+fi
 echo -e "\nall checks passed!"

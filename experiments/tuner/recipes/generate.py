@@ -24,9 +24,9 @@ from openai.types.chat.chat_completion import ChatCompletion
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 EXPERIMENTS_DIR = os.path.realpath(os.path.join(SCRIPT_DIR, ".."))
 sys.path.append(EXPERIMENTS_DIR)
-from AbstractModel import AbstractModel, IPrompt
-from gpt import GPTModel
-import config as projconfig
+from AbstractModel import AbstractModel, IPrompt  # noqa: E402
+from gpt import GPTModel  # noqa: E402
+import config as projconfig  # noqa: E402
 
 logger = utils.get_logger("DEBUG")
 
@@ -143,7 +143,7 @@ class InferenceRecipe(AbstractModel):
         )
         t = time.perf_counter() - t0
 
-        raw_output = self._tokenizer.decode(generated_tokens) 
+        raw_output = self._tokenizer.decode(generated_tokens)
         logger.info(raw_output)
 
         model_size = sum(
@@ -164,16 +164,22 @@ class InferenceRecipe(AbstractModel):
         logger.info(f"Memory used: {torch.cuda.max_memory_allocated() / 1e9:.02f} GB")
         return raw_output
 
+
 def benchmark_fluency(cfg: DictConfig) -> float:
     gpt = GPTModel(cfg.benchmark_judge)
-    fname = os.path.join(projconfig.DATASETS_DIR, "synthetic_smart/v4/feedback_gpt-3.5-turbo-0125.csv")
+    fname = os.path.join(
+        projconfig.DATASETS_DIR, "synthetic_smart/v4/feedback_gpt-3.5-turbo-0125.csv"
+    )
     env = Environment(loader=FileSystemLoader(os.path.join(EXPERIMENTS_DIR, "prompts")))
     fluency_template = env.get_template("fluency_score.jinja2")
     df = pd.read_csv(fname)
 
     recipe = InferenceRecipe(cfg=cfg)
     recipe.setup(cfg=cfg)
-    prompts = [recipe.alpaca_template.format({"instruction": prompt}) for prompt in df["prompt"].tolist()]
+    prompts = [
+        recipe.alpaca_template.format({"instruction": prompt})
+        for prompt in df["prompt"].tolist()
+    ]
 
     outputs, _ = recipe(prompts, cfg=cfg)
     outputs = [get_subresponse(output) for output in outputs]
@@ -182,7 +188,12 @@ def benchmark_fluency(cfg: DictConfig) -> float:
     df.to_csv(outname)
 
     def build_fluency_prompt(row: pd.Series) -> str:
-        return fluency_template.render({"question": "provide feedback in Dutch on a student's assignment.", "answer": row["output_llama2"]})
+        return fluency_template.render(
+            {
+                "question": "provide feedback in Dutch on a student's assignment.",
+                "answer": row["output_llama2"],
+            }
+        )
 
     df["fluency_prompts"] = df.apply(build_fluency_prompt, axis=1).to_list()
     df.to_csv(outname)
@@ -207,8 +218,8 @@ def get_subresponse(output: str) -> str:
     marker = "\n### Response:\n"
     idx = output.find(marker)
     if idx != -1:
-        return output[idx + len(marker):]
-    return output # fallback
+        return output[idx + len(marker) :]
+    return output  # fallback
 
 
 @config.parse
