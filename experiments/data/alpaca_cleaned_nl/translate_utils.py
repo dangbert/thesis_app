@@ -1,4 +1,8 @@
 import re
+import docx
+import config
+
+logger = config.get_logger(__name__, level="INFO")
 
 
 def serialize_sample(data: dict) -> str:
@@ -35,10 +39,19 @@ def deserialize_sample(data_str: str) -> dict:
 
 
 def serialize_dataset(dataset, fname: str, assert_sanity: bool = False):
-    """Serialize (alpaca) dataset to a text file which can ideally be translated as a single document translation and then deserialized back."""
+    """Serialize dataset to a text file or a Word (.docx) document."""
+    if fname.endswith(".docx"):
+        document = docx.Document()
+        for item in dataset:
+            cereal = serialize_sample(item)
+            if assert_sanity:
+                assert deserialize_sample(cereal) == item
+            document.add_paragraph(cereal)
+        document.save(fname)
+        return
 
     with open(fname, "w") as f:
-        for i, item in enumerate(dataset):
+        for item in dataset:
             cereal = serialize_sample(item)
             if assert_sanity:
                 assert deserialize_sample(cereal) == item
@@ -46,18 +59,22 @@ def serialize_dataset(dataset, fname: str, assert_sanity: bool = False):
 
 
 def deserialize_dataset(fname: str) -> list[dict]:
-    """Deserialize dataset from a text file using pattern matching."""
+    """Deserialize dataset from a text or Word (.docx) file using pattern matching."""
     dataset = []
-    with open(fname, "r") as f:
-        data_str = f.read()
-        pattern = re.compile(PATTERN_EXP, re.DOTALL)
+    if fname.lower().endswith(".docx"):
+        logger.info(f"loading dataset from a Word document: '{fname}'")
+        document = docx.Document(fname)
+        data_str = "\n".join([p.text for p in document.paragraphs])
+    else:
+        logger.info("loading dataset from a text file: '{fname}'")
+        with open(fname, "r") as f:
+            data_str = f.read()
 
-        matches = pattern.finditer(data_str)
-        for match in matches:
-            serialized_sample = match.group(
-                0
-            )  # Extract the entire matched sample block
-            deserialized_dict = deserialize_sample(serialized_sample)
-            dataset.append(deserialized_dict)
+    pattern = re.compile(PATTERN_EXP, re.DOTALL)
+    matches = pattern.finditer(data_str)
+    for match in matches:
+        serialized_sample = match.group(0)  # Extract the entire matched sample block
+        deserialized_dict = deserialize_sample(serialized_sample)
+        dataset.append(deserialized_dict)
 
     return dataset

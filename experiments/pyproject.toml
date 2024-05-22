@@ -33,10 +33,11 @@ haikunator = "^2.1.0"
 deepl = "^1.17.0"
 torchtune = "^0.1.1"
 lm-eval = "^0.4.2"
-
-# GPU dependencies are only installable / relevant on a machine with a GPU
 jinja2 = "^3.1.4"
+python-docx = "^1.1.2"
+
 [tool.poetry.group.gpu.dependencies]
+# GPU dependencies are only installable / relevant on a machine with a GPU
 bitsandbytes = "^0.43.1"
 
 [tool.poetry.group.dev.dependencies]

@@ -56,11 +56,11 @@ def test_integration(tmpdir):
         cereal = tutils.serialize_sample(item)
         assert tutils.deserialize_sample(cereal) == item
 
-    fname = os.path.join(tmpdir, "out.txt")
-    tutils.serialize_dataset(dataset, fname, assert_sanity=True)
+    for ext in ["txt", "docx"]:
+        fname = os.path.join(tmpdir, f"out.{ext}")
+        tutils.serialize_dataset(dataset, fname, assert_sanity=True)
 
-    new_dataset = tutils.deserialize_dataset(fname)
-
-    assert len(new_dataset) == len(dataset)
-    for i in range(len(new_dataset)):
-        assert new_dataset[i] == dataset[i]
+        new_dataset = tutils.deserialize_dataset(fname)
+        assert len(new_dataset) == len(dataset)
+        for i in range(len(new_dataset)):
+            assert new_dataset[i] == dataset[i]
