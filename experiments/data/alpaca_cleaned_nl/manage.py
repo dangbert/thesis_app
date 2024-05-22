@@ -27,7 +27,7 @@ COL_NAMES = ["output", "input", "instruction"]  # columns to translate
 TRANSLATED_PATH = os.path.join(SCRIPT_DIR, "translated_dataset.json")
 # TRANSLATED_PATH = os.path.join(SCRIPT_DIR, "translated_dataset[100_samples].json")
 # TRANSLATED_PATH = "./tmp.json"
-TRANSLATED_DATASET_ID = "dangbert/alpaca-cleaned-nl" # where to upload on hugging face
+TRANSLATED_DATASET_ID = "dangbert/alpaca-cleaned-nl"  # where to upload on hugging face
 
 logger = config.get_logger(__name__, level="INFO")
 
@@ -73,7 +73,9 @@ def main():
 
     if args.upload:
         tdataset, tdataset_dict = load_local_dataset(TRANSLATED_PATH)
-        logger.info(f"uploading translated dataset to hugging face hub '{TRANSLATED_DATASET_ID}'")
+        logger.info(
+            f"uploading translated dataset to hugging face hub '{TRANSLATED_DATASET_ID}'"
+        )
         # https://huggingface.co/docs/datasets/upload_dataset
         breakpoint()
         with TaskTimer("push to hub"):
@@ -157,12 +159,11 @@ class DUMMYResult:
 def load_local_dataset(disk_path: str):
     """Reload dataset from local cache of previous translations."""
     assert os.path.exists(disk_path)
-    tdataset: DatasetDict = load_dataset(
-        "json", data_files=disk_path, split="train"
-    )
+    tdataset: DatasetDict = load_dataset("json", data_files=disk_path, split="train")
     tdataset_dict = {c: tdataset[c] for c in tdataset.column_names}
     logger.info(f"reloaded cached dataset from '{disk_path}'")
     return tdataset, tdataset_dict
+
 
 def translate_dataset(dataset, disk_path: str, max_samples: int):
     """
