@@ -24,9 +24,9 @@ from config import TaskTimer  # noqa
 DATASET_ID = "yahma/alpaca-cleaned"
 COL_NAMES = ["output", "input", "instruction"]  # columns to translate
 
-TRANSLATED_PATH = os.path.join(SCRIPT_DIR, "translated_dataset.jsonl")
-# TRANSLATED_PATH = os.path.join(SCRIPT_DIR, "translated_dataset[100_samples].json")
-# TRANSLATED_PATH = "./tmp.json"
+TRANSLATED_PATH = os.path.join(
+    SCRIPT_DIR, "translated_dataset.jsonl"
+)  # where to write/read translated dataset
 TRANSLATED_DATASET_ID = "dangbert/alpaca-cleaned-nl"  # where to upload on hugging face
 
 logger = config.get_logger(__name__, level="INFO")
@@ -62,9 +62,6 @@ def main():
     if args.translate:
         sdataset, orig_indices = get_shuffled_dataset()
         sdataset = sdataset.add_column("orig_index", orig_indices)
-        # fname = "shuffled_dataset.json"
-        # sdataset.to_json(fname, indent=2)
-        # print(f"wrote {fname}")
 
         _ = estimate_budget()
         translate_dataset(sdataset, TRANSLATED_PATH, max_samples=args.max_samples)

@@ -39,19 +39,28 @@ SAMPLE2_STR = """
 
 
 def test_serialize():
-    assert tutils.serialize(SAMPLE1) == SAMPLE1_STR
-    assert tutils.serialize(SAMPLE2) == SAMPLE2_STR
+    assert tutils.serialize_sample(SAMPLE1) == SAMPLE1_STR
+    assert tutils.serialize_sample(SAMPLE2) == SAMPLE2_STR
 
 
 def test_desserialize():
-    assert tutils.deserialize(SAMPLE1_STR) == SAMPLE1
-    assert tutils.deserialize(SAMPLE2_STR) == SAMPLE2
+    assert tutils.deserialize_sample(SAMPLE1_STR) == SAMPLE1
+    assert tutils.deserialize_sample(SAMPLE2_STR) == SAMPLE2
 
 
-def test_integration():
+def test_integration(tmpdir):
     dataset, dataset_dict = manage.load_local_dataset(SAMPLE_DATASET_PATH)
 
     for i, item in enumerate(dataset):
         assert isinstance(item, dict)
-        cereal = tutils.serialize(item)
-        assert tutils.deserialize(cereal) == item
+        cereal = tutils.serialize_sample(item)
+        assert tutils.deserialize_sample(cereal) == item
+
+    fname = os.path.join(tmpdir, "out.txt")
+    tutils.serialize_dataset(dataset, fname, assert_sanity=True)
+
+    new_dataset = tutils.deserialize_dataset(fname)
+
+    assert len(new_dataset) == len(dataset)
+    for i in range(len(new_dataset)):
+        assert new_dataset[i] == dataset[i]
