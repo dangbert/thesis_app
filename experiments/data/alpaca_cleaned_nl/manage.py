@@ -10,7 +10,7 @@ import os
 import json
 import sys
 import glob
-from datasets import load_dataset, Dataset, DatasetDict
+from datasets import load_dataset, concatenate_datasets, Dataset, DatasetDict
 import numpy as np
 import deepl
 from typing import Union
@@ -44,7 +44,7 @@ def main():
         "--translate",
         "-t",
         action="store_true",
-        help="Translate the dataset to Dutch",
+        help="Translate the dataset to Dutch, writing the result to '{TRANSLATED_PATH}'.  Resume from where it left off if the file already exists.",
     )
     parser.add_argument(
         "--max-samples",
@@ -69,10 +69,17 @@ def main():
         help="Folder of docx files to convert to jsonl files (e.g. downloaded from DeepL after translation).",
     )
     parser.add_argument(
+        "--merge",
+        nargs=2,
+        type=str,
+        metavar=("folder", "output_file"),
+        help="Folder of jsonl files to merge into a single dataset (jsonl) file",
+    )
+    parser.add_argument(
         "--upload",
         "-u",
-        action="store_true",
-        help="Upload translated dataset to hugging face hub",
+        type=str,
+        help="Upload provided .jsonl file to hugging face hub, replacing the existing dataset '{TRANSLATED_DATASET_ID}'",
     )
 
     args = parser.parse_args()
@@ -115,13 +122,51 @@ def main():
             return
 
     if args.upload:
-        tdataset, tdataset_dict = load_local_dataset(TRANSLATED_PATH)
+        fname = args.upload
+        assert os.path.isfile(fname)
+        assert fname.lower().endswith(".jsonl") or fname.lower().endswith(".json")
+        tdataset, _ = load_local_dataset(fname)
         logger.info(
             f"uploading translated dataset to hugging face hub '{TRANSLATED_DATASET_ID}'"
         )
         # https://huggingface.co/docs/datasets/upload_dataset
         with TaskTimer("push to hub"):
             tdataset.push_to_hub(TRANSLATED_DATASET_ID)
+        return
+
+    if args.merge:
+        dir, output_file = args.merge
+        assert not os.path.exists(output_file), f"refusing to overwrite '{output_file}'"
+        fnames = glob.glob(f"{dir}/*.jsonl")
+        logger.info(f"found {len(fnames)} jsonl files in '{dir}' to merge")
+        if len(fnames) == 0:
+            return
+
+        seen_ids = set()
+
+        def filter_rows(item):
+            # prevent possible duplicates when concatenating datasets by removing rows where orig_index has already been seen
+            nonlocal seen_ids
+            return item["orig_index"] not in seen_ids  # True if row should be kept
+
+        combined = None
+        for fname in fnames:
+            cur_dataset, _ = load_local_dataset(fname)
+            if combined is None:
+                combined = cur_dataset
+                continue
+            seen_ids = set(combined["orig_index"])
+            prev_len = len(cur_dataset)
+            cur_dataset = cur_dataset.filter(filter_rows)
+            removed = prev_len - len(cur_dataset)
+            if removed > 0:
+                logger.info(f"skipping {removed} possible duplicates from '{fname}'")
+            combined = concatenate_datasets([combined, cur_dataset])
+
+        combined.to_json(output_file)
+        logger.info(
+            f"wrote merged dataset (from {len(fnames)} files) to '{output_file}' ({len(combined)} final rows)"
+        )
         return
 
     # download dataset to hugging face disk cache
@@ -203,9 +248,7 @@ def load_local_dataset(disk_path: str):
     assert os.path.exists(disk_path)
     tdataset: DatasetDict = load_dataset("json", data_files=disk_path, split="train")
     tdataset_dict = {c: tdataset[c] for c in tdataset.column_names}
-    logger.info(
-        f"reloaded cached dataset from '{disk_path}' (with {len(tdataset)} samples)"
-    )
+    logger.info(f"reloaded dataset from '{disk_path}' (with {len(tdataset)} samples)")
     return tdataset, tdataset_dict
 
 
