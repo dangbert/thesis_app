@@ -40,23 +40,23 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        "--dump-docx",
+        "--dump",
         type=str,
         nargs=3,
         metavar=("filename", "start_index", "count"),
-        help="Dump source dataset entries to a docx file with the specified filename, starting from the specified index and count",
+        help="Dump source dataset entries to a docx or text file with the specified filename, starting from the specified index and count",
     )
 
     args = parser.parse_args()
 
-    if args.dump_docx:
-        filename, start_index, count = args.dump_docx
+    if args.dump:
+        filename, start_index, count = args.dump
         start_index, count = int(start_index), int(count)
         assert not os.path.exists(filename), f"refusing to overwrite '{filename}'"
         sdataset, orig_indices = get_shuffled_dataset()
         sdataset = sdataset.add_column("orig_index", orig_indices)
 
-        # TOOD: use start_index and count
+        sdataset = sdataset.select(range(start_index, start_index + count))
         tutils.serialize_dataset(sdataset, filename, assert_sanity=False)
         return
 
