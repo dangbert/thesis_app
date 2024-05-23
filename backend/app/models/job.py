@@ -33,26 +33,24 @@ class Job(Base):
         return f"<job id={self.id}, job_type={self.job_type}, status={self.status} />"
 
     def run(self, session: Session):
-        if self.status != JobStatus.PENDING:
-            logger.warning(
-                f"Job must be in status 'pending' to run, not '{self.status}'"
+        if self.status != JobStatus.IN_PROGRESS:
+            logger.error(
+                f"Job must be already have status 'IN_PROGRESS' to run, not '{self.status}'"
             )
             return
 
         if self.job_type not in JOB_RUN_MAP:
             raise NotImplementedError(f"Job type '{self.job_type}' not implemented")
 
-        JOB_RUN_MAP[self.job_type](self)
+        JOB_RUN_MAP[self.job_type](self, session)
 
 
-class AI_FEEDBACK_DATA(BaseModel):
+class AI_FEEDBACK_JOB_DATA(BaseModel):
     attempt_id: str
 
 
-def _run_ai_feedback(job: Job):
-    pass
+from app.feedback import run_ai_feedback  # noqa: E402
 
-
-JOB_RUN_MAP: dict[JobType, Callable] = {
-    JobType.AI_FEEDBACK: _run_ai_feedback,
+JOB_RUN_MAP: dict[JobType, Callable[[Job, Session], None]] = {
+    JobType.AI_FEEDBACK: run_ai_feedback,
 }

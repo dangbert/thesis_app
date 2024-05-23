@@ -11,6 +11,7 @@ from app.models import (
     File,
     CourseUserLink,
 )
+from app.models.job import AI_FEEDBACK_JOB_DATA
 from app.hardcoded import SMARTData, FeedbackData
 from app.settings import get_settings
 from sqlalchemy.orm import Session
@@ -23,6 +24,12 @@ import httpx
 
 
 DUMMY_ID = UUID("cc2d7ce4-170f-4817-b4a9-76e11d5f9c56")
+example_smart_data = SMARTData(goal="test goal", plan="test plan")
+example_feedback_data = FeedbackData(
+    feedback="good start, but try again", approved=False
+)
+example_ai_feedback_data = AI_FEEDBACK_JOB_DATA(attempt_id="DUMMY_ID")
+
 
 settings = get_settings()
 
@@ -83,12 +90,6 @@ def make_assignment(
     session.add(assignment)
     session.commit()
     return assignment
-
-
-example_smart_data = SMARTData(goal="test goal", plan="test plan")
-example_feedback_data = FeedbackData(
-    feedback="good start, but try again", approved=False
-)
 
 
 def make_attempt(
