@@ -9,6 +9,7 @@ import argparse
 import os
 import json
 import sys
+import glob
 from datasets import load_dataset, Dataset, DatasetDict
 import numpy as np
 import deepl
@@ -40,11 +41,38 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
+        "--translate",
+        "-t",
+        action="store_true",
+        help="Translate the dataset to Dutch",
+    )
+    parser.add_argument(
+        "--max-samples",
+        "-m",
+        type=int,
+        default=100,
+        help="max number of samples to translate (only applicable alongside --translate)",
+    )
+    parser.add_argument(
         "--dump",
         type=str,
         nargs=3,
         metavar=("filename", "start_index", "stop_index"),
         help="Dump source dataset entries to a docx or text file with the specified filename, starting from the specified index and ending before the stop_index (exclusive).",
+    )
+
+    parser.add_argument(
+        "--deserialize",
+        type=str,
+        nargs=1,
+        metavar=("folder"),
+        help="Folder of docx files to convert to jsonl files (e.g. downloaded from DeepL after translation).",
+    )
+    parser.add_argument(
+        "--upload",
+        "-u",
+        action="store_true",
+        help="Upload translated dataset to hugging face hub",
     )
 
     args = parser.parse_args()
@@ -60,6 +88,21 @@ def main():
 
         sdataset = sdataset.select(range(start_index, stop_index))
         tutils.serialize_dataset(sdataset, filename, assert_sanity=False)
+        return
+
+    if args.deserialize:
+        dir = args.deserialize[0]
+        assert os.path.isdir(dir)
+        fnames = glob.glob(f"{dir}/*.docx")
+        logger.info(f"found {len(fnames)} docx files in '{dir}' to convert to jsonl")
+        for fname in fnames:
+            outname = fname.replace(".docx", ".jsonl")
+            if os.path.exists(outname):
+                logger.info(f"skipping already deserialized file: '{fname}'")
+                continue
+            logger.info(f"converting '{fname}' -> '{outname}'")
+            cur_dataset = tutils.deserialize_dataset(fname)
+            cur_dataset.to_json(outname)
         return
 
     if args.translate:
