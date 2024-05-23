@@ -43,20 +43,22 @@ def main():
         "--dump",
         type=str,
         nargs=3,
-        metavar=("filename", "start_index", "count"),
-        help="Dump source dataset entries to a docx or text file with the specified filename, starting from the specified index and count",
+        metavar=("filename", "start_index", "stop_index"),
+        help="Dump source dataset entries to a docx or text file with the specified filename, starting from the specified index and ending before the stop_index (exclusive).",
     )
 
     args = parser.parse_args()
 
     if args.dump:
-        filename, start_index, count = args.dump
-        start_index, count = int(start_index), int(count)
-        assert not os.path.exists(filename), f"refusing to overwrite '{filename}'"
+        filename, start_index, stop_index = args.dump
+        start_index, stop_index = int(start_index), int(stop_index)
+        # assert not os.path.exists(filename), f"refusing to overwrite '{filename}'"
+        if os.path.isdir(filename):
+            filename = f"{filename}/orig_{start_index}_to_{stop_index}.docx"
         sdataset, orig_indices = get_shuffled_dataset()
         sdataset = sdataset.add_column("orig_index", orig_indices)
 
-        sdataset = sdataset.select(range(start_index, start_index + count))
+        sdataset = sdataset.select(range(start_index, stop_index))
         tutils.serialize_dataset(sdataset, filename, assert_sanity=False)
         return
 

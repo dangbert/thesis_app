@@ -56,21 +56,27 @@ def deserialize_sample(data_str: str) -> dict:
 def serialize_dataset(dataset, fname: str, assert_sanity: bool = False):
     """Serialize dataset to a text file or a Word (.docx) document."""
     bad_count = 0
+    char_count = 0
 
     def process_item(item: dict):
         nonlocal bad_count
+        nonlocal char_count
         cereal = serialize_sample(item)
         if not deserialize_sample(cereal) == item:
             bad_count += 1
             if assert_sanity:
                 assert deserialize_sample(cereal) == item
+        char_count += len(cereal)
         return cereal
 
     if fname.endswith(".docx"):
         document = docx.Document()
-        for item in dataset:
+        for i, item in enumerate(dataset):
             cereal = process_item(item)
             document.add_paragraph(cereal)
+            # if i % 10 == 0:
+            #     document.add_page_break()
+            #     document.add_paragraph("")
         document.save(fname)
 
     else:
@@ -78,12 +84,25 @@ def serialize_dataset(dataset, fname: str, assert_sanity: bool = False):
             for item in dataset:
                 cereal = process_item(item)
                 f.write(cereal + "\n")
+                char_count += 1  # for newline
 
     if bad_count > 0:
         logger.warning(
             f"Failed to perfectly encode: {bad_count}/{len(dataset)} samples"
         )
-    logger.info(f"Serialized dataset to '{fname}'")
+    filesize = _get_filesize_mb(fname)
+    logger.info(
+        f"Serialized dataset to '{fname}' ({char_count:,} total chars), {filesize:.3f} MB"
+    )
+
+
+def _get_filesize_mb(filepath: str) -> float:
+    """
+    Get the filesize of a file in megabytes.
+    """
+    filesize_bytes = os.path.getsize(filepath)
+    filesize_mb = filesize_bytes / 1024**2
+    return filesize_mb
 
 
 def deserialize_dataset(fname: str) -> Dataset:
@@ -92,7 +111,7 @@ def deserialize_dataset(fname: str) -> Dataset:
     Afterwards calling this function you can write the dataset to a .jsonl file with
     dataset.to_json("/tmp/tmp.jsonl")
     """
-    dataset = []
+    dlist = []
     if fname.lower().endswith(".docx"):
         logger.info(f"loading dataset from a Word document: '{fname}'")
         document = docx.Document(fname)
@@ -107,6 +126,8 @@ def deserialize_dataset(fname: str) -> Dataset:
     for match in matches:
         serialized_sample = match.group(0)  # Extract the entire matched sample block
         deserialized_dict = deserialize_sample(serialized_sample)
-        dataset.append(deserialized_dict)
+        dlist.append(deserialized_dict)
 
-    return Dataset.from_list(dataset)
+    dataset = Dataset.from_list(dlist)
+    logger.info(f"Deserialized dataset with {len(dataset)} rows")
+    return dataset
