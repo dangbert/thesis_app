@@ -9,7 +9,8 @@ import argparse
 import os
 import json
 import sys
-from datasets import load_dataset, Dataset, DatasetDict
+import glob
+from datasets import load_dataset, concatenate_datasets, Dataset, DatasetDict
 import numpy as np
 import deepl
 from typing import Union
@@ -17,17 +18,18 @@ from typing import Union
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 EXPERIMENTS_DIR = os.path.realpath(os.path.join(SCRIPT_DIR, "../.."))
 sys.path.append(EXPERIMENTS_DIR)
-import config  # noqa
-from config import TaskTimer  # noqa
+import data.alpaca_cleaned_nl.translate_utils as tutils  # noqa: E402
+import config  # noqa: E402
+from config import TaskTimer  # noqa: E402
 
 
 DATASET_ID = "yahma/alpaca-cleaned"
 COL_NAMES = ["output", "input", "instruction"]  # columns to translate
 
-TRANSLATED_PATH = os.path.join(SCRIPT_DIR, "translated_dataset.json")
-# TRANSLATED_PATH = os.path.join(SCRIPT_DIR, "translated_dataset[100_samples].json")
-# TRANSLATED_PATH = "./tmp.json"
-TRANSLATED_DATASET_ID = "dangbert/alpaca-cleaned-nl" # where to upload on hugging face
+TRANSLATED_PATH = os.path.join(
+    SCRIPT_DIR, "translated_dataset.jsonl"
+)  # where to write/read translated dataset
+TRANSLATED_DATASET_ID = "dangbert/alpaca-cleaned-nl"  # where to upload on hugging face
 
 logger = config.get_logger(__name__, level="INFO")
 
@@ -42,29 +44,77 @@ def main():
         "--translate",
         "-t",
         action="store_true",
-        help="Translate the dataset to Dutch",
+        help="Translate the dataset to Dutch, writing the result to '{TRANSLATED_PATH}'.  Resume from where it left off if the file already exists.",
     )
     parser.add_argument(
         "--max-samples",
         "-m",
         type=int,
         default=100,
-        help="max number of samples to translate",
+        help="max number of samples to translate (only applicable alongside --translate)",
+    )
+    parser.add_argument(
+        "--dump",
+        type=str,
+        nargs=3,
+        metavar=("filename", "start_index", "stop_index"),
+        help="Dump source dataset entries to a docx or text file with the specified filename, starting from the specified index and ending before the stop_index (exclusive).",
+    )
+
+    parser.add_argument(
+        "--deserialize",
+        type=str,
+        nargs=1,
+        metavar=("folder"),
+        help="Folder of docx files to convert to jsonl files (e.g. downloaded from DeepL after translation).",
+    )
+    parser.add_argument(
+        "--merge",
+        nargs=2,
+        type=str,
+        metavar=("folder", "output_file"),
+        help="Folder of jsonl files to merge into a single dataset (jsonl) file",
     )
     parser.add_argument(
         "--upload",
         "-u",
-        action="store_true",
-        help="Upload translated dataset to hugging face hub",
+        type=str,
+        help="Upload provided .jsonl file to hugging face hub, replacing the existing dataset '{TRANSLATED_DATASET_ID}'",
     )
+
     args = parser.parse_args()
+
+    if args.dump:
+        filename, start_index, stop_index = args.dump
+        start_index, stop_index = int(start_index), int(stop_index)
+        # assert not os.path.exists(filename), f"refusing to overwrite '{filename}'"
+        if os.path.isdir(filename):
+            filename = f"{filename}/orig_{start_index}_to_{stop_index}.docx"
+        sdataset, orig_indices = get_shuffled_dataset()
+        sdataset = sdataset.add_column("orig_index", orig_indices)
+
+        sdataset = sdataset.select(range(start_index, stop_index))
+        tutils.serialize_dataset(sdataset, filename, assert_sanity=False)
+        return
+
+    if args.deserialize:
+        dir = args.deserialize[0]
+        assert os.path.isdir(dir)
+        fnames = glob.glob(f"{dir}/*.docx")
+        logger.info(f"found {len(fnames)} docx files in '{dir}' to convert to jsonl")
+        for fname in fnames:
+            outname = fname.replace(".docx", ".jsonl")
+            if os.path.exists(outname):
+                logger.info(f"skipping already deserialized file: '{fname}'")
+                continue
+            logger.info(f"converting '{fname}' -> '{outname}'")
+            cur_dataset = tutils.deserialize_dataset(fname)
+            cur_dataset.to_json(outname)
+        return
 
     if args.translate:
         sdataset, orig_indices = get_shuffled_dataset()
         sdataset = sdataset.add_column("orig_index", orig_indices)
-        # fname = "shuffled_dataset.json"
-        # sdataset.to_json(fname, indent=2)
-        # print(f"wrote {fname}")
 
         _ = estimate_budget()
         translate_dataset(sdataset, TRANSLATED_PATH, max_samples=args.max_samples)
@@ -72,12 +122,51 @@ def main():
             return
 
     if args.upload:
-        tdataset, tdataset_dict = load_local_dataset(TRANSLATED_PATH)
-        logger.info(f"uploading translated dataset to hugging face hub '{TRANSLATED_DATASET_ID}'")
+        fname = args.upload
+        assert os.path.isfile(fname)
+        assert fname.lower().endswith(".jsonl") or fname.lower().endswith(".json")
+        tdataset, _ = load_local_dataset(fname)
+        logger.info(
+            f"uploading translated dataset to hugging face hub '{TRANSLATED_DATASET_ID}'"
+        )
         # https://huggingface.co/docs/datasets/upload_dataset
-        breakpoint()
         with TaskTimer("push to hub"):
             tdataset.push_to_hub(TRANSLATED_DATASET_ID)
+        return
+
+    if args.merge:
+        dir, output_file = args.merge
+        assert not os.path.exists(output_file), f"refusing to overwrite '{output_file}'"
+        fnames = glob.glob(f"{dir}/*.jsonl")
+        logger.info(f"found {len(fnames)} jsonl files in '{dir}' to merge")
+        if len(fnames) == 0:
+            return
+
+        seen_ids = set()
+
+        def filter_rows(item):
+            # prevent possible duplicates when concatenating datasets by removing rows where orig_index has already been seen
+            nonlocal seen_ids
+            return item["orig_index"] not in seen_ids  # True if row should be kept
+
+        combined = None
+        for fname in fnames:
+            cur_dataset, _ = load_local_dataset(fname)
+            if combined is None:
+                combined = cur_dataset
+                continue
+            seen_ids = set(combined["orig_index"])
+            prev_len = len(cur_dataset)
+            cur_dataset = cur_dataset.filter(filter_rows)
+            removed = prev_len - len(cur_dataset)
+            if removed > 0:
+                logger.info(f"skipping {removed} possible duplicates from '{fname}'")
+            combined = concatenate_datasets([combined, cur_dataset])
+
+        combined.to_json(output_file)
+        logger.info(
+            f"wrote merged dataset (from {len(fnames)} files) to '{output_file}' ({len(combined)} final rows)"
+        )
         return
 
     # download dataset to hugging face disk cache
@@ -157,12 +246,11 @@ class DUMMYResult:
 def load_local_dataset(disk_path: str):
     """Reload dataset from local cache of previous translations."""
     assert os.path.exists(disk_path)
-    tdataset: DatasetDict = load_dataset(
-        "json", data_files=disk_path, split="train"
-    )
+    tdataset: DatasetDict = load_dataset("json", data_files=disk_path, split="train")
     tdataset_dict = {c: tdataset[c] for c in tdataset.column_names}
-    logger.info(f"reloaded cached dataset from '{disk_path}'")
+    logger.info(f"reloaded dataset from '{disk_path}' (with {len(tdataset)} samples)")
     return tdataset, tdataset_dict
+
 
 def translate_dataset(dataset, disk_path: str, max_samples: int):
     """
@@ -171,7 +259,7 @@ def translate_dataset(dataset, disk_path: str, max_samples: int):
 
     max_samples: maximum number of samples to translate before quitting (one sample has len(COL_NAMES) columns
     """
-    assert disk_path.endswith(".json")
+    assert disk_path.endswith(".jsonl") or disk_path.endswith(".json")
 
     tdataset_dict: dict = {c: [] for c in COL_NAMES}  # translated dataset
     extra_cols = ["orig_index", "detected_source_lang"]
@@ -182,7 +270,8 @@ def translate_dataset(dataset, disk_path: str, max_samples: int):
     assert tdataset_dict.keys() == set(COL_NAMES + extra_cols)
 
     def flush_translated_dataset(tdataset_dict):
-        Dataset.from_dict(tdataset_dict).to_json(disk_path, indent=2)
+        # note: .to_json(disk_path, indent=2) makes it more readable but leads to problems reloading later :(
+        Dataset.from_dict(tdataset_dict).to_json(disk_path)
 
     translator = deepl.Translator(config.get_settings().deepl_api_key)
 

@@ -3,11 +3,11 @@
 import os
 import argparse
 import json
-
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 from datasets import load_dataset
 import time
 from time import perf_counter
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 # https://huggingface.co/datasets/oscar-corpus/OSCAR-2301

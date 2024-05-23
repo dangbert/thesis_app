@@ -1,0 +1,44 @@
+<===@51367===>
+<===0===></===0===>
+<===1==>U plant een reis naar Mexico-Stad, welke attracties en bezienswaardigheden raadt u aan? </===1==>
+<==2===>Mexico Stad is een levendige en historisch rijke bestemming met een grote verscheidenheid aan attracties en bezienswaardigheden. Hier zijn enkele aanbevelingen voor je reis:
+
+1. De Zocalo: Dit is het centrale plein in Mexico-Stad en een van de grootste openbare pleinen ter wereld. Het wordt omringd door een aantal historische gebouwen en is een geweldig startpunt om de stad te verkennen.
+
+2. Het Palacio de Bellas Artes: Dit prachtige gebouw is de thuisbasis van Mexico's operagebouw en museum voor schone kunsten. Het heeft grootse architectuur en een indrukwekkende kunstcollectie.
+
+3. 3. Templo Mayor: Dit is een Azteekse tempel in het hart van Mexico-Stad. Het is zorgvuldig opgegraven en gereconstrueerd om een fascinerende blik te werpen op de oude geschiedenis van de stad.
+
+4. Nationaal Antropologisch Museum: Dit wordt algemeen beschouwd als een van de beste antropologiemusea ter wereld. Het beschikt over een uitgebreide collectie artefacten uit de rijke precolumbiaanse geschiedenis van Mexico, waaronder de Azteken, Maya's en Olmeken.
+
+5. Chapultepec Park: Dit grote stadspark is een geweldige plek om te ontspannen en te genieten van het mooie weer in Mexico-Stad. Er zijn verschillende musea, een dierentuin en verschillende meren om te varen.
+
+6. Coyoacán: Deze charmante buurt is beroemd om zijn kleurrijke koloniale architectuur en straten met bomen. Het is ook de thuisbasis van het Frida Kahlo Museum, gewijd aan de beroemde Mexicaanse kunstenaar.
+
+Kortom, Mexico-Stad heeft veel te bieden en er is voor elk wat wils. Zorg ervoor dat je vooruit plant en haal het meeste uit je reis naar deze ongelooflijke bestemming.</==2==>
+</===@51367===>
+<===@7272===>
+<===0===>Ik ben naar de winkel geweest.</===0===>
+<===1==>Odentificeer en herstel de grammaticale fout.</===1==>
+<==2===>De zin moet worden gecorrigeerd naar “Ik ging naar de winkel.”</==2==>
+</===@7272===>
+<===@38844===>
+<===0===>Ik was heel blij dat ik het artikel vond dat ik zocht.</===0===>
+<===1==>Geef een zin, verwijder alle overbodige woorden zonder de betekenis van de zin te veranderen.</===1==>
+<==2===>Ik heb het item gevonden.</==2===>
+</===@38844===>
+<===@36240===>
+<===0===></===0===>
+<===1==>Noem een winkel die eigendom is van Walmart.</===1==>
+<==2===>Een winkel die eigendom is van Walmart is Sam's Club.</==2==>
+</===@36240===>
+<===@25869===>
+<===0===>Katten zijn om verschillende redenen slechte huisdieren. Hun natuurlijke jachtinstinct kan leiden tot vernieling in huis, ze zijn vaak onafhankelijk en vereisen constant onderhoud als het gaat om verzorging en dierenartszorg.</==0===>
+<===1===>Vat het artikel “Waarom katten slechte huisdieren zijn” samen.</===1==>
+<==2===>Het artikel stelt dat katten slechte huisdieren zijn vanwege hun jachtinstincten die chaos veroorzaken, hun onafhankelijkheid en hun hoge onderhoudsniveau op het gebied van verzorging en gezondheidszorg.</==2==>
+</===@25869===>
+<===@46375===>
+<===0===></===0===>
+<===1==>Verander de volgende zin: “Hij werkt vijf dagen per week”</===1===>
+<==2===>“Hij werkt vijf dagen per week.”</==2==>
+</===@46375===>
