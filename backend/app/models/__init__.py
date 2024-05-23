@@ -13,6 +13,7 @@ from .course import (
     Feedback,
     AttemptFeedbackLink,
 )
+from .job import Job, JobStatus, JobType
 
 # importing Base here (after all models are imported) for alembic
 from .base import Base

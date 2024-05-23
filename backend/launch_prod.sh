@@ -7,8 +7,12 @@ function main() {
     cd "$SCRIPT_DIR"
     ./manageDB.py --maybe-migrate
 
-    export NUM_WORKERS="$(python3 -c 'import multiprocessing; print(multiprocessing.cpu_count() * 2 + 1)')"
-    echo "setting NUM_WORKERS=$NUM_WORKERS"
+    if [ -z "$NUM_WORKERS" ]; then
+        export NUM_WORKERS="$(python3 -c 'import multiprocessing; print(multiprocessing.cpu_count() * 2 + 1)')"
+        echo "setting NUM_WORKERS=$NUM_WORKERS"
+    else
+        echo "using existing NUM_WORKERS=$NUM_WORKERS"
+    fi
 
     declare -a CMD=(
         "gunicorn" "app.main:app"
