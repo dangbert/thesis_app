@@ -71,8 +71,8 @@ export const createAssignment = async (
 // MARK: attempts
 const attemptPath = `${API_PATH}/attempt`;
 
-export const listAttempts = async (assignment_id: string) => {
-  const params = new URLSearchParams({ assignment_id });
+export const listAttempts = async (assignment_id: string, user_id: string) => {
+  const params = new URLSearchParams({ assignment_id, user_id });
   return await jsonOrError(
     fetch(`${attemptPath}/?${params}`, { method: 'GET' })
   );
@@ -109,6 +109,7 @@ export const createFeedback = async (feedback: models.FeedbackCreate) => {
   );
 };
 
+// MARK: files
 const filePath = `${API_PATH}/file`;
 export const createFile = async (file: File) => {
   const url = `${filePath}/`;

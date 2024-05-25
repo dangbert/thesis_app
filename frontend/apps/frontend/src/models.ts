@@ -60,7 +60,7 @@ export interface AttemptPublic extends BaseFields {
   assignment_id: string;
   user_id: string;
   data: SMARTData;
-  feedback: FeedbackPublic[];
+  feedbacks: FeedbackPublic[];
   files: FilePublic[];
 }
 

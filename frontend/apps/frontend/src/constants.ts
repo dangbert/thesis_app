@@ -6,3 +6,5 @@ export const FEEDBACK_MIN_ROWS = 4;
 
 export const ATTEMPT_MAX_ROWS = FEEDBACK_MAX_ROWS;
 export const ATTEMPT_MIN_ROWS = FEEDBACK_MIN_ROWS;
+
+export const SNACKBAR_DUR_MS = 4500;

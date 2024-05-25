@@ -140,7 +140,7 @@ class Attempt(Base):
             assignment_id=self.assignment_id,
             user_id=self.user_id,
             data=self.data,
-            feedback=feed_objs,
+            feedbacks=feed_objs,
             files=[file.to_public() for file in self.files],
             **super().to_public().model_dump(),
         )

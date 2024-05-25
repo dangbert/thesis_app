@@ -186,16 +186,16 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
       )}
 
       {error && <Typography color="error">{error}</Typography>}
-      {!readOnly && (
-        <Box display="flex" justifyContent="flex-end" mt={2}>
-          <Button onClick={onClose} color="primary">
-            Cancel
-          </Button>
+      <Box display="flex" justifyContent="flex-end" mt={2}>
+        <Button onClick={onClose} color="primary">
+          {readOnly ? 'Close' : 'Cancel'}
+        </Button>
+        {!readOnly && (
           <Button onClick={handleSubmit} color="primary" disabled={!canSubmit}>
             {submitting ? <CircularProgress size={24} /> : 'Submit Feedback'}
           </Button>
-        </Box>
-      )}
+        )}
+      </Box>
     </>
   );
 };

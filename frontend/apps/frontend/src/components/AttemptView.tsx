@@ -6,12 +6,9 @@ import {
   DialogContent,
   TextField,
   Grid,
-  Box,
-  IconButton,
   List,
   ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
+  Alert,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FeedbackView from './Feedback';
@@ -116,7 +113,11 @@ const AttemptView: React.FC<AttemptViewProps> = ({
                   onClose={onClose}
                 />
               ) : (
-                <Typography>No feedback available yet.</Typography>
+                <>
+                  <Alert severity="info">
+                    No feedback available yet, stay tuned...
+                  </Alert>
+                </>
               )
             ) : (
               <FeedbackView

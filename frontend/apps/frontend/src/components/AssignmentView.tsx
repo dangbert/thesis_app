@@ -7,6 +7,7 @@ import AttemptHistory from './AttemptHistory';
 import { AssignmentPublic } from '../models';
 import * as models from '../models';
 import * as courseApi from '../api';
+import * as constants from '../constants';
 import { useUserContext } from '../providers';
 
 interface IAssignmentViewProps {
@@ -22,16 +23,19 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
   const [creatingAttempt, setCreatingAttempt] = useState(false);
   const [snackbarTxt, setSnackbarTxt] = useState('');
 
+  const isInstructor = true; // TODO don't hardcode
+
   // load attempts
   useEffect(() => {
     let cancel = false;
     (async () => {
+      if (!userCtx.user) return;
       if (asData.id === '') {
         setAttempts([]);
         return;
       }
       console.log(`requesting attempts for assignment ${asData.id}`);
-      const res = await courseApi.listAttempts(asData.id);
+      const res = await courseApi.listAttempts(asData.id, userCtx.user.id);
       if (cancel) return;
       if (res.error) {
         console.error(res.error);
@@ -43,14 +47,14 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
 
       return () => (cancel = true);
     })();
-  }, [asData.id]);
+  }, [asData.id, userCtx.user?.id]);
 
   if (!userCtx.user) return null;
   return (
     <div>
       <Snackbar
         open={snackbarTxt !== ''}
-        autoHideDuration={4000}
+        autoHideDuration={constants.SNACKBAR_DUR_MS}
         onClose={() => setSnackbarTxt('')}
         message={snackbarTxt}
       />
@@ -95,7 +99,7 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
           asData={asData}
           open={true}
           onClose={() => setViewAttemptIdx(-1)}
-          mode="createFeedback"
+          mode={isInstructor ? 'createFeedback' : 'view'}
           onCreateFeedback={(feedback: models.FeedbackPublic) => {
             setSnackbarTxt('Feedback submitted ✅');
             setViewAttemptIdx(-1);
@@ -103,7 +107,11 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
         />
       )}
 
-      <AttemptHistory attempts={attempts} />
+      <AttemptHistory
+        attempts={attempts}
+        asData={asData}
+        isInstructor={isInstructor}
+      />
     </div>
   );
 };

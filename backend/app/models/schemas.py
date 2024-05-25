@@ -63,7 +63,7 @@ class AttemptPublic(DateFields):
     assignment_id: UUID
     user_id: UUID
     data: dict[str, Any]
-    feedback: list["FeedbackPublic"]
+    feedbacks: list["FeedbackPublic"]
     files: list["FilePublic"]
 
 
