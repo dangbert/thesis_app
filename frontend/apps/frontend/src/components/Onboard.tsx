@@ -12,6 +12,10 @@ function Onboard() {
   const message = 'Login with your VU email to join!';
   const role = 'student';
 
+  // const handleRedirect = () => {
+  //   window.location.href = LOGIN_URL; // force page reload
+  // };
+
   return (
     <Card sx={{ maxWidth: 400, m: 'auto', mt: 5 }}>
       <CardContent>
@@ -31,6 +35,7 @@ function Onboard() {
           variant="contained"
           sx={{ width: '100%' }}
           href={LOGIN_URL}
+          // onClick={handleRedirect}
         >
           Join Course
         </Button>

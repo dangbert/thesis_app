@@ -2,7 +2,7 @@ import urllib.parse
 from fastapi import APIRouter, Request, HTTPException
 from authlib.integrations.starlette_client import OAuth
 from authlib.oauth2 import OAuth2Error
-from authlib.integrations.base_client import OAuthError
+from authlib.integrations.base_client import OAuthError, MismatchingStateError
 from starlette.datastructures import URL
 from starlette.responses import RedirectResponse
 from sqlalchemy import select
@@ -16,8 +16,10 @@ import app.hardcoded as hardcoded
 
 logger = get_logger(__name__)
 
+IMPORTANT_LOGIN_STATE = {"destination"}  # import field in session to preserve
 
-USE_CONNECTION = "google-oauth2"  # "email" for passwordless login
+
+USE_CONNECTION = "google-oauth2"  # set to "email" for passwordless login
 settings = get_settings()
 LOGIN_URL = (
     f"{settings.site_url}{settings.api_v1_str}/auth/login"  # request.url_for("login")
@@ -32,7 +34,7 @@ oauth.register(
     # https://auth0.com/docs/get-started/apis/scopes/openid-connect-scopes#standard-claims
     client_kwargs={"scope": "openid profile email"},
     server_metadata_url=f"https://{settings.auth0_domain}/.well-known/openid-configuration",
-    # authorize_state=settings.secret_key,
+    authorize_state=settings.secret_key,
 )
 
 
@@ -91,6 +93,23 @@ async def callback(request: Request, session: SessionDep):
 
     try:
         token = await oauth.auth0.authorize_access_token(request)
+    except MismatchingStateError:
+        # if a user starts a google login and then revisits the site's login page, they may get a CSRF warning:
+        #   Invalid authentication request: mismatching_state: CSRF Warning! State not equal in request and response.
+
+        # clear session so user can login again, but remember important fields
+        keep = {
+            k: request.session.get(k)
+            for k in IMPORTANT_LOGIN_STATE
+            if request.session.get(k) is not None
+        }
+        request.session.clear()
+        logger.warning(
+            f"Mismatching state error, clearing session, but keeping fields: {keep.keys()}"
+        )
+        for k, v in keep.items():
+            request.session[k] = v
+        return RedirectResponse(url=LOGIN_URL)
     except (OAuth2Error, OAuthError) as exc:
         logger.warning(f"Invalid authentication request: {exc}")
         return RedirectResponse(url=LOGIN_URL)

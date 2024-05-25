@@ -20,7 +20,8 @@ const LinkBehavior = React.forwardRef<
 
 const INITIAL_THEME = createTheme({
   palette: {
-    mode: 'dark',
+    mode: 'light', // 'dark'
+
     // https://brandportal.vu.nl/modules/product/DigitalStyleGuide/default/index.aspx?ItemId=6744
     primary: {
       main: '#0077b3',

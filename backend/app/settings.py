@@ -1,6 +1,7 @@
 """
 All application settings are defined here.
 
+
 Usage:
 
 from app.settings import settings
@@ -50,7 +51,7 @@ class Settings(BaseSettings):
 
     # session management
     secret_key: str
-    session_expiration_secs: int = 60 * 60 * 24 * 7
+    session_expiration_secs: int = 60 * 60 * 24 * 14
 
     # https://docs.python.org/3/library/logging.html#levels
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"

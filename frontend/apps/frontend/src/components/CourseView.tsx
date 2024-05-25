@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, Typography, useTheme, Button } from '@mui/material';
+import {
+  Card,
+  CardContent,
+  Typography,
+  useTheme,
+  Button,
+  Alert,
+} from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import AssignmentView from './AssignmentView';
 import * as models from '../models';
@@ -50,6 +57,7 @@ const CourseView: React.FC<CourseViewProps> = ({ course }) => {
     const dummyAs: models.AssignmentCreate = {
       name: 'dummy assignment',
       about: '**more info to come**\n:)',
+      scorable: false,
     };
     const response = await courseApi.createAssignment(course.id, dummyAs);
     if (!response.error) {
@@ -80,9 +88,9 @@ const CourseView: React.FC<CourseViewProps> = ({ course }) => {
       {/*map courselist to simple list of names */}
       {loadingAssignments && 'loading assignments...'}
 
-      {!loadingAssignments &&
-        !asList.length &&
-        'No assignments currently setup for this course'}
+      {!loadingAssignments && !asList.length && (
+        <Alert severity="info">This course currently has no assignments</Alert>
+      )}
 
       {isAdmin && (
         <Button variant="contained" onClick={handleCreateAs}>

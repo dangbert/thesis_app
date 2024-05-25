@@ -11,7 +11,7 @@ from app.models.schemas import (
     FilePublic,
     FeedbackPublic,
 )
-from sqlalchemy import String, ForeignKey, JSON
+from sqlalchemy import String, ForeignKey, JSON, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PUUID
 from uuid import UUID
@@ -81,7 +81,7 @@ class Assignment(Base):
     name: Mapped[str]
     about: Mapped[str] = mapped_column(String, default="")
     scorable: Mapped[bool] = mapped_column(
-        bool
+        Boolean
     )  # whether assignment attempts should be assigned a score
 
     course: Mapped["Course"] = relationship("Course", back_populates="assignments")

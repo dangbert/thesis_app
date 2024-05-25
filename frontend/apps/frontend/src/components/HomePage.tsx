@@ -12,6 +12,7 @@ import {
   MenuItem,
   ListItemText,
   Icon,
+  Alert,
 } from '@mui/material';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -33,7 +34,8 @@ const HomePage = () => {
   const classes = useStyles(theme);
   const [userMenuEl, setUserMenuEl] = useState<HTMLElement | null>(null);
 
-  // TODO: referesh user data on a timer?
+  // TODO: refresh user data on a timer, alert user if they're logged out
+  // "login in a new tab if you wish to continue your work on this page"
   useEffect(() => {
     (async () => {
       let cancel = false;
@@ -78,14 +80,8 @@ const HomePage = () => {
       ? courseList[courseIdx]
       : null;
 
-  const handleLogout = async () => {
-    const res = await courseApi.logout();
-    if (res.error) {
-      alert(`failed to logout: ${res.error}`);
-    } else {
-      userCtx.onChange(undefined);
-      setUserMenuEl(null); // close user menu
-    }
+  const handleLogout = () => {
+    window.location.href = courseApi.LOGOUT_URL; // force page reload
   };
 
   if (!userCtx.user) {
@@ -151,10 +147,12 @@ const HomePage = () => {
         {/*map courselist to simple list of names */}
         {loadingCourses && 'loading courses...'}
 
-        {!loadingCourses &&
-          courseList.length === 0 &&
-          "You're not enrolled in any courses yet..."}
-
+        {!loadingCourses && courseList.length === 0 && (
+          <Alert severity="warning">
+            You're not enrolled in any courses yet, ask your teacher for an
+            invite link...
+          </Alert>
+        )}
         {curCourse && <CourseView course={curCourse} />}
       </div>
     </div>
@@ -206,7 +204,6 @@ const useStyles = makeStyles((theme) => ({
     margin: 0,
     padding: 0,
     overflow: 'hidden', // Optional: to manage overflow of child components
-    border: '2px dashed red',
   },
   centeredContent: {
     display: 'flex',

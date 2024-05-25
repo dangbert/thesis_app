@@ -3,12 +3,13 @@ import * as models from '../models';
 
 // MARK: auth
 const authPath = `${API_PATH}/auth`;
+export const LOGOUT_URL = `${authPath}/logout`;
+
+/**
+ * Note it's more user friendly to just link the user to LOGOUT_URL
+ */
 export const logout = async () => {
-  return await jsonOrError(
-    fetch(`${authPath}/logout`, {
-      method: 'GET',
-    })
-  );
+  return await jsonOrError(fetch(LOGOUT_URL, { method: 'GET' }));
 };
 
 export const getCurUser = async () => {

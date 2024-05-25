@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
 import styled from '@emotion/styled';
 import { ThemeProvider, Theme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -47,6 +47,8 @@ export function App() {
           <UserContext.Provider value={userContext}>
             <CssBaseline enableColorScheme={true} />
             <Routes>
+              {/* if user got soft linked to a /api url, refresh the page */}
+              <Route path="/api/*" element={<ApiRedirect />} />
               <Route path="/" element={<HomePage />} />
               <Route path="/join" element={<Onboard />} />
               <Route
@@ -61,8 +63,20 @@ export function App() {
               <Route
                 path="*"
                 element={
-                  <Typography variant="h1" gutterBottom>
-                    Fallback page
+                  <Typography
+                    variant="h4"
+                    gutterBottom
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      marginTop: '24px',
+                    }}
+                  >
+                    Page not found...{' '}
+                    <a href="/" style={{ marginLeft: '8px' }}>
+                      {' '}
+                      go to home page
+                    </a>
                   </Typography>
                 }
               />
@@ -74,5 +88,20 @@ export function App() {
     </BrowserRouter>
   );
 }
+
+const ApiRedirect = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    // Check if the current path starts with '/api'
+    if (location.pathname.startsWith('/api')) {
+      // Force a full page reload to the current path
+      window.location.href =
+        window.location.origin + location.pathname + location.search;
+    }
+  }, [location]);
+
+  return 'redirecting...';
+};
 
 export default App;
