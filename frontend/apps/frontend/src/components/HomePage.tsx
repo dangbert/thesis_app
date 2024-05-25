@@ -14,10 +14,10 @@ import {
   Icon,
   Alert,
 } from '@mui/material';
-import LockOpenIcon from '@mui/icons-material/LockOpen';
 import ListItemIcon from '@mui/material/ListItemIcon';
-
 import MenuIcon from '@mui/icons-material/Menu';
+import LogoutIcon from '@mui/icons-material/Logout';
+
 import makeStyles from '@mui/styles/makeStyles';
 import CourseView from './CourseView';
 
@@ -132,7 +132,7 @@ const HomePage = () => {
             >
               <MenuItem onClick={handleLogout}>
                 <ListItemIcon>
-                  <LockOpenIcon />
+                  <LogoutIcon />
                 </ListItemIcon>
                 <ListItemText primary="Logout" />
               </MenuItem>

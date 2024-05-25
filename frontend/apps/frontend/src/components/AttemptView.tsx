@@ -16,6 +16,7 @@ import * as constants from '../constants';
 
 interface AttemptViewProps {
   attempt: models.AttemptPublic;
+  asData: models.AssignmentPublic;
   open: boolean;
   onClose: () => void;
   onCreateFeedback?: (feedback: models.FeedbackPublic) => void;
@@ -25,6 +26,7 @@ interface AttemptViewProps {
 
 const AttemptView: React.FC<AttemptViewProps> = ({
   attempt,
+  asData,
   open,
   onClose,
   onCreateFeedback,
@@ -84,6 +86,7 @@ const AttemptView: React.FC<AttemptViewProps> = ({
               feedback ? (
                 <FeedbackView
                   attemptId={attempt.id}
+                  asData={asData}
                   feedback={feedback}
                   readOnly={true}
                   onClose={onClose}
@@ -94,6 +97,7 @@ const AttemptView: React.FC<AttemptViewProps> = ({
             ) : (
               <FeedbackView
                 attemptId={attempt.id}
+                asData={asData}
                 feedback={feedback}
                 readOnly={false}
                 onClose={onClose}

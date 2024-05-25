@@ -89,6 +89,7 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
       {attempts.length > 0 && viewAttemptIdx > -1 && (
         <AttemptView
           attempt={attempts[viewAttemptIdx]}
+          asData={asData}
           open={true}
           onClose={() => setViewAttemptIdx(-1)}
           mode="createFeedback"
