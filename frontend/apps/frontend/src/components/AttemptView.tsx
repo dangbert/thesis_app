@@ -36,11 +36,12 @@ const AttemptView: React.FC<AttemptViewProps> = ({
   mode,
   feedback,
 }) => {
+  const canCreateFeedback = mode === 'createFeedback' && !feedback;
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      aria-labelledby="attempt-view-title"
+      aria-labelledby="attempt-view"
       fullWidth={true}
       maxWidth="xl"
       // PaperProps={{ style: { minHeight: '70vh' } }}
@@ -101,7 +102,7 @@ const AttemptView: React.FC<AttemptViewProps> = ({
           </Grid>
           <Grid item xs={12} md={6}>
             <Typography variant="h6" gutterBottom>
-              Feedback
+              {canCreateFeedback ? 'Create Feedback' : 'View Feedback'}
             </Typography>
             {mode === 'view' ? (
               feedback ? (
@@ -124,7 +125,7 @@ const AttemptView: React.FC<AttemptViewProps> = ({
                 attemptId={attempt.id}
                 asData={asData}
                 feedback={feedback}
-                readOnly={false}
+                readOnly={!canCreateFeedback}
                 onClose={onClose}
                 onCreate={onCreateFeedback}
               />

@@ -31,6 +31,21 @@ const AttemptHistory: React.FC<AttemptHistoryProps> = ({
   const [snackbarTxt, setSnackbarTxt] = useState('');
 
   console.log('history attempts', attempts);
+
+  let curAttempt = undefined;
+  let curFeedback = undefined;
+  if (
+    attempts.length > 0 &&
+    viewAttemptIdx > -1 &&
+    viewAttemptIdx < attempts.length
+  ) {
+    curAttempt = attempts[viewAttemptIdx];
+    if (curAttempt.feedbacks.length > 0) {
+      // TODO: get latest feedback (preferring human feedback if available)
+      curFeedback = curAttempt.feedbacks[curAttempt.feedbacks.length - 1];
+    }
+  }
+
   return (
     <>
       <Snackbar
@@ -39,21 +54,20 @@ const AttemptHistory: React.FC<AttemptHistoryProps> = ({
         onClose={() => setSnackbarTxt('')}
         message={snackbarTxt}
       />
-      {attempts.length > 0 &&
-        viewAttemptIdx > -1 &&
-        viewAttemptIdx < attempts.length && (
-          <AttemptView
-            attempt={attempts[viewAttemptIdx]}
-            asData={asData}
-            open={true}
-            onClose={() => setViewAttemptIdx(-1)}
-            mode={isInstructor ? 'createFeedback' : 'view'}
-            onCreateFeedback={(feedback: models.FeedbackPublic) => {
-              setSnackbarTxt('Feedback submitted ✅');
-              setViewAttemptIdx(-1);
-            }}
-          />
-        )}
+      {curAttempt && (
+        <AttemptView
+          attempt={curAttempt}
+          feedback={curFeedback}
+          asData={asData}
+          open={true}
+          onClose={() => setViewAttemptIdx(-1)}
+          mode={isInstructor && !curFeedback ? 'createFeedback' : 'view'}
+          onCreateFeedback={(feedback: models.FeedbackPublic) => {
+            setSnackbarTxt('Feedback submitted ✅');
+            setViewAttemptIdx(-1);
+          }}
+        />
+      )}
       <Timeline
         // position="left"
         sx={{
@@ -68,6 +82,18 @@ const AttemptHistory: React.FC<AttemptHistoryProps> = ({
           .reverse()
           .map((attempt, attemptIndex) => {
             const realIndex = attempts.length - attemptIndex - 1;
+            let status = isInstructor
+              ? 'awaiting AI feedback'
+              : 'awaiting teacher review';
+            if (attempt.feedbacks.length > 0) {
+              const hasHumanFeedback = attempt.feedbacks.some((x) => !x.is_ai);
+              const hasAiFeedback = attempt.feedbacks.some((x) => x.is_ai);
+              if (hasHumanFeedback) {
+                status = 'feedback available';
+              } else if (hasAiFeedback) {
+                status = 'awaiting teacher review';
+              }
+            }
 
             return (
               <React.Fragment key={attempt.id}>
@@ -86,10 +112,11 @@ const AttemptHistory: React.FC<AttemptHistoryProps> = ({
                     <Paper elevation={3} style={{ padding: '6px 16px' }}>
                       <Typography variant="h6" component="h1">
                         Submission {realIndex + 1}
+                        {attemptIndex === 0 ? ' (latest)' : ''}
                       </Typography>
-                      <Typography>
-                        Created at:{' '}
-                        {new Date(attempt.created_at).toLocaleString()}
+                      {/* TODO: create a <FeedbackStatus> component with an icon (also for user table) */}
+                      <Typography style={{ marginTop: '8px' }}>
+                        Status: {status}
                       </Typography>
                       <Button
                         variant="outlined"

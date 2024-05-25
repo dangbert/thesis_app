@@ -120,7 +120,9 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
       fullWidth={true}
       maxWidth="md"
     >
-      <DialogTitle id="form-dialog-title">Create New Attempt</DialogTitle>
+      <DialogTitle id="form-dialog-title">
+        Create New Attempt: {asData.name}
+      </DialogTitle>
       <DialogContent>
         {error && <div style={{ color: 'red' }}>{error}</div>}
         <TextField

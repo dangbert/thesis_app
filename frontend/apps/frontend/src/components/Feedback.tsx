@@ -103,7 +103,6 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
   let approvalStr = feedbackData.approved ? 'approve' : 'resubmit';
   if (needsApprovalResponse) approvalStr = ''; // make the button blank
 
-  console.log(`approvalStr = ${approvalStr}`);
   return (
     <>
       {/* TODO: start textfield short, and support it growing up to maxlines? */}
@@ -141,6 +140,7 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
           name="goal"
           value={approvalStr}
           onChange={(event) => {
+            if (readOnly) return;
             setNeedsApprovalResponse(false);
             setFeedbackData((prev) => ({
               ...prev,
@@ -152,6 +152,7 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
             value="approve"
             control={<Radio />}
             label="Approve"
+            // disabled={readOnly}
           />
           <FormControlLabel
             value="resubmit"
@@ -170,12 +171,13 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
             row
             name="score"
             value={feedbackData.score?.toString() || ''}
-            onChange={(event) =>
+            onChange={(event) => {
+              if (readOnly) return;
               setFeedbackData((prev) => ({
                 ...prev,
                 score: parseInt(event.target.value),
-              }))
-            }
+              }));
+            }}
           >
             <FormControlLabel value="0" control={<Radio />} label="0" />
             <FormControlLabel value="1" control={<Radio />} label="1" />

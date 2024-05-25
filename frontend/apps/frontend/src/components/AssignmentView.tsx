@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Typography, Snackbar } from '@mui/material';
+import { Button, Typography, Snackbar, Alert } from '@mui/material';
 import AttemptCreateModal from './AttemptCreateModal';
 import AttemptView from './AttemptView';
 import AttemptHistory from './AttemptHistory';
@@ -18,7 +18,6 @@ interface IAssignmentViewProps {
 const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
   const [attempts, setAttempts] = useState<models.AttemptPublic[]>([]);
   const userCtx = useUserContext();
-  const [viewAttemptIdx, setViewAttemptIdx] = useState(-1);
 
   const [creatingAttempt, setCreatingAttempt] = useState(false);
   const [snackbarTxt, setSnackbarTxt] = useState('');
@@ -65,14 +64,21 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
       <Typography variant="body1" color="textSecondary" component="p">
         {asData.about}
       </Typography>
-      <div style={{ marginTop: '12px' }}>
-        You have made {attempts.length} attempts so far on this assignment.
-      </div>
+
+      {attempts.length === 0 && (
+        <Alert
+          severity="info"
+          style={{ marginTop: '12px', marginBottom: '12px' }}
+        >
+          You've made no submissions on this assignment yet!
+        </Alert>
+      )}
       {!creatingAttempt && (
         <Button variant="contained" onClick={() => setCreatingAttempt(true)}>
           New Submission
         </Button>
       )}
+
       {creatingAttempt && (
         <AttemptCreateModal
           asData={asData}
@@ -81,28 +87,6 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
           onCreate={(att: models.AttemptPublic) => {
             setAttempts((prev) => [...prev, att]);
             setSnackbarTxt('Attempt submitted ✅');
-          }}
-        />
-      )}
-
-      {attempts.length > 0 && viewAttemptIdx === -1 && (
-        <Button
-          variant="contained"
-          onClick={() => setViewAttemptIdx(attempts.length - 1)}
-        >
-          View Last attempt
-        </Button>
-      )}
-      {attempts.length > 0 && viewAttemptIdx > -1 && (
-        <AttemptView
-          attempt={attempts[viewAttemptIdx]}
-          asData={asData}
-          open={true}
-          onClose={() => setViewAttemptIdx(-1)}
-          mode={isInstructor ? 'createFeedback' : 'view'}
-          onCreateFeedback={(feedback: models.FeedbackPublic) => {
-            setSnackbarTxt('Feedback submitted ✅');
-            setViewAttemptIdx(-1);
           }}
         />
       )}
