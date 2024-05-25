@@ -18,7 +18,7 @@ import {
   FeedbackCreate,
   AssignmentPublic,
 } from '../models';
-import * as courseApi from '../api/courses';
+import * as courseApi from '../api';
 import { useUserContext } from '../providers';
 
 import { FEEDBACK_MAX_ROWS, FEEDBACK_MIN_ROWS } from '../constants';

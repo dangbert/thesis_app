@@ -108,3 +108,17 @@ export const createFeedback = async (feedback: models.FeedbackCreate) => {
     })
   );
 };
+
+const filePath = `${API_PATH}/file`;
+export const createFile = async (file: File) => {
+  const url = `${filePath}/`;
+  const formData = new FormData();
+  formData.append('file', file);
+
+  return await jsonOrError(
+    fetch(url, {
+      method: 'PUT',
+      body: formData,
+    })
+  );
+};

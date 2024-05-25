@@ -16,12 +16,19 @@ router = APIRouter()
 FILE_NOT_FOUND = "File not found or not authorized"
 
 
-def get_file_or_fail(session: SessionDep, file_id: UUID, user: User) -> FileModel:
-    """Get's a file by ID, or raises a 404 if it doesn't exist or the user doesn't have access."""
-    file = session.query(FileModel).filter(FileModel.id == file_id).first()
-    if not file or (file and not user.can_view(session, file)):
-        raise HTTPException(status_code=404, detail=FILE_NOT_FOUND)
-    return file
+def get_files_or_fail(
+    session: SessionDep, file_ids: list[UUID], user: User, error_code: int = 404
+) -> list[FileModel]:
+    """Get's a list of file by ID(s), or raises a 404 if it doesn't exist or the user doesn't have access."""
+    # file = session.query(FileModel).filter(FileModel.id == file_id).first()
+    files = session.query(FileModel).filter(FileModel.id.in_(file_ids)).all()
+    if len(files) != len(file_ids):
+        raise HTTPException(status_code=error_code, detail=FILE_NOT_FOUND)
+
+    for file in files:
+        if not user.can_view(session, file):
+            raise HTTPException(status_code=error_code, detail=FILE_NOT_FOUND)
+    return files
 
 
 # https://fastapi.tiangolo.com/tutorial/request-files/#uploadfile-with-additional-metadata
@@ -67,7 +74,7 @@ async def upload_file(
 async def read_file(
     user: AuthUserDep, file_id: UUID, session: SessionDep
 ) -> FileResponse:
-    db_file = get_file_or_fail(session, file_id, user)
+    db_file = get_files_or_fail(session, [file_id], user)[0]
 
     if not os.path.isfile(db_file.disk_path):
         raise HTTPException(status_code=404, detail="File not found on disk")

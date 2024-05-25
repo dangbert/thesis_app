@@ -6,7 +6,7 @@ import AttemptHistory from './AttemptHistory';
 
 import { AssignmentPublic } from '../models';
 import * as models from '../models';
-import * as courseApi from '../api/courses';
+import * as courseApi from '../api';
 import { useUserContext } from '../providers';
 
 interface IAssignmentViewProps {
@@ -82,7 +82,10 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
       )}
 
       {attempts.length > 0 && viewAttemptIdx === -1 && (
-        <Button variant="contained" onClick={() => setViewAttemptIdx(0)}>
+        <Button
+          variant="contained"
+          onClick={() => setViewAttemptIdx(attempts.length - 1)}
+        >
           View Last attempt
         </Button>
       )}

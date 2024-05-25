@@ -12,11 +12,13 @@ from app.models.course import (
     Attempt,
     AttemptCreate,
     AttemptPublic,
+    AttemptFileLink,
     AttemptFeedbackLink,
     FeedbackPublic,
     Feedback,
 )
 from app.routes.courses import get_assignment_or_fail
+from app.routes.files import get_files_or_fail
 from app.hardcoded import SMARTData, FeedbackData
 from uuid import UUID
 from pydantic import ValidationError
@@ -69,10 +71,16 @@ async def create_attempt(
             status_code=400, detail="Data format not in SMARTData format"
         )
 
+    files = get_files_or_fail(session, body.file_ids, user, error_code=400)
     attempt = Attempt(
         assignment_id=assignment_id, user_id=user.id, data=smart_data.model_dump()
     )
     session.add(attempt)
+    session.flush()  # to get ID
+
+    # add files to attempt
+    for file in files:
+        session.add(AttemptFileLink(attempt_id=attempt.id, file_id=file.id))
     session.commit()
     return attempt.to_public()
 

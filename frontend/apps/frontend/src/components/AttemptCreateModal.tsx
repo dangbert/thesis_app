@@ -21,10 +21,10 @@ import {
   AttemptPublic,
   SMARTData,
 } from '../models';
-import * as courseApi from '../api/courses';
+import * as courseApi from '../api';
 import { useUserContext } from '../providers';
 import * as constants from '../constants';
-import { FileUploadButton } from './Files';
+import FileView, { FileUploadButton } from './Files';
 
 interface AttemptCreateModalProps {
   asData: AssignmentPublic;
@@ -39,6 +39,7 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
   onClose,
   onCreate,
 }) => {
+  // TODO: toast alert for error
   const [error, setError] = useState<string>('');
   const [data, setData] = useState<SMARTData>({ goal: '', plan: '' });
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -71,11 +72,31 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
 
     let cancelled = false;
     setSubmitting(true);
+
+    // batch upload files
+    const fileUploads = files.map((file) => courseApi.createFile(file));
+    const fileResults = await Promise.all(fileUploads);
+    let failedFiles = 0;
+    const fileIds = [];
+    console.log('fileResults', fileResults);
+    for (const res of fileResults) {
+      if (res.error) {
+        failedFiles++;
+      } else {
+        fileIds.push(res.data.id);
+      }
+    }
+    if (failedFiles) {
+      setError(`Failed to upload ${failedFiles} files`);
+      setSubmitting(false);
+      return;
+    }
+
     const attemptData: AttemptCreate = {
       assignment_id: asData.id,
       data,
+      file_ids: fileIds,
     };
-
     const res = await courseApi.createAttempt(attemptData);
     if (cancelled) return;
 
@@ -134,14 +155,19 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
         <br />
         <br />
         <Typography variant="subtitle1" gutterBottom>
-          File Attachments
+          File Attachments ({files.length}):
         </Typography>
 
         <FileUploadButton onChange={handleFileChange} />
         <List dense>
           {files.map((file, index) => (
             <ListItem key={index}>
-              <ListItemText primary={file.name} />
+              {/* <ListItemText primary={file.name} /> */}
+
+              <FileView
+                filename={file.name}
+                read_url={URL.createObjectURL(file)}
+              />
               <ListItemSecondaryAction>
                 <IconButton
                   edge="end"

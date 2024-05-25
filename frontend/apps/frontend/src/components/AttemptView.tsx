@@ -7,7 +7,13 @@ import {
   TextField,
   Grid,
   Box,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
 } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 import FeedbackView from './Feedback';
 import FileView from './Files';
 
@@ -81,16 +87,20 @@ const AttemptView: React.FC<AttemptViewProps> = ({
             <br />
             <br />
             <Typography variant="subtitle1" gutterBottom>
-              File Attachments
+              File Attachments ({attempt.files.length}):
             </Typography>
             {attempt.files.length === 0 && (
               <Typography sx={{ fontStyle: 'italic' }}>
                 No files attached.
               </Typography>
             )}
-            {attempt.files.map((file) => (
-              <FileView key={file.id} file={file} />
-            ))}
+            <List dense>
+              {attempt.files.map((file, index) => (
+                <ListItem key={index}>
+                  <FileView filename={file.filename} read_url={file.read_url} />
+                </ListItem>
+              ))}
+            </List>
           </Grid>
           <Grid item xs={12} md={6}>
             <Typography variant="h6" gutterBottom>

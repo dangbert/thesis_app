@@ -4,13 +4,14 @@ import { styled } from '@mui/material/styles';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
 interface FileViewProps {
-  file: models.FilePublic;
+  filename: string;
+  read_url: string;
 }
 
-const FileView: React.FC<FileViewProps> = ({ file }) => {
+const FileView: React.FC<FileViewProps> = ({ filename, read_url }) => {
   return (
-    <Link href={file.read_url} target="_blank" rel="noreferrer">
-      {file.filename}
+    <Link href={read_url} target="_blank" rel="noreferrer">
+      {filename}
     </Link>
   );
 };

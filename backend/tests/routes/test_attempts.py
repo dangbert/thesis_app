@@ -21,6 +21,7 @@ from tests.dummy import (
 )
 import tests.dummy as dummy
 import json
+from app.routes.files import FILE_NOT_FOUND
 
 
 def test_list_attempts(client, settings, session):
@@ -67,13 +68,14 @@ def test_get_attempt(client, settings, session):
 
 
 def test_create_attempt(client, settings, session):
-    user = make_user(session)
+    user1 = make_user(session)
+    user2 = make_user(session, email="user2@example.com")
     c1 = make_course(session)
     as1 = make_assignment(session, c1.id)
     dummy.assert_not_authenticated(client.put(f"{settings.api_v1_str}/attempt/"))
 
-    dummy.login_user(client, user)
-    obj = AttemptCreate(assignment_id=as1.id, data={"hello": "world"})
+    dummy.login_user(client, user1)
+    obj = AttemptCreate(assignment_id=as1.id, data={"hello": "world"}, file_ids=[])
     res = client.put(
         f"{settings.api_v1_str}/attempt/",
         json=json.loads(obj.model_dump_json()),
@@ -82,7 +84,7 @@ def test_create_attempt(client, settings, session):
     assert res.status_code == 404 and res.json()["detail"] == ASSIGNMENT_NOT_FOUND
 
     # ensure only SMARTData format is accepted
-    user.enroll(session, c1, CourseRole.STUDENT)
+    user1.enroll(session, c1, CourseRole.STUDENT)
     res = client.put(
         f"{settings.api_v1_str}/attempt/",
         # this is a hack to get obj as a dict where UUID is serialized to str
@@ -94,7 +96,9 @@ def test_create_attempt(client, settings, session):
         and res.json()["detail"] == "Data format not in SMARTData format"
     )
 
-    obj = AttemptCreate(assignment_id=as1.id, data=EXAMPLE_SMART_DATA.model_dump())
+    obj = AttemptCreate(
+        assignment_id=as1.id, data=EXAMPLE_SMART_DATA.model_dump(), file_ids=[]
+    )
     res = client.put(
         f"{settings.api_v1_str}/attempt/",
         # this is a hack to get obj as a dict where UUID is serialized to str
@@ -105,8 +109,39 @@ def test_create_attempt(client, settings, session):
     created = session.get(Attempt, res.json()["id"])
     assert (
         AttemptPublic(**res.json()) == created.to_public()
-        and created.user_id == user.id
+        and created.user_id == user1.id
     )
+
+    # user can't create attempt with other's files
+    file1 = dummy.make_file(session, user1.id)
+    file2 = dummy.make_file(session, user2.id)
+    file3 = dummy.make_file(session, user1.id)
+    obj = AttemptCreate(
+        assignment_id=as1.id,
+        data=EXAMPLE_SMART_DATA.model_dump(),
+        file_ids=[file1.id, file2.id],
+    )
+    res = client.put(
+        f"{settings.api_v1_str}/attempt/",
+        json=json.loads(obj.model_dump_json()),
+        params={"assignment_id": as1.id},
+    )
+    assert res.status_code == 400 and res.json()["detail"] == FILE_NOT_FOUND
+
+    # user can create attempt with their own files
+    obj = AttemptCreate(
+        assignment_id=as1.id,
+        data=EXAMPLE_SMART_DATA.model_dump(),
+        file_ids=[file1.id, file3.id],
+    )
+    res = client.put(
+        f"{settings.api_v1_str}/attempt/",
+        json=json.loads(obj.model_dump_json()),
+        params={"assignment_id": as1.id},
+    )
+    assert res.status_code == 201
+    ret_obj = AttemptPublic(**res.json())
+    assert ret_obj.files == [file1.to_public(), file3.to_public()]
 
 
 def test_create_feedback(client, settings, session):

@@ -10,7 +10,7 @@ import {
 import makeStyles from '@mui/styles/makeStyles';
 import AssignmentView from './AssignmentView';
 import * as models from '../models';
-import * as courseApi from '../api/courses';
+import * as courseApi from '../api';
 import { useUserContext } from '../providers';
 
 interface CourseViewProps {

@@ -23,7 +23,7 @@ import CourseView from './CourseView';
 
 import { useUserContext } from '../providers';
 import * as models from '../models';
-import * as courseApi from '../api/courses';
+import * as courseApi from '../api';
 
 const HomePage = () => {
   const [courseList, setCourseList] = useState<models.CoursePublic[]>([]);

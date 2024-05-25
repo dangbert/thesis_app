@@ -53,9 +53,13 @@ export interface AttemptCreate {
   assignment_id: string;
   /* eslint-disable  @typescript-eslint/no-explicit-any */
   data: SMARTData; // | { [key: string]: any };
+  file_ids: string[];
 }
 
-export interface AttemptPublic extends AttemptCreate, BaseFields {
+export interface AttemptPublic extends BaseFields {
+  assignment_id: string;
+  user_id: string;
+  data: SMARTData;
   feedback: FeedbackPublic[];
   files: FilePublic[];
 }
