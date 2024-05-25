@@ -57,6 +57,7 @@ export interface AttemptCreate {
 
 export interface AttemptPublic extends AttemptCreate, BaseFields {
   feedback: FeedbackPublic[];
+  files: FilePublic[];
 }
 
 export interface FilePublic extends BaseFields {

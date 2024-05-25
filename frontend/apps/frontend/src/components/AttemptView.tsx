@@ -8,8 +8,8 @@ import {
   Grid,
   Box,
 } from '@mui/material';
-import FeedbackView from './Feedback'; // Make sure this component is properly imported
-import { FIELD_ROWS } from './AttemptCreateModal';
+import FeedbackView from './Feedback';
+import FileView from './Files';
 
 import * as models from '../models';
 import * as constants from '../constants';
@@ -77,6 +77,20 @@ const AttemptView: React.FC<AttemptViewProps> = ({
               minRows={constants.ATTEMPT_MIN_ROWS}
               maxRows={constants.ATTEMPT_MAX_ROWS}
             />
+
+            <br />
+            <br />
+            <Typography variant="subtitle1" gutterBottom>
+              File Attachments
+            </Typography>
+            {attempt.files.length === 0 && (
+              <Typography sx={{ fontStyle: 'italic' }}>
+                No files attached.
+              </Typography>
+            )}
+            {attempt.files.map((file) => (
+              <FileView key={file.id} file={file} />
+            ))}
           </Grid>
           <Grid item xs={12} md={6}>
             <Typography variant="h6" gutterBottom>

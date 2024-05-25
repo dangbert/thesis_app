@@ -61,6 +61,7 @@ class AttemptPublic(AttemptCreate, DateFields):
     id: UUID
     user_id: UUID
     feedback: list["FeedbackPublic"]
+    files: list["FilePublic"]
 
 
 class FilePublic(DateFields):

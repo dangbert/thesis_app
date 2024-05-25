@@ -6,10 +6,15 @@ import {
   TextField,
   DialogActions,
   Button,
-  useTheme,
-  useMediaQuery,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  Typography,
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
+import DeleteIcon from '@mui/icons-material/Delete';
 import {
   AssignmentPublic,
   AttemptCreate,
@@ -19,6 +24,7 @@ import {
 import * as courseApi from '../api/courses';
 import { useUserContext } from '../providers';
 import * as constants from '../constants';
+import { FileUploadButton } from './Files';
 
 interface AttemptCreateModalProps {
   asData: AssignmentPublic;
@@ -26,8 +32,6 @@ interface AttemptCreateModalProps {
   onClose: () => void;
   onCreate?: (attempt: AttemptPublic) => void;
 }
-
-export const FIELD_ROWS = 8;
 
 const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
   asData,
@@ -39,10 +43,24 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
   const [data, setData] = useState<SMARTData>({ goal: '', plan: '' });
   const [submitting, setSubmitting] = useState<boolean>(false);
   const userCtx = useUserContext();
+  const [files, setFiles] = useState<File[]>([]);
 
   const handleFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('received file:');
+    console.log(event.target.files);
+    // console.log(URL.createObjectURL(event.target.files[0]));
+    if (event.target.files) {
+      setFiles([...files, ...Array.from(event.target.files)]);
+    }
+  };
+
+  const handleDeleteFile = (file: File) => {
+    setFiles(files.filter((f) => f !== file));
   };
 
   const handleSubmit = async () => {
@@ -72,6 +90,7 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
   };
 
   const canSubmit = !submitting && data.goal.trim() && data.plan.trim();
+
   return (
     <Dialog
       open={open}
@@ -111,12 +130,35 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
           value={data.plan}
           onChange={handleFormChange}
         />
+
+        <br />
+        <br />
+        <Typography variant="subtitle1" gutterBottom>
+          File Attachments
+        </Typography>
+
+        <FileUploadButton onChange={handleFileChange} />
+        <List dense>
+          {files.map((file, index) => (
+            <ListItem key={index}>
+              <ListItemText primary={file.name} />
+              <ListItemSecondaryAction>
+                <IconButton
+                  edge="end"
+                  aria-label="delete"
+                  onClick={() => handleDeleteFile(file)}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </ListItemSecondaryAction>
+            </ListItem>
+          ))}
+        </List>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="primary">
           Cancel
         </Button>
-        {/* loading spinner when submitting */}
         <LoadingButton
           onClick={handleSubmit}
           color="primary"
