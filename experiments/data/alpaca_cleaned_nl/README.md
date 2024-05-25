@@ -27,14 +27,17 @@ You can also serialize a portion of the alpaca-cleaned dataset to a word file wh
 #   (e.g. if you already translated 600 samples with the API)
 mkdir /tmp/converted # create a directory to work out of
 ./manage.py --dump /tmp/converted/ 600 650 # converts samples [600,650)
-# tip: pay attention to the number of chars reported in the outptu / resulting file size, and adjust the start/stop index parameters as needed
+# tip: pay attention to the number of chars reported in the output / resulting file size, and adjust the start/stop index parameters as needed
 
-# now convert a folder of 1 or more translated .docx files to .jsonl files
+# (now upload the dumped .docx file to DeepL for translation)
+
+# then convert a folder of 1 or more translated .docx files to .jsonl files
 ./manage.py --deserialize /tmp/converted/
 # then merge all the .jsonl files to a single .jsonl file
 ./manage.py --merge /tmp/converted/ ./output.jsonl
 
-# then you can upload the final dataset with --upload as shown further above
+# upload the final dataset to hugging face
+./manage.py --upload ./output.jsonl
 ````
 
-With the `--merge` approach it's possible to combine translated samples from the API, with translated samples from the docx file upload approach (just ensure all the desired .jsonl files are the same folder passed with `--merge`).
+With the `--merge` approach it's possible to combine translated samples from the API, with translated samples from the docx file upload approach (just ensure all the desired .jsonl files are in the same folder passed with `--merge`).

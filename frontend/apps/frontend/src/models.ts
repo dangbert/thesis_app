@@ -15,7 +15,14 @@ export interface SMARTData {
 
 export interface FeedbackData {
   feedback: string;
+  other_comments: string;
   approved: boolean;
+  score?: number;
+  metrics?: EvalMetrics;
+}
+
+export interface EvalMetrics {
+  problems: string[];
 }
 
 /* must match backend/app/models/schemas.py */
@@ -37,6 +44,7 @@ export interface CoursePublic extends CourseCreate, BaseFields {}
 export interface AssignmentCreate {
   name: string;
   about: string;
+  scorable: boolean;
 }
 
 export interface AssignmentPublic extends AssignmentCreate, BaseFields {}

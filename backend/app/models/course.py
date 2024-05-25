@@ -80,6 +80,9 @@ class Assignment(Base):
     )
     name: Mapped[str]
     about: Mapped[str] = mapped_column(String, default="")
+    scorable: Mapped[bool] = mapped_column(
+        bool
+    )  # whether assignment attempts should be assigned a score
 
     course: Mapped["Course"] = relationship("Course", back_populates="assignments")
 
@@ -95,6 +98,7 @@ class Assignment(Base):
             id=self.id,
             name=self.name,
             about=self.about,
+            scorable=self.scorable,
             **super().to_public().model_dump(),
         )
 

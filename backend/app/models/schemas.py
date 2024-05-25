@@ -45,6 +45,7 @@ class CoursePublic(CourseCreate, DateFields):
 class AssignmentCreate(BaseModel):
     name: str
     about: str
+    scorable: bool
 
 
 class AssignmentPublic(AssignmentCreate, DateFields):
