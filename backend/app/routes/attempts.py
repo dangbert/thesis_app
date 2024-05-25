@@ -22,6 +22,7 @@ from app.routes.files import get_files_or_fail
 from app.hardcoded import SMARTData, FeedbackData
 from uuid import UUID
 from pydantic import ValidationError
+from typing import Optional
 
 router = APIRouter()
 
@@ -37,13 +38,30 @@ def get_attempt_or_fail(session: SessionDep, attempt_id: UUID, user: User) -> At
 
 @router.get("/")
 async def list_attempts(
-    user: AuthUserDep, assignment_id: UUID, session: SessionDep
+    session: SessionDep,
+    user: AuthUserDep,
+    assignment_id: UUID,
+    user_id: Optional[UUID] = None,
 ) -> list[AttemptPublic]:
-    get_assignment_or_fail(session, assignment_id, user)
+    """
+    List assignment attempts made by current user (or a provided user if requested by the teacher).
+    Attempts are ordered from oldest to newest.
+    """
+    as1 = get_assignment_or_fail(session, assignment_id, user)
+    if (
+        user_id is not None
+        and user_id != user.id
+        and not user.can_view(session, as1, edit=True)
+    ):
+        raise HTTPException(
+            status_code=403, detail="You are not allowed to view other users' attempts"
+        )
+
+    user_id = user_id or user.id
     attempts = (
         session.query(Attempt)
-        .filter_by(assignment_id=assignment_id)
-        .order_by(Attempt.created_at.desc())
+        .filter(Attempt.assignment_id == assignment_id, Attempt.user_id == user_id)
+        .order_by(Attempt.created_at.asc())
         .all()
     )
     return [

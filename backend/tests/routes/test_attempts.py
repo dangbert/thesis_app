@@ -25,28 +25,45 @@ from app.routes.files import FILE_NOT_FOUND
 
 
 def test_list_attempts(client, settings, session):
-    user = make_user(session)
-    c1 = make_course(session)
-    as1 = make_assignment(session, c1.id)
+    c1, as1, student1, teacher = dummy.init_simple_course(session)
+    student2 = dummy.make_user(session, email="random@example.com")
     dummy.assert_not_authenticated(
-        client.get(
-            f"{settings.api_v1_str}/attempt/", params={"assignment_id": DUMMY_ID}
-        )
+        client.get(f"{settings.api_v1_str}/attempt/", params={"assignment_id": as1.id})
     )
 
-    dummy.login_user(client, user)
+    # student2 (not part of the course has no access)
+    dummy.login_user(client, student2)
     res = client.get(
         f"{settings.api_v1_str}/attempt/", params={"assignment_id": as1.id}
     )
     assert res.status_code == 404 and res.json()["detail"] == ASSIGNMENT_NOT_FOUND
 
-    user.enroll(session, c1, CourseRole.STUDENT)
-    at1 = make_attempt(session, as1.id, user.id)
-    res = client.get(
-        f"{settings.api_v1_str}/attempt/", params={"assignment_id": as1.id}
-    )
-    assert res.status_code == 200 and len(res.json()) == 1
-    assert AttemptPublic(**res.json()[0]) == at1.to_public()
+    student2.enroll(session, c1, CourseRole.STUDENT)
+    at_2a = make_attempt(session, as1.id, student2.id)
+    at_2b = make_attempt(session, as1.id, student2.id)
+
+    # student1 should only see their own attempts
+    dummy.login_user(client, student1)
+    at_1a = make_attempt(session, as1.id, student1.id)
+    for extra in [{}, {"user_id": student1.id}]:
+        res = client.get(
+            f"{settings.api_v1_str}/attempt/", params={"assignment_id": as1.id, **extra}
+        )
+        assert res.status_code == 200 and len(res.json()) == 1
+        assert AttemptPublic(**res.json()[0]) == at_1a.to_public()
+
+    # test teacher can view specific student's attempts
+    dummy.login_user(client, teacher)
+    for extra, expected in [
+        ({}, []),
+        ({"user_id": student1.id}, [at_1a.to_public()]),
+        ({"user_id": student2.id}, [at_2a.to_public(), at_2b.to_public()]),
+    ]:
+        res = client.get(
+            f"{settings.api_v1_str}/attempt/", params={"assignment_id": as1.id, **extra}
+        )
+        assert res.status_code == 200 and len(res.json()) == len(expected)
+        assert [AttemptPublic(**x) for x in res.json()] == expected
 
 
 def test_get_attempt(client, settings, session):
