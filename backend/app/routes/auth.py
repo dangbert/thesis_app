@@ -38,6 +38,24 @@ oauth.register(
 )
 
 
+def _cleanup_session(request: Request):
+    """
+    Clears session, but preserves important fields.
+    Fixes a CSRF warning when a user starts a google login and then revisits the site's login page.
+    """
+    keep = {
+        k: request.session.get(k)
+        for k in IMPORTANT_LOGIN_STATE
+        if request.session.get(k) is not None
+    }
+    request.session.clear()
+    logger.warning(
+        f"Mismatching state error, clearing session, but keeping fields: {keep.keys()}"
+    )
+    for k, v in keep.items():
+        request.session[k] = v
+
+
 def is_relative_url(url: URL) -> bool:
     is_abs = url.scheme or url.hostname or not str(url).startswith("/")
     return not is_abs
@@ -72,6 +90,7 @@ async def login(
         raise HTTPException(
             status_code=400, detail="destination must be a relative path"
         )
+    _cleanup_session(request)
     request.session["destination"] = destination  # remember for later
     # TODO: validate invite_key and save in session
 
@@ -98,17 +117,7 @@ async def callback(request: Request, session: SessionDep):
         #   Invalid authentication request: mismatching_state: CSRF Warning! State not equal in request and response.
 
         # clear session so user can login again, but remember important fields
-        keep = {
-            k: request.session.get(k)
-            for k in IMPORTANT_LOGIN_STATE
-            if request.session.get(k) is not None
-        }
-        request.session.clear()
-        logger.warning(
-            f"Mismatching state error, clearing session, but keeping fields: {keep.keys()}"
-        )
-        for k, v in keep.items():
-            request.session[k] = v
+        _cleanup_session(request)
         return RedirectResponse(url=LOGIN_URL)
     except (OAuth2Error, OAuthError) as exc:
         logger.warning(f"Invalid authentication request: {exc}")
