@@ -18,6 +18,7 @@ import {
 } from '../models';
 import * as courseApi from '../api/courses';
 import { useUserContext } from '../providers';
+import * as constants from '../constants';
 
 interface AttemptCreateModalProps {
   asData: AssignmentPublic;
@@ -91,7 +92,8 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
           type="text"
           fullWidth
           multiline
-          rows={FIELD_ROWS}
+          minRows={constants.ATTEMPT_MIN_ROWS}
+          maxRows={constants.ATTEMPT_MAX_ROWS}
           name="goal"
           value={data.goal}
           onChange={handleFormChange}
@@ -103,7 +105,8 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
           type="text"
           fullWidth
           multiline
-          rows={FIELD_ROWS}
+          minRows={constants.ATTEMPT_MIN_ROWS}
+          maxRows={constants.ATTEMPT_MAX_ROWS}
           name="plan"
           value={data.plan}
           onChange={handleFormChange}

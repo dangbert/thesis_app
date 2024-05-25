@@ -12,7 +12,7 @@ import FeedbackView from './Feedback'; // Make sure this component is properly i
 import { FIELD_ROWS } from './AttemptCreateModal';
 
 import * as models from '../models';
-import { on } from 'events';
+import * as constants from '../constants';
 
 interface AttemptViewProps {
   attempt: models.AttemptPublic;
@@ -37,7 +37,7 @@ const AttemptView: React.FC<AttemptViewProps> = ({
       onClose={onClose}
       aria-labelledby="attempt-view-title"
       fullWidth={true}
-      maxWidth="lg"
+      maxWidth="xl"
       // PaperProps={{ style: { minHeight: '70vh' } }}
     >
       <DialogContent>
@@ -59,9 +59,10 @@ const AttemptView: React.FC<AttemptViewProps> = ({
               fullWidth
               margin="dense"
               InputProps={{ readOnly: true }}
-              disabled={true}
+              // disabled={true}
               multiline
-              rows={FIELD_ROWS}
+              minRows={constants.ATTEMPT_MIN_ROWS}
+              maxRows={constants.ATTEMPT_MAX_ROWS}
             />
             <TextField
               label="Action Plan"
@@ -69,9 +70,10 @@ const AttemptView: React.FC<AttemptViewProps> = ({
               fullWidth
               margin="dense"
               InputProps={{ readOnly: true }}
-              disabled={true}
+              // disabled={true}
               multiline
-              rows={FIELD_ROWS}
+              minRows={constants.ATTEMPT_MIN_ROWS}
+              maxRows={constants.ATTEMPT_MAX_ROWS}
             />
           </Grid>
           <Grid item xs={12} md={6}>
