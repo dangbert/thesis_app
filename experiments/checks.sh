@@ -11,7 +11,7 @@ echo -e "\nruff checks"
 ruff check .
 
 echo -e "\nunit tests"
-pytest
+pytest -v
 
 # check if arg --skip-mypy
 if [ "$1" == "-n" ]; then

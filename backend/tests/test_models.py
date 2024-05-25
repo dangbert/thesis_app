@@ -2,7 +2,7 @@ from app.models import User, Course, Assignment
 import app.models as models
 from uuid import UUID
 from sqlalchemy.orm import Session
-from tests.dummy import make_user, make_course, make_assignment, example_feedback_data
+from tests.dummy import make_user, make_course, make_assignment, EXAMPLE_FEEDBACK_DATA
 import tests.dummy as dummy
 
 
@@ -23,8 +23,8 @@ def test_integration__user_course_assignment(session: Session):
     _ = make_user(session)
     course = make_course(session)
 
-    a1 = Assignment(name="Assignment 1", course_id=course.id)
-    a2 = Assignment(name="Assignment 2", course_id=course.id)
+    a1 = Assignment(name="Assignment 1", course_id=course.id, scorable=True)
+    a2 = Assignment(name="Assignment 2", course_id=course.id, scorable=False)
     session.add(a1)
     session.add(a2)
     session.commit()
@@ -58,7 +58,7 @@ def test_attempt_feedback(session):
         attempt_id=at1.id,
         user_id=user.id,
         is_ai=False,
-        data=example_feedback_data.model_dump(),
+        data=EXAMPLE_FEEDBACK_DATA.model_dump(),
     )
     session.add(feedback)
     session.commit()

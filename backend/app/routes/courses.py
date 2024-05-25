@@ -89,7 +89,9 @@ async def create_assignment(
         raise HTTPException(
             status_code=403, detail="you're unauthorized to create assignments"
         )
-    assignment = Assignment(name=body.name, about=body.about, course_id=course_id)
+    assignment = Assignment(
+        name=body.name, about=body.about, course_id=course_id, scorable=body.scorable
+    )
     session.add(assignment)
     session.commit()
     return assignment.to_public()

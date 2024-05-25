@@ -24,11 +24,11 @@ import httpx
 
 
 DUMMY_ID = UUID("cc2d7ce4-170f-4817-b4a9-76e11d5f9c56")
-example_smart_data = SMARTData(goal="test goal", plan="test plan")
-example_feedback_data = FeedbackData(
+EXAMPLE_SMART_DATA = SMARTData(goal="test goal", plan="test plan")
+EXAMPLE_FEEDBACK_DATA = FeedbackData(
     feedback="good start, but try again", approved=False
 )
-example_ai_feedback_data = AI_FEEDBACK_JOB_DATA(attempt_id="DUMMY_ID")
+EXAMPLE_AI_FEEDBACK_DATA = AI_FEEDBACK_JOB_DATA(attempt_id="DUMMY_ID")
 
 
 settings = get_settings()
@@ -84,9 +84,9 @@ def make_course(session: Session, name="Test Course") -> Course:
 
 
 def make_assignment(
-    session: Session, course_id: UUID, name="Test Assignment"
+    session: Session, course_id: UUID, name="Test Assignment", scorable: bool = False
 ) -> Assignment:
-    assignment = Assignment(course_id=course_id, name=name)
+    assignment = Assignment(course_id=course_id, name=name, scorable=scorable)
     session.add(assignment)
     session.commit()
     return assignment
@@ -99,7 +99,7 @@ def make_attempt(
     data: Optional[dict[str, Any]] = None,
 ) -> Attempt:
     if data is None:
-        data = example_smart_data.model_dump()
+        data = EXAMPLE_SMART_DATA.model_dump()
     attempt = Attempt(assignment_id=assignment_id, user_id=user_id, data=data)
     session.add(attempt)
     session.commit()
@@ -113,7 +113,7 @@ def make_feedback(
     user_id: Optional[UUID] = None,
 ) -> models.Feedback:
     if data is None:
-        data = example_feedback_data.model_dump()
+        data = EXAMPLE_FEEDBACK_DATA.model_dump()
     feedback = models.Feedback(
         attempt_id=attempt_id,
         user_id=user_id,

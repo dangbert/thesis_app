@@ -140,7 +140,9 @@ def test_create_assignment(client, settings, session):
     )
 
     dummy.login_user(client, user)
-    obj = AssignmentCreate(name="Test Assignment", about="This is a test assignment.")
+    obj = AssignmentCreate(
+        name="Test Assignment", about="This is a test assignment.", scorable=True
+    )
     res = client.put(
         f"{settings.api_v1_str}/course/{course.id}/assignment",
         json=obj.model_dump(),

@@ -17,7 +17,7 @@ from tests.dummy import (
     make_course,
     make_assignment,
     make_attempt,
-    example_smart_data,
+    EXAMPLE_SMART_DATA,
 )
 import tests.dummy as dummy
 import json
@@ -94,7 +94,7 @@ def test_create_attempt(client, settings, session):
         and res.json()["detail"] == "Data format not in SMARTData format"
     )
 
-    obj = AttemptCreate(assignment_id=as1.id, data=example_smart_data.model_dump())
+    obj = AttemptCreate(assignment_id=as1.id, data=EXAMPLE_SMART_DATA.model_dump())
     res = client.put(
         f"{settings.api_v1_str}/attempt/",
         # this is a hack to get obj as a dict where UUID is serialized to str
@@ -121,7 +121,7 @@ def test_create_feedback(client, settings, session):
     dummy.login_user(client, user)
     obj = schemas.FeedbackCreate(
         attempt_id=at1.id,
-        data=dummy.example_feedback_data.model_dump(),
+        data=dummy.EXAMPLE_FEEDBACK_DATA.model_dump(),
     )
 
     res = client.put(
@@ -132,7 +132,7 @@ def test_create_feedback(client, settings, session):
     session.refresh(at1)
     assert (
         len(at1.feedbacks) == 1
-        and FeedbackData(**at1.feedbacks[0].data) == dummy.example_feedback_data
+        and FeedbackData(**at1.feedbacks[0].data) == dummy.EXAMPLE_FEEDBACK_DATA
     )
 
     created = session.get(Feedback, res.json()["id"])

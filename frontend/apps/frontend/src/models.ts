@@ -15,7 +15,7 @@ export interface SMARTData {
 
 export interface FeedbackData {
   feedback: string;
-  other_comments: string;
+  other_comments?: string;
   approved: boolean;
   score?: number;
   metrics?: EvalMetrics;

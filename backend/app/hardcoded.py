@@ -16,7 +16,7 @@ class FeedbackData(BaseModel):
     """Schema for validating the Feedback.data column."""
 
     feedback: str
-    other_comments: str
+    other_comments: Optional[str] = None
     approved: bool  # whether the feedback is approved by the teacher
     score: Optional[int] = None
     eval_metrics: Optional["EvalMetrics"] = None
