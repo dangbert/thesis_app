@@ -25,7 +25,7 @@ from app.routes.files import FILE_NOT_FOUND
 
 
 def test_list_attempts(client, settings, session):
-    c1, as1, student1, teacher = dummy.init_simple_course(session)
+    c1, as1, teacher, student1 = dummy.init_simple_course(session)
     student2 = dummy.make_user(session, email="random@example.com")
     dummy.assert_not_authenticated(
         client.get(f"{settings.api_v1_str}/attempt/", params={"assignment_id": as1.id})

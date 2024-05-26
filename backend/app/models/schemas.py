@@ -1,5 +1,5 @@
 """
-Pydantic models for partial representations of SQLAlchemy models.
+Pydantic models (and enums) for partial representations of SQLAlchemy models.
 Must match frontend/apps/frontend/models.ts
 """
 
@@ -7,6 +7,7 @@ from datetime import datetime
 from uuid import UUID
 from pydantic import BaseModel, EmailStr
 from typing import Any, Optional
+import enum
 
 
 class DateFields(BaseModel):
@@ -29,6 +30,11 @@ class Auth0UserInfo(BaseModel):
 
 class UserPublic(Auth0UserInfo, DateFields):
     id: UUID
+
+
+class CourseRole(enum.Enum):
+    STUDENT = "student"
+    TEACHER = "teacher"
 
 
 class CourseCreate(BaseModel):
@@ -84,3 +90,22 @@ class FeedbackPublic(DateFields):
     user_id: Optional[UUID]
     is_ai: bool
     data: dict[str, Any]
+
+
+class AssignmentAttemptStatus(enum.Enum):
+    """Enum for the status of a student's attempt(s) on an assignment."""
+
+    NOT_STARTED = "not started"
+    AWAITING_FEEDBACK = "awaiting feedback"
+    AWAITING_RESUBMISSION = "awaiting resubmission"
+    COMPLETE = "complete"
+
+
+class AssignmentStudentStatus(BaseModel):
+    """Represents a single student's status on completing a particular assignment."""
+
+    student: "UserPublic"
+    role: "CourseRole"
+    attempt_count: int
+    last_attempt_date: Optional[datetime]
+    status: AssignmentAttemptStatus

@@ -10,7 +10,7 @@ def test_pop_next_pending_job(session):
     """
     Test that the loop_once function correctly runs a job.
     """
-    course, assignment, student, teacher = dummy.init_simple_course(session)
+    course, assignment, teacher, student = dummy.init_simple_course(session)
 
     pending = jobRunner.pop_next_pending_job(session)
     assert pending is None

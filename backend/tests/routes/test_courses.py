@@ -8,6 +8,7 @@ from app.models.course import (
     AssignmentCreate,
     AssignmentPublic,
 )
+from app.models.schemas import AssignmentAttemptStatus, AssignmentStudentStatus
 from app.routes.courses import COURSE_NOT_FOUND, ASSIGNMENT_NOT_FOUND
 from tests.dummy import DUMMY_ID, make_course, make_assignment
 import tests.dummy as dummy
@@ -164,3 +165,42 @@ def test_create_assignment(client, settings, session):
     assert res.status_code == 201
     a1 = session.get(Assignment, res.json()["id"])
     assert AssignmentPublic(**res.json()) == a1.to_public()
+
+
+def test_get_assignment_status(client, settings, session):
+    course, as1, prof, student1 = dummy.init_simple_course(session)
+    student2 = dummy.make_user(session, email="student2@example.com")
+    student2.enroll(session, course, CourseRole.STUDENT)
+
+    # NOTE: would be better to just put assignments under {settings.api_v1_str}/assignment/ but not that important
+    def get_status_url(assignment: Assignment):
+        return f"{settings.api_v1_str}/course/{assignment.course_id}/assignment/{assignment.id}"
+
+    dummy.login_user(client, student1)
+    res = client.put(get_status_url(as1))
+    assert res.status_code == 403
+
+    dummy.login_user(client, prof)
+    res = client.put(get_status_url(as1))
+
+    assert res.status_code == 200
+    assert res.json()
+
+    res_list = [AssignmentStudentStatus(**item) for item in res.json()]
+    initial_args = {
+        "role": CourseRole.STUDENT,
+        "attempt_count": 0,
+        "last_attempt_date": None,
+        "status": AssignmentAttemptStatus.NOT_STARTED,
+    }
+    expected = [
+        # prof will also show up as they can complete their own assignment for testing
+        AssignmentStudentStatus(
+            student=prof.to_public(),
+            **initial_args,
+            role=CourseRole.TEACHER,
+        ),
+        AssignmentStudentStatus(student=student1.to_public(), **initial_args),
+        AssignmentStudentStatus(student=student2.to_public(), **initial_args),
+    ]
+    assert res_list == expected

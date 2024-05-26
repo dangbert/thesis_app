@@ -73,17 +73,19 @@ def test_user_can_view(session):
     Sanity checks for user.can_view method to ensure proper access control.
     NOTE: not testing file access here but this is done implicitly in test_files.py
     """
-    course = make_course(session)
-    as1 = make_assignment(session, course.id)
-    student1 = make_user(session)
+    course, as1, prof, student1 = dummy.init_simple_course(session)
     user2 = make_user(session, email="fake@example.com")
-    prof = make_user(session, email="professor@example.com")
-    prof.enroll(session, course, models.CourseRole.TEACHER)
 
     attempt = dummy.make_attempt(session, as1.id, user2.id)
     ai_feedback = dummy.make_feedback(session, attempt.id)
     prof_feedback = dummy.make_feedback(session, attempt.id, user_id=prof.id)
 
+    def assert_no_access(user):
+        for obj in [course, as1, attempt, ai_feedback]:
+            assert not user.can_view(session, obj)
+            assert not user.can_view(session, obj, edit=True)
+
+    assert_no_access(user2)
     for in_course in [False, True]:
         user2.enroll(session, course, models.CourseRole.STUDENT if in_course else None)
         assert in_course == user2.can_view(
@@ -95,14 +97,6 @@ def test_user_can_view(session):
         assert in_course == user2.can_view(session, ai_feedback)
         assert not user2.can_view(session, ai_feedback, edit=True)
 
-    def assert_no_access(user):
-        for obj in [course, as1, attempt, ai_feedback]:
-            assert not user.can_view(session, obj)
-            assert not user.can_view(session, obj, edit=True)
-
-    assert_no_access(student1)
-
-    student1.enroll(session, course, models.CourseRole.STUDENT)
     # student1 should have view only access to course and assignment
     for prof_access in [True, False]:
         assert student1.can_view(session, course, edit=prof_access) != prof_access

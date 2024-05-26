@@ -2,6 +2,7 @@ from app.models.base import Base
 from app.models.user import User
 from app.settings import get_settings
 from app.models.schemas import (
+    CourseRole,
     CourseCreate,
     CoursePublic,
     AssignmentCreate,
@@ -49,11 +50,6 @@ class Course(Base):
             about=self.about,
             **super().to_public().model_dump(),
         )
-
-
-class CourseRole(enum.Enum):
-    STUDENT = "student"
-    TEACHER = "teacher"
 
 
 class CourseUserLink(Base):
