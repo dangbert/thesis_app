@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Feedback Available</title>
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Roboto', sans-serif;
+      }
+      pre {
+        font-family: 'Roboto', sans-serif;
+        font-style: normal;
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 24px;
+        color: #212b36;
+      }
+      .fontNormal {
+        font-family: 'Roboto', sans-serif;
+        font-style: normal;
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 24px;
+        color: #212b36;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      td {
+        padding: 0.625rem;
+      }
+      .emailHeader {
+        font-weight: 700;
+        font-size: 18px;
+        line-height: 28px;
+      }
+      .solid {
+        width: 100%;
+        border-top: 3px solid rgba(145, 158, 171, 0.24);
+      }
+
+      .footer {
+        text-align: center;
+      }
+
+      .footer-smallFont_light {
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 18px;
+        color: #6c6b6b;
+      }
+
+      /* .footer-contactUs { */
+      a {
+        font-style: normal;
+        font-weight: 500;
+        font-size: 12px;
+        line-height: 18px;
+        text-align: center;
+        text-decoration-line: underline;
+        color: #0077b3;
+      }
+
+      .footer-buttons {
+        margin-top: 24px;
+      }
+
+      .footer-buttons a {
+        margin: 0 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <table>
+      <!-- <tr>
+        <td>
+          <img
+            height="49px"
+            width="143px"
+            src="TODO_LOGO_URL"
+          />
+        </td>
+      </tr> -->
+      <tr>
+        <td>
+          <h1 class="emailHeader">
+            <b>You've received feedback on your "{assignment_name}" assignment submission.</b>
+          </h1>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <pre>{{message}}</pre>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <hr class="solid" />
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <div class="footer">
+            <p class="footer-links footer-smallFont_light">
+              This email was sent due to your enrollment on <a href="{{site_url}}">{{site_url}}</a><br />
+              If you have any technical issues or complaints please contact <a href="mailto:{{support_email}}">{{support_email}}</a>
+            </p>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

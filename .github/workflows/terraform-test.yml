@@ -1,0 +1,35 @@
+name: terraform-test
+
+on:
+  pull_request:
+    paths:
+      - 'terraform/**'
+
+defaults:
+  run:
+    working-directory: terraform
+
+jobs:
+  terraform_checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: install terraform
+        run: |
+            # https://developer.hashicorp.com/terraform/install
+            wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+            echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+            sudo apt update && sudo apt install -y terraform
+
+      - name: terraform validate common environment
+        run: |
+          cd instances/common
+          terraform init -backend=false
+          terraform validate
+
+      - name: validate terraform formatting
+        run: |
+          terraform fmt -recursive -check
+          echo "all terraform formatting looks good!"

@@ -23,9 +23,15 @@ variable "create_ec2" {
   description = "set true to create an EC2 instance for deployment"
 }
 
+variable "aws_region" {
+  description = "The AWS region to deploy to"
+  type        = string
+  default     = "eu-west-1"
+}
+
 locals {
   aws = {
-    region  = "eu-west-1"
+    region  = var.aws_region
     profile = "default"
   }
   env_name  = basename(abspath(path.module))
