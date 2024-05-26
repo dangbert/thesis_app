@@ -73,6 +73,25 @@ class AttemptPublic(DateFields):
     files: list["FilePublic"]
 
 
+class AssignmentAttemptStatus(enum.Enum):
+    """Enum for the status of a student's attempt(s) on an assignment."""
+
+    NOT_STARTED = "not started"
+    AWAITING_FEEDBACK = "awaiting feedback"
+    AWAITING_RESUBMISSION = "awaiting resubmission"
+    COMPLETE = "complete"
+
+
+class AssignmentStudentStatus(BaseModel):
+    """Represents a single student's status on completing a particular assignment."""
+
+    student: UserPublic
+    role: CourseRole
+    attempt_count: int = 0
+    last_attempt_date: Optional[datetime] = None
+    status: AssignmentAttemptStatus = AssignmentAttemptStatus.NOT_STARTED
+
+
 class FilePublic(DateFields):
     id: UUID
     filename: str
@@ -90,22 +109,3 @@ class FeedbackPublic(DateFields):
     user_id: Optional[UUID]
     is_ai: bool
     data: dict[str, Any]
-
-
-class AssignmentAttemptStatus(enum.Enum):
-    """Enum for the status of a student's attempt(s) on an assignment."""
-
-    NOT_STARTED = "not started"
-    AWAITING_FEEDBACK = "awaiting feedback"
-    AWAITING_RESUBMISSION = "awaiting resubmission"
-    COMPLETE = "complete"
-
-
-class AssignmentStudentStatus(BaseModel):
-    """Represents a single student's status on completing a particular assignment."""
-
-    student: "UserPublic"
-    role: "CourseRole"
-    attempt_count: int
-    last_attempt_date: Optional[datetime]
-    status: AssignmentAttemptStatus

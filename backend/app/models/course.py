@@ -11,6 +11,8 @@ from app.models.schemas import (
     AttemptPublic,
     FilePublic,
     FeedbackPublic,
+    AssignmentStudentStatus,
+    AssignmentAttemptStatus,
 )
 from sqlalchemy import String, ForeignKey, JSON, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship

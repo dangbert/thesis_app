@@ -59,10 +59,10 @@ def init_simple_course(session) -> Tuple[Course, Assignment, User, User]:
     """Create a single course, assignment, teacher, and student."""
     course = make_course(session)
     assignment = make_assignment(session, course.id, "assignment1")
-    student = make_user(session, email="student1@example.com")
     teacher = make_user(session, email="teacher1@example.com")
-    student.enroll(session, course, CourseRole.STUDENT)
+    student = make_user(session, email="student1@example.com")
     teacher.enroll(session, course, CourseRole.TEACHER)
+    student.enroll(session, course, CourseRole.STUDENT)
     return course, assignment, teacher, student
 
 
