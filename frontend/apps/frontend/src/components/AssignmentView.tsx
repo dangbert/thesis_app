@@ -49,10 +49,6 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
       } else {
         setAttempts(res.data);
       }
-
-      // TODO: test status fetch!
-      // const res2 = await courseApi.getAssignmentStatus(asData, asData.id);
-
       return () => (cancel = true);
     })();
   }, [asData.id, userCtx.user?.id, attemptLoadTime]);
@@ -82,7 +78,14 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
         {asData.about}
       </Markdown>
 
-      {isTeacher && <AssignmentStatus asData={asData} />}
+      {isTeacher && (
+        <>
+          <AssignmentStatus asData={asData} />
+          <hr />
+          <br />
+          <br />
+        </>
+      )}
 
       {!creatingAttempt && (
         <Button variant="contained" onClick={() => setCreatingAttempt(true)}>

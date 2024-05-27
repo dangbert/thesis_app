@@ -74,6 +74,7 @@ interface RowData {
   group: number;
   submissions: number;
   status: string;
+  role: string;
 }
 
 interface HeadCell {
@@ -101,6 +102,12 @@ const headCells: readonly HeadCell[] = [
     numeric: true,
     disablePadding: false,
     label: 'Group',
+  },
+  {
+    id: 'role',
+    numeric: false,
+    disablePadding: false,
+    label: 'role',
   },
   {
     id: 'submissions',
@@ -140,7 +147,8 @@ function EnhancedTableHead(props: EnhancedTableProps) {
         {headCells.map((headCell) => (
           <TableCell
             key={headCell.id}
-            align={headCell.numeric ? 'right' : 'left'}
+            // align={headCell.numeric ? 'right' : 'left'}
+            align={'left'}
             padding={headCell.disablePadding ? 'none' : 'normal'}
             sortDirection={orderBy === headCell.id ? order : false}
           >
@@ -197,12 +205,13 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
   const [orderBy, setOrderBy] = React.useState<keyof RowData>('name');
   const [page, setPage] = React.useState(0);
   const [dense, setDense] = React.useState(false);
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [rowsPerPage, setRowsPerPage] = React.useState(100);
 
   const rows = statusData.map((s) => ({
     id: s.student.id,
     name: s.student.name,
     email: s.student.email,
+    role: s.role,
     group: -1, // TODO todo for now
     submissions: s.attempt_count,
     status: s.status,
@@ -242,9 +251,10 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
         .slice()
         .sort(getComparator(order, orderBy))
         .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-    [order, orderBy, page, rowsPerPage]
+    [JSON.stringify(statusData), order, orderBy, page, rowsPerPage]
   );
 
+  // TODO: use MIT DataGrid! https://mui.com/x/react-data-grid/#mit-version-free-forever
   if (!userCtx.user) return null;
   return (
     <div>
@@ -291,6 +301,7 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
               sx={{ minWidth: 750 }}
               aria-labelledby="tableTitle"
               size={dense ? 'small' : 'medium'}
+              stickyHeader
             >
               <EnhancedTableHead
                 order={order}
@@ -300,38 +311,21 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
               />
               <TableBody>
                 {visibleRows.map((row, index) => {
-                  const labelId = `enhanced-table-checkbox-${index}`;
-
                   return (
                     <TableRow
                       hover
-                      role="checkbox"
                       tabIndex={-1}
                       key={row.id}
-                      selected={false}
                       sx={{ cursor: 'pointer' }}
                     >
-                      <TableCell padding="checkbox">
-                        <Checkbox
-                          color="primary"
-                          checked={false}
-                          inputProps={{
-                            'aria-labelledby': labelId,
-                          }}
-                        />
+                      <TableCell align="left">{row.name}</TableCell>
+                      <TableCell align="left">
+                        <a href={'mailto:' + row.email}>{row.email}</a>
                       </TableCell>
-                      <TableCell
-                        component="th"
-                        id={labelId}
-                        scope="row"
-                        padding="none"
-                      >
-                        {row.name}
-                      </TableCell>
-                      <TableCell align="right">{row.email}</TableCell>
-                      <TableCell align="right">{row.group}</TableCell>
-                      <TableCell align="right">{row.submissions}</TableCell>
-                      <TableCell align="right">{row.status}</TableCell>
+                      <TableCell align="left">{row.group}</TableCell>
+                      <TableCell align="left">{row.role}</TableCell>
+                      <TableCell align="left">{row.submissions}</TableCell>
+                      <TableCell align="left">{row.status}</TableCell>
                     </TableRow>
                   );
                 })}
