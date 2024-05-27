@@ -42,3 +42,8 @@ ignore = ["E712", "F401"]
 module = "authlib.*"
 ignore_missing_imports = true
 follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = "openai.*"
+ignore_missing_imports = true
+follow_imports = "skip"

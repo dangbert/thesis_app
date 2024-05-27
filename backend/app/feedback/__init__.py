@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from pydantic import ValidationError
 import config
 
+from .AbstractModel import AbstractModel, IPrompt, IConversation
+
 logger = config.get_logger(__name__)
 
 

@@ -1,8 +1,8 @@
 import os
 from openai import OpenAI
 from openai.types.chat.chat_completion import ChatCompletion
-from AbstractModel import AbstractModel, IPrompt
-from typing import List, Tuple, Optional, Callable
+from .AbstractModel import AbstractModel, IPrompt
+from typing import List, Tuple, Optional, Callable, Any, cast
 import config
 
 logger = config.get_logger(__name__)
@@ -29,9 +29,9 @@ PRICES = {k: [p / 1_000_000 for p in v] for k, v in PRICES.items()}
 
 
 class GPTModel(AbstractModel):
-    def __init__(self, model_name: str = "gpt-3.5-turbo-0125"):
+    def __init__(self, api_key: str, model_name: str = "gpt-3.5-turbo-0125"):
         self.model_name = model_name
-        self.client = OpenAI(api_key=config.get_settings().openai_api_key)
+        self.client = OpenAI(api_key=api_key)
         if model_name not in PRICES.keys():
             logger.warning(f"price entry unknown for model '{model_name}'")
 
@@ -48,7 +48,7 @@ class GPTModel(AbstractModel):
         https://community.openai.com/t/cheat-sheet-mastering-temperature-and-top-p-in-chatgpt-api/172683
         """
         assert isinstance(prompts, list)
-        extra_args = dict()
+        extra_args: dict[str, Any] = dict()
         if json_mode:
             # https://platform.openai.com/docs/guides/text-generation/json-mode
             extra_args["response_format"] = {"type": "json_object"}
@@ -102,7 +102,7 @@ def auto_reprompt(
     model: GPTModel,
     prompts: List[IPrompt],
     **kwargs,
-) -> Tuple[List[str], float, int]:
+) -> Tuple[List[Optional[str]], float, int]:
     """
     Keep prompting model until validator function is happy or a depth of max_retries iterations are reached.
     max_retries is the max number of retry iterations e.g. one retry would be: 3 failures in first batch -> second batch of length 3 which all validate
@@ -116,16 +116,18 @@ def auto_reprompt(
     total_calls = len(outputs)
     # orig_outputs = outputs.copy()
 
+    new_outputs = cast(list[Optional[str]], outputs)
+
     # map indices to {new_prompt}
     bad = {}
-    for i, response in enumerate(outputs):
+    for i, response in enumerate(new_outputs):
         if not validator(response):
             bad[i] = {"new_prompt": prompts[i]}
-            outputs[i] = None
+            new_outputs[i] = None
 
     max_retries -= 1
     if len(bad) == 0 or max_retries < 0:
-        return outputs, total_price, total_calls
+        return new_outputs, total_price, total_calls
 
     new_prompts = [v["new_prompt"] for v in bad.values()]
     logger.debug(f"reprompting {len(new_prompts)} prompts ({max_retries=})")
@@ -135,10 +137,10 @@ def auto_reprompt(
     total_calls += new_calls
 
     cur = 0
-    for i in range(len(outputs)):
+    for i in range(len(new_outputs)):
         if i in bad:
-            outputs[i] = new_outputs[cur]
+            new_outputs[i] = new_outputs[cur]
             cur += 1
 
     total_price += new_price
-    return outputs, total_price, total_calls
+    return new_outputs, total_price, total_calls
