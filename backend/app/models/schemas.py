@@ -57,6 +57,7 @@ class AssignmentCreate(BaseModel):
 
 class AssignmentPublic(AssignmentCreate, DateFields):
     id: UUID
+    course_id: UUID
 
 
 class AttemptCreate(BaseModel):

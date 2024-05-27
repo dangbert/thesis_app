@@ -54,7 +54,9 @@ export interface AssignmentCreate {
   scorable: boolean;
 }
 
-export interface AssignmentPublic extends AssignmentCreate, BaseFields {}
+export interface AssignmentPublic extends AssignmentCreate, BaseFields {
+  course_id: string;
+}
 
 export interface AttemptCreate {
   assignment_id: string;

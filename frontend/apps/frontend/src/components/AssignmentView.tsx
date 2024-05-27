@@ -3,6 +3,7 @@ import { Button, Typography, Snackbar, Alert } from '@mui/material';
 import AttemptCreateModal from './AttemptCreateModal';
 import AttemptView from './AttemptView';
 import AttemptHistory from './AttemptHistory';
+import AssignmentStatus from './AssignmentStatus';
 import Markdown from 'react-markdown';
 
 import { AssignmentPublic } from '../models';
@@ -46,7 +47,6 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
         console.error(res.error);
         setAttempts([]);
       } else {
-        console.log('fetched attempt list\n', res.data);
         setAttempts(res.data);
       }
 
@@ -59,7 +59,7 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
 
   if (!userCtx.user) return null;
   return (
-    <div>
+    <div style={{ border: '2px dashed purple' }}>
       <Snackbar
         open={snackbarTxt !== ''}
         autoHideDuration={constants.SNACKBAR_DUR_MS}
@@ -82,6 +82,16 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
         {asData.about}
       </Markdown>
 
+      {isTeacher && <AssignmentStatus asData={asData} />}
+
+      {!creatingAttempt && (
+        <Button variant="contained" onClick={() => setCreatingAttempt(true)}>
+          New Submission
+        </Button>
+      )}
+      <Typography variant="h6" component="h4" style={{ marginTop: '24px' }}>
+        Your submission history:
+      </Typography>
       {attempts.length === 0 && (
         <Alert
           severity="info"
@@ -89,11 +99,6 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
         >
           You've made no submissions on this assignment yet!
         </Alert>
-      )}
-      {!creatingAttempt && (
-        <Button variant="contained" onClick={() => setCreatingAttempt(true)}>
-          New Submission
-        </Button>
       )}
 
       {creatingAttempt && (

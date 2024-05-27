@@ -99,6 +99,7 @@ class Assignment(Base):
             name=self.name,
             about=self.about,
             scorable=self.scorable,
+            course_id=self.course_id,
             **super().to_public().model_dump(),
         )
 

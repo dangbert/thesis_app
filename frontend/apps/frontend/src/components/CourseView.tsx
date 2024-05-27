@@ -30,7 +30,6 @@ const CourseView: React.FC<CourseViewProps> = ({ course }) => {
   const userCtx = useUserContext();
 
   const isTeacher = course.your_role === models.CourseRole.TEACHER;
-  console.log('isTeacher=', isTeacher);
   // const asData = asIdx > -1 && asIdx < asList.length ? asList[asIdx] : null;
 
   // load assignments for current course
