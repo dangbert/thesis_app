@@ -21,6 +21,7 @@ import json
 from typing import Any, Optional, Tuple
 import itsdangerous
 import httpx
+import pytest_mock
 
 
 DUMMY_ID = UUID("cc2d7ce4-170f-4817-b4a9-76e11d5f9c56")
@@ -148,3 +149,17 @@ def make_file(
         session.add(file_link)
         session.commit()
     return file
+
+
+def mock_gpt(
+    mocker: pytest_mock.MockerFixture,
+    outputs: list[str] = ["simulated output"],
+    simulated_cost: float = 0.0,
+):
+    # mock GPT API calls
+    mock = mocker.patch("app.feedback_utils.GPTModel.__call__")
+    mock.return_value = (outputs, [])
+
+    mock2 = mocker.patch("app.feedback_utils.GPTModel.compute_price")
+    mock2.return_value = simulated_cost
+    return mock, mock2

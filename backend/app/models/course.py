@@ -248,6 +248,7 @@ class Feedback(Base):
         )
 
 
+# TODO: I don't think this was necessary, Feedback.attempt_id should be sufficient by itself!
 class AttemptFeedbackLink(Base):
     __tablename__ = "attempt_feedback"
     attempt_id: Mapped[UUID] = mapped_column(

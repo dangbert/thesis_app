@@ -1,5 +1,5 @@
 from app.models.base import Base
-from app.models.course import Attempt, Feedback
+from app.models.course import Attempt, Feedback, AttemptFeedbackLink
 import config
 from app.settings import get_settings
 from sqlalchemy.orm import Mapped, mapped_column, Session
@@ -131,11 +131,13 @@ def _run_ai_feedback(job: Job, session: Session):
     )
     ai_feedback = Feedback(
         attempt_id=attempt.id,
-        user_id=attempt.user_id,
-        is_ai=False,
+        user_id=None,
+        is_ai=True,
         data=feedback_data.model_dump(),
     )
     session.add(ai_feedback)
+    session.flush()  # need an ID
+    session.add(AttemptFeedbackLink(attempt_id=attempt.id, feedback_id=ai_feedback.id))
 
     # TODO: for now noop function and marking job completed
     job.status = JobStatus.COMPLETED

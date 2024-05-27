@@ -7,10 +7,14 @@ from app.hardcoded import SMARTData, FeedbackData
 import pytest_mock
 
 
-def test_pop_next_pending_job(session):
+def test_pop_next_pending_job(session, mocker: pytest_mock.MockerFixture):
     """
     Test that the loop_once function correctly runs a job.
     """
+
+    simulated_feedback = "simulated feedback from GPT-3"
+    simulated_cost = 0.0042
+    dummy.mock_gpt(mocker, [simulated_feedback], simulated_cost)
     course, assignment, teacher, student = dummy.init_simple_course(session)
 
     pending = jobRunner.pop_next_pending_job(session)
@@ -42,22 +46,14 @@ def test_pop_next_pending_job(session):
 
     pending = jobRunner.pop_next_pending_job(session)
     assert pending is None, "should be no pending jobs"
-
-
-# TODO: also test in test_attempts.py that creating an attempt also creates an associated job!
+    assert session.query(Feedback).count() == 1, "1 feedback should be created"
 
 
 def test_ai_feedback_job(session, mocker: pytest_mock.MockerFixture):
     simulated_feedback = "simulated feedback from GPT-3"
     simulated_cost = 0.0042
 
-    # mock GPT API calls
-    mock = mocker.patch("app.feedback_utils.GPTModel.__call__")
-    mock.return_value = ([simulated_feedback], [])
-
-    mock2 = mocker.patch("app.feedback_utils.GPTModel.compute_price")
-    mock2.return_value = simulated_cost
-
+    dummy.mock_gpt(mocker, [simulated_feedback], simulated_cost)
     course, assignment, teacher, student = dummy.init_simple_course(session)
 
     attempt = dummy.make_attempt(session, assignment.id, student.id)
