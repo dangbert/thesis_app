@@ -20,7 +20,7 @@ def test_pop_next_pending_job(session):
     job1 = Job(
         job_type=JobType.AI_FEEDBACK,
         status=JobStatus.PENDING,
-        data=dummy.EXAMPLE_AI_FEEDBACK_DATA.dict(),
+        data=dummy.EXAMPLE_AI_FEEDBACK_DATA.custom_dump_dict(),
     )
     session.add(job1)
     session.commit()

@@ -28,7 +28,7 @@ EXAMPLE_SMART_DATA = SMARTData(goal="test goal", plan="test plan")
 EXAMPLE_FEEDBACK_DATA = FeedbackData(
     feedback="good start, but try again", approved=False
 )
-EXAMPLE_AI_FEEDBACK_DATA = AI_FEEDBACK_JOB_DATA(attempt_id="DUMMY_ID")
+EXAMPLE_AI_FEEDBACK_DATA = AI_FEEDBACK_JOB_DATA(attempt_id=DUMMY_ID)
 
 
 settings = get_settings()

@@ -7,6 +7,7 @@ from app.models.course import (
     FeedbackPublic,
     CourseRole,
 )
+from app.models.job import Job, AI_FEEDBACK_JOB_DATA, JobStatus, JobType
 import app.models.schemas as schemas
 from app.routes.courses import ASSIGNMENT_NOT_FOUND
 from app.routes.attempts import ATTEMPT_NOT_FOUND
@@ -128,6 +129,14 @@ def test_create_attempt(client, settings, session):
         AttemptPublic(**res.json()) == created.to_public()
         and created.user_id == user1.id
     )
+
+    # verify job was created
+    jobs = session.query(Job).all()
+    assert len(jobs) == 1
+    expect_job_data = AI_FEEDBACK_JOB_DATA(attempt_id=created.id)
+    job = jobs[0]
+    assert AI_FEEDBACK_JOB_DATA(**job.data) == expect_job_data
+    assert job.status == JobStatus.PENDING and job.job_type == JobType.AI_FEEDBACK
 
     # user can't create attempt with other's files
     file1 = dummy.make_file(session, user1.id)

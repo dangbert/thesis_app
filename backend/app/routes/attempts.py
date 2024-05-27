@@ -17,6 +17,8 @@ from app.models.course import (
     FeedbackPublic,
     Feedback,
 )
+import json
+from app.models.job import Job, AI_FEEDBACK_JOB_DATA, JobStatus, JobType
 from app.routes.courses import get_assignment_or_fail
 from app.routes.files import get_files_or_fail
 from app.hardcoded import SMARTData, FeedbackData
@@ -99,6 +101,14 @@ async def create_attempt(
     # add files to attempt
     for file in files:
         session.add(AttemptFileLink(attempt_id=attempt.id, file_id=file.id))
+
+    # create AI feedback job
+    job_data = AI_FEEDBACK_JOB_DATA(attempt_id=attempt.id)
+    job = Job(
+        job_type=JobType.AI_FEEDBACK,
+        data=job_data.custom_dump_dict(),
+    )
+    session.add(job)
     session.commit()
     return attempt.to_public()
 
