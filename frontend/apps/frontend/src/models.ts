@@ -34,6 +34,11 @@ export interface UserPublic extends BaseFields {
   picture?: string;
 }
 
+export enum CourseRole {
+  STUDENT = 'student',
+  TEACHER = 'teacher',
+}
+
 export interface CourseCreate {
   name: string;
   about: string;
@@ -62,6 +67,21 @@ export interface AttemptPublic extends BaseFields {
   data: SMARTData;
   feedbacks: FeedbackPublic[];
   files: FilePublic[];
+}
+
+export enum AssignmentAttemptStatus {
+  NOT_STARTED = 'not started',
+  AWAITING_FEEDBACK = 'awaiting feedback',
+  AWAITING_RESUBMISSION = 'awaiting resubmission',
+  COMPLETE = 'complete',
+}
+
+export interface AssignmentStudentStatus {
+  student: UserPublic;
+  role: CourseRole;
+  attempt_count: number;
+  last_attempt_date?: string;
+  status: AssignmentAttemptStatus;
 }
 
 export interface FilePublic extends BaseFields {

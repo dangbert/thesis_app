@@ -20,12 +20,14 @@ interface AttemptHistoryProps {
   attempts: models.AttemptPublic[]; // Now receives an array of attempts
   asData: models.AssignmentPublic;
   isInstructor: boolean;
+  refreshAttempts: () => void;
 }
 
 const AttemptHistory: React.FC<AttemptHistoryProps> = ({
   attempts,
   asData,
   isInstructor,
+  refreshAttempts,
 }) => {
   const [viewAttemptIdx, setViewAttemptIdx] = useState(-1);
   const [snackbarTxt, setSnackbarTxt] = useState('');
@@ -65,6 +67,7 @@ const AttemptHistory: React.FC<AttemptHistoryProps> = ({
           onCreateFeedback={(feedback: models.FeedbackPublic) => {
             setSnackbarTxt('Feedback submitted ✅');
             setViewAttemptIdx(-1);
+            refreshAttempts();
           }}
         />
       )}

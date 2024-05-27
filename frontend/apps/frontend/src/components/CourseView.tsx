@@ -6,6 +6,10 @@ import {
   useTheme,
   Button,
   Alert,
+  Tabs,
+  Tab,
+  Box,
+  AppBar,
 } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import AssignmentView from './AssignmentView';
@@ -28,7 +32,7 @@ const CourseView: React.FC<CourseViewProps> = ({ course }) => {
 
   const isAdmin = false;
 
-  const asData = asIdx > -1 && asIdx < asList.length ? asList[asIdx] : null;
+  // const asData = asIdx > -1 && asIdx < asList.length ? asList[asIdx] : null;
 
   // load assignments for current course
   useEffect(() => {
@@ -81,26 +85,98 @@ const CourseView: React.FC<CourseViewProps> = ({ course }) => {
           </Typography>
         </CardContent>
       </Card>
-      <hr />
+
       <br />
       <br />
 
-      {/*map courselist to simple list of names */}
-      {loadingAssignments && 'loading assignments...'}
-
-      {!loadingAssignments && !asList.length && (
-        <Alert severity="info">This course currently has no assignments</Alert>
-      )}
-
+      {/* NOTE: UI for creating assignments not fully supported, easier to use DB client */}
       {isAdmin && (
         <Button variant="contained" onClick={handleCreateAs}>
           Create Assignment
         </Button>
       )}
 
-      {asData && <AssignmentView asData={asData} />}
+      {loadingAssignments && 'loading assignments...'}
+
+      {!loadingAssignments && (
+        <>
+          {!asList.length && (
+            <Alert severity="info">
+              This course currently has no assignments
+            </Alert>
+          )}
+          {asList.length > 0 && (
+            <>
+              <Typography>
+                This course has {asList.length} assignment
+                {asList.length === 0 ? '' : 's'}:
+              </Typography>
+              <Box sx={{ width: '100%' }}>
+                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                  <Tabs
+                    value={asIdx >= 0 ? asIdx : false}
+                    onChange={(
+                      event: React.SyntheticEvent,
+                      newValue: number
+                    ) => {
+                      setAsIdx(newValue);
+                    }}
+                    aria-label="Assignment Tabs"
+                  >
+                    {asList.map((as, idx) => (
+                      <Tab
+                        label={as.name}
+                        value={idx}
+                        key={as.id}
+                        {...a11yProps(idx)}
+                      />
+                    ))}
+                  </Tabs>
+                </Box>
+                {asList.map((as, idx) => (
+                  <CustomTabPanel value={asIdx} index={idx} key={as.id}>
+                    <AssignmentView asData={as} />
+                  </CustomTabPanel>
+                ))}
+              </Box>
+            </>
+          )}
+        </>
+      )}
+
+      {/* {asData && <AssignmentView asData={asData} />} */}
     </div>
   );
 };
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+// https://mui.com/material-ui/react-tabs/#introduction
+function CustomTabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
+}
+
+function a11yProps(index: number) {
+  return {
+    id: `simple-tab-${index}`,
+    'aria-controls': `simple-tabpanel-${index}`,
+  };
+}
 
 export default CourseView;

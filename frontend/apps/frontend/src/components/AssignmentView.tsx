@@ -17,6 +17,9 @@ interface IAssignmentViewProps {
 
 const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
   const [attempts, setAttempts] = useState<models.AttemptPublic[]>([]);
+  const [attemptLoadTime, setAttemptLoadTime] = useState<number>(
+    Date.now() / 1000
+  );
   const userCtx = useUserContext();
 
   const [creatingAttempt, setCreatingAttempt] = useState(false);
@@ -44,9 +47,12 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
         setAttempts(res.data);
       }
 
+      // TODO: test status fetch!
+      // const res2 = await courseApi.getAssignmentStatus(asData, asData.id);
+
       return () => (cancel = true);
     })();
-  }, [asData.id, userCtx.user?.id]);
+  }, [asData.id, userCtx.user?.id, attemptLoadTime]);
 
   if (!userCtx.user) return null;
   return (
@@ -58,8 +64,8 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
         message={snackbarTxt}
       />
 
-      <Typography variant="h4" component="h2">
-        {asData.name}
+      <Typography variant="h5" component="h3">
+        Assignment: {asData.name}
       </Typography>
       <Typography variant="body1" color="textSecondary" component="p">
         {asData.about}
@@ -95,6 +101,7 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
         attempts={attempts}
         asData={asData}
         isInstructor={isInstructor}
+        refreshAttempts={() => setAttemptLoadTime(Date.now() / 1000)}
       />
     </div>
   );

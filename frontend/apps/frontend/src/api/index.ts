@@ -68,6 +68,17 @@ export const createAssignment = async (
   );
 };
 
+export const getAssignmentStatus = async (
+  course_id: string,
+  assignment_id: string
+) => {
+  return await jsonOrError(
+    fetch(`${coursePath}/${course_id}/assignment/${assignment_id}/status`, {
+      method: 'GET',
+    })
+  );
+};
+
 // MARK: attempts
 const attemptPath = `${API_PATH}/attempt`;
 
