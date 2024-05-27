@@ -75,7 +75,8 @@ export interface AttemptPublic extends BaseFields {
 
 export enum AssignmentAttemptStatus {
   NOT_STARTED = 'not started',
-  AWAITING_FEEDBACK = 'awaiting feedback',
+  AWAITING_AI_FEEDBACK = 'awaiting AI feedback',
+  AWAITING_TEACHER_FEEDBACK = 'awaiting teacher feedback',
   AWAITING_RESUBMISSION = 'awaiting resubmission',
   COMPLETE = 'complete',
 }

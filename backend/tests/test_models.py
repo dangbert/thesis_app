@@ -2,7 +2,12 @@ from app.models import User, Course, Assignment
 import app.models as models
 from uuid import UUID
 from sqlalchemy.orm import Session
-from tests.dummy import make_user, make_course, make_assignment, EXAMPLE_FEEDBACK_DATA
+from tests.dummy import (
+    make_user,
+    make_course,
+    make_assignment,
+    EXAMPLE_UNAPPROVED_FEEDBACK,
+)
 import tests.dummy as dummy
 
 
@@ -58,7 +63,7 @@ def test_attempt_feedback(session):
         attempt_id=at1.id,
         user_id=user.id,
         is_ai=False,
-        data=EXAMPLE_FEEDBACK_DATA.model_dump(),
+        data=EXAMPLE_UNAPPROVED_FEEDBACK.model_dump(),
     )
     session.add(feedback)
     session.commit()

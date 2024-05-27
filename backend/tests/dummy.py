@@ -10,6 +10,7 @@ from app.models import (
     Attempt,
     File,
     CourseUserLink,
+    AttemptFeedbackLink,
 )
 from app.models.job import AI_FEEDBACK_JOB_DATA
 from app.hardcoded import SMARTData, FeedbackData
@@ -26,9 +27,10 @@ import pytest_mock
 
 DUMMY_ID = UUID("cc2d7ce4-170f-4817-b4a9-76e11d5f9c56")
 EXAMPLE_SMART_DATA = SMARTData(goal="test goal", plan="test plan")
-EXAMPLE_FEEDBACK_DATA = FeedbackData(
+EXAMPLE_UNAPPROVED_FEEDBACK = FeedbackData(
     feedback="good start, but try again", approved=False
 )
+EXAMPLE_APPROVED_FEEDBACK = FeedbackData(feedback="well done!", approved=True)
 EXAMPLE_AI_FEEDBACK_DATA = AI_FEEDBACK_JOB_DATA(attempt_id=DUMMY_ID)
 
 
@@ -110,18 +112,23 @@ def make_attempt(
 def make_feedback(
     session: Session,
     attempt_id: UUID,
-    data: Optional[dict[str, Any]] = None,
+    # data: Optional[dict[str, Any]] = None,
     user_id: Optional[UUID] = None,
+    approved: bool = False,
 ) -> models.Feedback:
-    if data is None:
-        data = EXAMPLE_FEEDBACK_DATA.model_dump()
+    feedback_obj = (
+        EXAMPLE_APPROVED_FEEDBACK if approved else EXAMPLE_UNAPPROVED_FEEDBACK
+    )
     feedback = models.Feedback(
         attempt_id=attempt_id,
         user_id=user_id,
         is_ai=user_id is None,
-        data=data,
+        data=feedback_obj.model_dump(),
     )
     session.add(feedback)
+    session.flush()
+    link = AttemptFeedbackLink(attempt_id=attempt_id, feedback_id=feedback.id)
+    session.add(link)
     session.commit()
     return feedback
 

@@ -14,6 +14,7 @@ from app.models.schemas import (
     AssignmentStudentStatus,
     AssignmentAttemptStatus,
 )
+from app.hardcoded import FeedbackData
 from sqlalchemy import String, ForeignKey, JSON, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PUUID
@@ -146,6 +147,32 @@ class Attempt(Base):
             **super().to_public().model_dump(),
         )
 
+    def describe_status(self) -> AssignmentAttemptStatus:
+        """
+        Get the status of this attempt.
+        Note: this is most relevant when called on the student's latest attempt.
+        (Otherwise AWAITING_RESUBMISSION might be misleading)
+        """
+        teacher_feedbacks = sorted(
+            [f for f in self.feedbacks if not f.is_ai], key=lambda x: x.created_at
+        )
+        ai_feedbacks = sorted(
+            [f for f in self.feedbacks if f.is_ai], key=lambda x: x.created_at
+        )
+
+        if teacher_feedbacks:
+            feedback = teacher_feedbacks[-1]
+            feedback_data = FeedbackData(**feedback.data)
+            if feedback_data.approved:
+                return AssignmentAttemptStatus.COMPLETE
+            else:
+                return AssignmentAttemptStatus.AWAITING_RESUBMISSION
+
+        elif ai_feedbacks:
+            return AssignmentAttemptStatus.AWAITING_TEACHER_FEEDBACK
+        else:
+            return AssignmentAttemptStatus.AWAITING_AI_FEEDBACK
+
 
 class File(Base):
     __tablename__ = "file"
@@ -243,6 +270,7 @@ class Feedback(Base):
             attempt_id=self.attempt_id,
             user_id=self.user_id,
             is_ai=self.is_ai,
+            # TODO: note that we're returning the full FeedbackData object here (including eval metrics etc)
             data=self.data,
             **super().to_public().model_dump(),
         )

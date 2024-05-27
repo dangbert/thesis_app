@@ -14,6 +14,7 @@ from app.models.course import (
     AssignmentAttemptStatus,
     Attempt,
 )
+from app.hardcoded import FeedbackData
 from sqlalchemy import func
 from config import get_logger
 
@@ -179,25 +180,21 @@ async def get_assignment_status(
     final_status = []
     for user in users:
         # TODO: handle other statuses
+        last_attempt = user_last_attempt_map.get(user.id, None)
         cur = AssignmentStudentStatus(
             student=user.to_public(),
             # user role will always exist, but providing default for mypy
             role=user_role_map.get(user.id, CourseRole.STUDENT),
             attempt_count=user_attempt_count_map.get(user.id, 0),
-            last_attempt_date=None,
+            last_attempt_date=last_attempt.created_at if last_attempt else None,
         )
-        status = (
-            AssignmentAttemptStatus.NOT_STARTED
-            if cur.attempt_count == 0
-            else AssignmentAttemptStatus.AWAITING_FEEDBACK
-        )
-        cur.status = status
-        last_attempt = user_last_attempt_map.get(user.id, None)
-        if last_attempt:
-            cur.last_attempt_date = last_attempt.created_at
+        if not last_attempt:
+            cur.status = AssignmentAttemptStatus.NOT_STARTED
+        else:
+            cur.status = last_attempt.describe_status()
         final_status.append(cur)
 
     logger.info(
-        f"got assignment status for {len(final_status)} users in assignment {assignment_id}"
+        f"constructed assignment status for {len(final_status)} users in assignment {assignment_id}"
     )
     return final_status

@@ -223,7 +223,30 @@ def test_get_assignment_status(client, settings, session):
     last_attempt = dummy.make_attempt(session, as1.id, student1.id)
     expected[1].last_attempt_date = last_attempt.created_at
     expected[1].attempt_count = 2
-    expected[1].status = AssignmentAttemptStatus.AWAITING_FEEDBACK
+    expected[1].status = AssignmentAttemptStatus.AWAITING_AI_FEEDBACK
     res = client.get(get_status_url(as1))
     assert res.status_code == 200
+    assert [AssignmentStudentStatus(**item) for item in res.json()] == expected
+
+    # create AI feedback
+    dummy.make_feedback(session, last_attempt.id, user_id=None)
+    res = client.get(get_status_url(as1))
+    assert res.status_code == 200
+    expected[1].status = AssignmentAttemptStatus.AWAITING_TEACHER_FEEDBACK
+    assert [AssignmentStudentStatus(**item) for item in res.json()] == expected
+
+    # lastly create teacher feedback
+    teacher_feedback = dummy.make_feedback(
+        session, last_attempt.id, user_id=prof.id, approved=False
+    )
+    res = client.get(get_status_url(as1))
+    assert res.status_code == 200
+    expected[1].status = AssignmentAttemptStatus.AWAITING_RESUBMISSION
+    assert [AssignmentStudentStatus(**item) for item in res.json()] == expected
+
+    teacher_feedback.data = dummy.EXAMPLE_APPROVED_FEEDBACK.model_dump()
+    session.commit()
+    res = client.get(get_status_url(as1))
+    assert res.status_code == 200
+    expected[1].status = AssignmentAttemptStatus.COMPLETE
     assert [AssignmentStudentStatus(**item) for item in res.json()] == expected

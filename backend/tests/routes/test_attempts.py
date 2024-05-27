@@ -180,7 +180,7 @@ def test_create_feedback(client, settings, session):
     dummy.login_user(client, user)
     obj = schemas.FeedbackCreate(
         attempt_id=at1.id,
-        data=dummy.EXAMPLE_FEEDBACK_DATA.model_dump(),
+        data=dummy.EXAMPLE_UNAPPROVED_FEEDBACK.model_dump(),
     )
 
     res = client.put(
@@ -191,7 +191,7 @@ def test_create_feedback(client, settings, session):
     session.refresh(at1)
     assert (
         len(at1.feedbacks) == 1
-        and FeedbackData(**at1.feedbacks[0].data) == dummy.EXAMPLE_FEEDBACK_DATA
+        and FeedbackData(**at1.feedbacks[0].data) == dummy.EXAMPLE_UNAPPROVED_FEEDBACK
     )
 
     created = session.get(Feedback, res.json()["id"])

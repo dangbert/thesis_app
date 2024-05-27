@@ -79,7 +79,8 @@ class AssignmentAttemptStatus(enum.Enum):
     """Enum for the status of a student's attempt(s) on an assignment."""
 
     NOT_STARTED = "not started"
-    AWAITING_FEEDBACK = "awaiting feedback"
+    AWAITING_AI_FEEDBACK = "awaiting AI feedback"
+    AWAITING_TEACHER_FEEDBACK = "awaiting teacher feedback"
     AWAITING_RESUBMISSION = "awaiting resubmission"
     COMPLETE = "complete"
 
