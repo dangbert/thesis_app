@@ -34,4 +34,4 @@ RUN apt remove -y gcc && apt autoremove -y && pip uninstall -y poetry && rm -f r
 # copy whole backend folder
 COPY ./ .
 
-ENTRYPOINT ["/bin/bash", "./launch_prod.sh"]
+CMD ["/bin/bash", "./launch_prod.sh"]

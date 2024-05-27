@@ -19,11 +19,12 @@ def main():
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)  # Also handle Ctrl-C gracefully
 
-    with database.get_session() as session:
+    with database.SessionFactory() as session:
+        logger.info("Job runner started")
         while True:
             if not _loop_once(session):
                 logger.debug("No jobs to run, sleeping...")
-                time.sleep(15)
+                time.sleep(10)
 
 
 def _loop_once(session: Session) -> Job | None:
@@ -31,8 +32,13 @@ def _loop_once(session: Session) -> Job | None:
     if job is None:
         return None
 
-    logger.info(f"Running job: {job}")
+    pending_job_count = (
+        session.query(models.Job).filter(Job.status == JobStatus.PENDING).count()
+    )
+    logger.info(f"Running job: {job} (other pending jobs: {pending_job_count-1})")
+    start_time = time.perf_counter()
     job.run(session)
+    logger.info(f"job complete in {(time.perf_counter() - start_time):.3f} secs: {job}")
     return job
 
 

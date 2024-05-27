@@ -1,5 +1,16 @@
 name: thesis
 
+x-common-env: &common-env
+  ENV: PRD
+  SERVER_NAME: ${SERVER_NAME}
+  DB_PASS: ${DB_PASS}
+  SECRET_KEY: ${SECRET_KEY}
+  AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID}
+  AUTH0_CLIENT_SECRET: ${AUTH0_CLIENT_SECRET}
+  AUTH0_DOMAIN: ${AUTH0_DOMAIN}
+  OPENAI_API_KEY: ${OPENAI_API_KEY}
+  GPT_MODEL: ${GPT_MODEL}
+
 services:
   backend:
     platform: ${PROD_PLATFORM}
@@ -8,17 +19,21 @@ services:
       dockerfile: ./Dockerfile
       target: prod
     environment:
-      - ENV=PRD
-      - SERVER_NAME=${SERVER_NAME}
-      - DB_PASS=${DB_PASS}
-      - SECRET_KEY=${SECRET_KEY}
-      - AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID}
-      - AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET}
-      - AUTH0_DOMAIN=${AUTH0_DOMAIN}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - GPT_MODEL=${GPT_MODEL}
+      <<: *common-env
     volumes:
       - ${VOLUMES_DIR}/files:/files
+
+  jobs:
+    platform: ${PROD_PLATFORM}
+    build:
+      context: ../backend
+      dockerfile: ./Dockerfile
+      target: prod
+    environment:
+      <<: *common-env
+    volumes:
+      - ${VOLUMES_DIR}/files:/files
+    command: ./jobRunner.py
 
   nginx:
     platform: ${PROD_PLATFORM}
