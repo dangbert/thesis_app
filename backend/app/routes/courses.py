@@ -75,7 +75,9 @@ async def list_assignments(
     user: AuthUserDep, course_id: UUID, session: SessionDep
 ) -> list[AssignmentPublic]:
     course = get_course_or_fail(session, course_id, user)
-    return [a.to_public() for a in course.assignments if user.can_view(session, a)]
+    # sort by oldest to newest
+    assignments = sorted(course.assignments, key=lambda a: a.created_at)
+    return [a.to_public() for a in assignments if user.can_view(session, a)]
 
 
 @router.get("/{course_id}/assignment/{assignment_id}")

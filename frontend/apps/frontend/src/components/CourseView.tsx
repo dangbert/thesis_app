@@ -16,6 +16,7 @@ import AssignmentView from './AssignmentView';
 import * as models from '../models';
 import * as courseApi from '../api';
 import { useUserContext } from '../providers';
+import Markdown from 'react-markdown';
 
 interface CourseViewProps {
   course: models.CoursePublic;
@@ -80,9 +81,16 @@ const CourseView: React.FC<CourseViewProps> = ({ course }) => {
           <Typography variant="h3" component="h2">
             {course.name}
           </Typography>
-          <Typography variant="body2" color="textSecondary" component="p">
+          <Markdown
+            // make links open in a new page
+            components={{
+              a: ({ node, ...props }) => (
+                <a {...props} target="_blank" rel="noopener noreferrer" />
+              ),
+            }}
+          >
             {course.about}
-          </Typography>
+          </Markdown>
         </CardContent>
       </Card>
 

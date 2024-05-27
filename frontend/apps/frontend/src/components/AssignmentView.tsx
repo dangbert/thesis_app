@@ -3,6 +3,7 @@ import { Button, Typography, Snackbar, Alert } from '@mui/material';
 import AttemptCreateModal from './AttemptCreateModal';
 import AttemptView from './AttemptView';
 import AttemptHistory from './AttemptHistory';
+import Markdown from 'react-markdown';
 
 import { AssignmentPublic } from '../models';
 import * as models from '../models';
@@ -65,11 +66,19 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
       />
 
       <Typography variant="h5" component="h3">
-        Assignment: {asData.name}
+        {asData.name}
       </Typography>
-      <Typography variant="body1" color="textSecondary" component="p">
+
+      <Markdown
+        // make links open in a new page
+        components={{
+          a: ({ node, ...props }) => (
+            <a {...props} target="_blank" rel="noopener noreferrer" />
+          ),
+        }}
+      >
         {asData.about}
-      </Typography>
+      </Markdown>
 
       {attempts.length === 0 && (
         <Alert
