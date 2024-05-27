@@ -19,14 +19,14 @@ import * as constants from '../constants';
 interface AttemptHistoryProps {
   attempts: models.AttemptPublic[]; // Now receives an array of attempts
   asData: models.AssignmentPublic;
-  isInstructor: boolean;
+  isTeacher: boolean;
   refreshAttempts: () => void;
 }
 
 const AttemptHistory: React.FC<AttemptHistoryProps> = ({
   attempts,
   asData,
-  isInstructor,
+  isTeacher,
   refreshAttempts,
 }) => {
   const [viewAttemptIdx, setViewAttemptIdx] = useState(-1);
@@ -63,7 +63,7 @@ const AttemptHistory: React.FC<AttemptHistoryProps> = ({
           asData={asData}
           open={true}
           onClose={() => setViewAttemptIdx(-1)}
-          mode={isInstructor && !curFeedback ? 'createFeedback' : 'view'}
+          mode={isTeacher && !curFeedback ? 'createFeedback' : 'view'}
           onCreateFeedback={(feedback: models.FeedbackPublic) => {
             setSnackbarTxt('Feedback submitted ✅');
             setViewAttemptIdx(-1);
@@ -85,7 +85,7 @@ const AttemptHistory: React.FC<AttemptHistoryProps> = ({
           .reverse()
           .map((attempt, attemptIndex) => {
             const realIndex = attempts.length - attemptIndex - 1;
-            let status = isInstructor
+            let status = isTeacher
               ? 'awaiting AI feedback'
               : 'awaiting teacher review';
             if (attempt.feedbacks.length > 0) {

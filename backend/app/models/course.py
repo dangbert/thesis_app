@@ -45,12 +45,14 @@ class Course(Base):
         cascade="all, delete",
     )
 
-    def to_public(self) -> CoursePublic:
+    def to_public(self, your_role: Optional[CourseRole] = None) -> CoursePublic:
+        """Return a public representation of the course, including the user's role in it (if provided)."""
         return CoursePublic(
             id=self.id,
             name=self.name,
             about=self.about,
             **super().to_public().model_dump(),
+            your_role=your_role,
         )
 
 

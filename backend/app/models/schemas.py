@@ -46,6 +46,7 @@ class CoursePublic(CourseCreate, DateFields):
     """Public representation of a course to return via API."""
 
     id: UUID
+    your_role: Optional[CourseRole] = None
 
 
 class AssignmentCreate(BaseModel):

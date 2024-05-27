@@ -13,10 +13,14 @@ import { useUserContext } from '../providers';
 
 interface IAssignmentViewProps {
   asData: AssignmentPublic;
+  isTeacher: boolean;
   // dueDate: string;
 }
 
-const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
+const AssignmentView: React.FC<IAssignmentViewProps> = ({
+  asData,
+  isTeacher,
+}) => {
   const [attempts, setAttempts] = useState<models.AttemptPublic[]>([]);
   const [attemptLoadTime, setAttemptLoadTime] = useState<number>(
     Date.now() / 1000
@@ -25,8 +29,6 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
 
   const [creatingAttempt, setCreatingAttempt] = useState(false);
   const [snackbarTxt, setSnackbarTxt] = useState('');
-
-  const isInstructor = true; // TODO don't hardcode
 
   // load attempts
   useEffect(() => {
@@ -109,7 +111,7 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({ asData }) => {
       <AttemptHistory
         attempts={attempts}
         asData={asData}
-        isInstructor={isInstructor}
+        isTeacher={isTeacher}
         refreshAttempts={() => setAttemptLoadTime(Date.now() / 1000)}
       />
     </div>

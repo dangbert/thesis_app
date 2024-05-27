@@ -28,11 +28,9 @@ const CourseView: React.FC<CourseViewProps> = ({ course }) => {
   const [loadingAssignments, setLoadingAssignments] = useState<boolean>(true);
 
   const userCtx = useUserContext();
-  const theme = useTheme();
-  //   const classes = useStyles(theme);
 
-  const isAdmin = false;
-
+  const isTeacher = course.your_role === models.CourseRole.TEACHER;
+  console.log('isTeacher=', isTeacher);
   // const asData = asIdx > -1 && asIdx < asList.length ? asList[asIdx] : null;
 
   // load assignments for current course
@@ -98,11 +96,11 @@ const CourseView: React.FC<CourseViewProps> = ({ course }) => {
       <br />
 
       {/* NOTE: UI for creating assignments not fully supported, easier to use DB client */}
-      {isAdmin && (
+      {/* {isTeacher && (
         <Button variant="contained" onClick={handleCreateAs}>
           Create Assignment
         </Button>
-      )}
+      )} */}
 
       {loadingAssignments && 'loading assignments...'}
 
@@ -143,7 +141,7 @@ const CourseView: React.FC<CourseViewProps> = ({ course }) => {
                 </Box>
                 {asList.map((as, idx) => (
                   <CustomTabPanel value={asIdx} index={idx} key={as.id}>
-                    <AssignmentView asData={as} />
+                    <AssignmentView asData={as} isTeacher={isTeacher} />
                   </CustomTabPanel>
                 ))}
               </Box>

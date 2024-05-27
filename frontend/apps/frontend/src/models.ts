@@ -44,7 +44,9 @@ export interface CourseCreate {
   about: string;
 }
 
-export interface CoursePublic extends CourseCreate, BaseFields {}
+export interface CoursePublic extends CourseCreate, BaseFields {
+  your_role?: CourseRole;
+}
 
 export interface AssignmentCreate {
   name: string;

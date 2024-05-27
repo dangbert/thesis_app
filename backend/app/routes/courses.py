@@ -48,7 +48,7 @@ def get_assignment_or_fail(
 @router.get("/")
 async def list_courses(user: AuthUserDep, session: SessionDep) -> list[CoursePublic]:
     links = session.query(CourseUserLink).filter_by(user_id=user.id).all()
-    return [link.course.to_public() for link in links]
+    return [link.course.to_public(your_role=link.role) for link in links]
 
 
 @router.get("/{course_id}")
@@ -58,7 +58,8 @@ async def get_course(
     course = session.get(Course, course_id)
     if not course or (course and not user.can_view(session, course)):
         raise HTTPException(status_code=404, detail="Course not found or unauthorized")
-    return course.to_public()
+    user_role = user.get_course_role(session, course_id)
+    return course.to_public(your_role=user_role)
 
 
 @router.put("/", status_code=201)

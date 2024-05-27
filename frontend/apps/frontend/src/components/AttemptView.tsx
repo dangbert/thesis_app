@@ -69,6 +69,7 @@ const AttemptView: React.FC<AttemptViewProps> = ({
               multiline
               minRows={constants.ATTEMPT_MIN_ROWS}
               maxRows={constants.ATTEMPT_MAX_ROWS}
+              variant="filled" // more clear it's read only
             />
             <TextField
               label="Action Plan"
@@ -80,6 +81,7 @@ const AttemptView: React.FC<AttemptViewProps> = ({
               multiline
               minRows={constants.ATTEMPT_MIN_ROWS}
               maxRows={constants.ATTEMPT_MAX_ROWS}
+              variant="filled"
             />
 
             <br />

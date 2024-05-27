@@ -41,11 +41,18 @@ def test_list_courses(client, settings, session):
     assert res.status_code == 200
     res_list = res.json()
     res_course = CoursePublic(**res_list[0])
-    assert res_course == course1.to_public() and len(res_list) == 1
+    assert (
+        res_course == course1.to_public(your_role=CourseRole.STUDENT)
+        and len(res_list) == 1
+    )
 
     user.enroll(session, course2, CourseRole.TEACHER)
     res = client.get(f"{settings.api_v1_str}/course/")
-    assert res.status_code == 200 and len(res.json()) == 2
+    assert res.status_code == 200
+    assert [CoursePublic(**item) for item in res.json()] == [
+        course1.to_public(your_role=CourseRole.STUDENT),
+        course2.to_public(your_role=CourseRole.TEACHER),
+    ]
 
     user.enroll(session, course1, role=None)
     user.enroll(session, course2, role=None)
@@ -65,9 +72,14 @@ def test_get_course(client, settings, session):
         res = client.get(f"{settings.api_v1_str}/course/{course_id}")
         assert res.status_code == 404 and res.json()["detail"] == COURSE_NOT_FOUND
 
-    user1.enroll(session, course1, CourseRole.STUDENT)
-    res = client.get(f"{settings.api_v1_str}/course/{course1.id}")
-    assert res.status_code == 200 and CoursePublic(**res.json()) == course1.to_public()
+    prof = dummy.make_user(session, email="prof@example.com")
+    for user, role in [(user1, CourseRole.STUDENT), (prof, CourseRole.TEACHER)]:
+        user.enroll(session, course1, role)
+        dummy.login_user(client, user)
+        res = client.get(f"{settings.api_v1_str}/course/{course1.id}")
+        assert res.status_code == 200 and CoursePublic(
+            **res.json()
+        ) == course1.to_public(your_role=role)
 
 
 def test_list_assignments(client, settings, session):

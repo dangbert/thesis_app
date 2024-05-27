@@ -117,6 +117,7 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
         multiline
         minRows={FEEDBACK_MIN_ROWS}
         maxRows={FEEDBACK_MAX_ROWS}
+        variant={readOnly ? 'filled' : 'outlined'}
       />
       <TextField
         label="Other Comments"
@@ -129,6 +130,7 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
         multiline
         minRows={FEEDBACK_MIN_ROWS}
         maxRows={FEEDBACK_MAX_ROWS}
+        variant={readOnly ? 'filled' : 'outlined'}
       />
 
       <br />
@@ -144,14 +146,14 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
             setNeedsApprovalResponse(false);
             setFeedbackData((prev) => ({
               ...prev,
-              approved: event.target.value === 'approve',
+              approved: event.target.value === 'approved',
             }));
           }}
         >
           <FormControlLabel
-            value="approve"
+            value="approved"
             control={<Radio />}
-            label="Approve"
+            label="Approved"
             // disabled={readOnly}
           />
           <FormControlLabel

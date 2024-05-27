@@ -57,6 +57,14 @@ class User(Base):
         link.role = role
         session.commit()
 
+    def get_course_role(self, session, course_id: UUID) -> Optional["CourseRole"]:
+        link = (
+            session.query(CourseUserLink)
+            .filter_by(user_id=self.id, course_id=course_id)
+            .first()
+        )
+        return link.role if link else None
+
     def can_view(
         self,
         session: Session,
@@ -82,16 +90,12 @@ class User(Base):
     def _can_view_course(
         self, session: Session, course: "Course", edit: bool = False
     ) -> bool:
-        link = (
-            session.query(CourseUserLink)
-            .filter_by(user_id=self.id, course_id=course.id)
-            .first()
-        )
-        if not link:
+        role = self.get_course_role(session, course.id)
+        if role is None:
             return False
         if edit:
-            return link.role == CourseRole.TEACHER
-        return link.role in {CourseRole.STUDENT, CourseRole.TEACHER}
+            return role == CourseRole.TEACHER
+        return role in {CourseRole.STUDENT, CourseRole.TEACHER}
 
     def _can_view_assignment(
         self, session: Session, assignment: "Assignment", edit: bool = False
