@@ -1,4 +1,5 @@
 from app.models.base import Base
+from app.models.course import Attempt
 import config
 from sqlalchemy.orm import Mapped, mapped_column, Session
 from sqlalchemy import JSON, Integer, Enum
@@ -7,6 +8,8 @@ from pydantic import BaseModel, ValidationError
 import enum
 from uuid import UUID
 import json
+import app.feedback as feedback
+from app.hardcoded import SMARTData, FeedbackData
 
 logger = config.get_logger(__name__)
 
@@ -37,11 +40,13 @@ class Job(Base):
         return f"<job id={self.id}, job_type={self.job_type}, status={self.status} />"
 
     def run(self, session: Session):
-        if self.status != JobStatus.IN_PROGRESS:
+        if self.status != JobStatus.PENDING:
             logger.error(
-                f"Job must be already have status '{JobStatus.IN_PROGRESS}' to run, not '{self.status}'"
+                f"Job must be have status '{JobStatus.PENDING}' to run, not '{self.status}'"
             )
             return
+        self.status = JobStatus.IN_PROGRESS
+        session.commit()
 
         if self.job_type not in JOB_RUN_MAP:
             raise NotImplementedError(f"Job type '{self.job_type}' not implemented")
@@ -62,8 +67,57 @@ class AI_FEEDBACK_JOB_DATA(BaseModel):
         return json.loads(json.dumps(self.dict(), default=str))
 
 
-from app.feedback import run_ai_feedback  # noqa: E402
+def _run_ai_feedback(job: Job, session: Session):
+    """
+    Generates AI feedback for a particular attempt, attaching a Feedback object.
+    This is the crux of this project...
+    """
+
+    try:
+        job_data = AI_FEEDBACK_JOB_DATA(**job.data)  # noqa: F841
+    except ValidationError as e:
+        logger.error(f"Failed to parse data for {job}: {e}")
+        job.status = JobStatus.FAILED
+        job.error = "failed to parse data for job"
+        session.commit()
+        return
+
+    attempt_id = job_data.attempt_id
+    attempt = session.query(Attempt).get(attempt_id)
+    if attempt is None:
+        logger.error(
+            f"Attempt with id {attempt_id} not found but referenced in job {job}"
+        )
+        job.status = JobStatus.FAILED
+        job.error = "attempt not found"
+        session.commit()
+        return
+
+    try:
+        smart_data = SMARTData(**attempt.data)
+    except ValidationError as e:
+        logger.error(f"Failed to parse data for attempt {attempt_id}: {e}")
+        job.status = JobStatus.FAILED
+        job.error = "failed to parse data for attempt"
+        session.commit()
+        return
+
+    job.status = JobStatus.IN_PROGRESS
+    session.commit()
+
+    prompt = feedback.prompts.PROMPT_SMART_FEEDBACK_TEXT_ONLY.format(
+        FEEDBACK_PRINCIPLES=feedback.prompts.FEEDBACK_PRINCIPLES,
+        SMART_RUBRIC=feedback.prompts.SMART_RUBRIC,
+        learning_goal=smart_data.goal,
+        action_plan=smart_data.plan,
+        language="Dutch",
+    )
+
+    # TODO: for now noop function and marking job completed
+    job.status = JobStatus.COMPLETED
+    session.commit()
+
 
 JOB_RUN_MAP: dict[JobType, Callable[[Job, Session], None]] = {
-    JobType.AI_FEEDBACK: run_ai_feedback,
+    JobType.AI_FEEDBACK: _run_ai_feedback,
 }

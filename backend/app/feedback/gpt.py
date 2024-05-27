@@ -114,7 +114,6 @@ def auto_reprompt(
     outputs, meta = model(prompts, **kwargs)
     total_price = model.compute_price(meta)
     total_calls = len(outputs)
-    # orig_outputs = outputs.copy()
 
     new_outputs = cast(list[Optional[str]], outputs)
 

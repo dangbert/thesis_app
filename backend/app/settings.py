@@ -69,6 +69,9 @@ class Settings(BaseSettings):
     auth0_client_id: str
     auth0_client_secret: str
 
+    # OpenAI
+    openai_api_key: str
+
     @property
     def db_uri(self):
         return self._db_uri(omit_pass=False)

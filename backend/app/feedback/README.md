@@ -1,0 +1,1 @@
+This folder contains utils for generating feedback with the OpenAI API.  It overlaps significantly with the `experiments` directory at the root of this repo, and ideally this folder would be moved into some `shared` folder (for code used by both `backend` and `experiments`).

@@ -103,11 +103,7 @@ async def create_attempt(
         session.add(AttemptFileLink(attempt_id=attempt.id, file_id=file.id))
 
     # create AI feedback job
-    job_data = AI_FEEDBACK_JOB_DATA(attempt_id=attempt.id)
-    job = Job(
-        job_type=JobType.AI_FEEDBACK,
-        data=job_data.custom_dump_dict(),
-    )
+    job = build_feedback_job_for_attempt(attempt.id)
     session.add(job)
     session.commit()
     return attempt.to_public()
@@ -136,3 +132,12 @@ async def create_feedback(
     session.add(AttemptFeedbackLink(attempt_id=attempt.id, feedback_id=feedback.id))
     session.commit()
     return feedback.to_public()
+
+
+def build_feedback_job_for_attempt(attempt_id: UUID):
+    job_data = AI_FEEDBACK_JOB_DATA(attempt_id=attempt_id)
+    job = Job(
+        job_type=JobType.AI_FEEDBACK,
+        data=job_data.custom_dump_dict(),
+    )
+    return job

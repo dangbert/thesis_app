@@ -37,11 +37,8 @@ def _loop_once(session: Session) -> Job | None:
 
 
 def pop_next_pending_job(session: Session) -> Job | None:
-    """Get the next pending job to run, and mark it as in progress."""
+    """Get the next pending job to run."""
     job = session.query(models.Job).filter(Job.status == JobStatus.PENDING).first()
-    if job:
-        job.status = JobStatus.IN_PROGRESS
-        session.commit()
     return job
 
 

@@ -1,75 +1,27 @@
-import config
-from prompts.parsing import *  # noqa
-
-# import english prompts as default which this file can override
-from prompts.english import *  # noqa
-
-logger = config.get_logger(__name__)
-
-PROMPT_SYNTHETIC_SMART = """
-You're a student taking a course where you're tasked with writing a SMART goal defining your personal learning objective for the course.
-{SMART_RUBRIC}
-
-Your response should contain a SMART goal written from your perspective as a student, as well as an appropriate action plan, formatted like the example response below (simple json object containing plain text data with no markdown formatting).
-{SMART_EXAMPLE}
-
-In your case the goal you're writing should focus on a skill such as '{skill}' (for example {skill_description}) and you shall write your goal/plan using a tone of voice such as '{tone}'.
-{extra}
-Now respond only with a SMART goal written from your perspective as a student as well as an appropriate action plan in json format like the example. You do not have to adhere to the particular wording structure used in the example, just the json format. However, your SMART goal and plan should be written in the {language} language.
+FEEDBACK_PRINCIPLES = """
+* Feedback shall be geared to providing information about progress and achievement, not towards providing a summative grade or pass/fail assessment.
+* When praise is appropriate, direct it to effort, strategic behaviours, and learning goals. Avoid praising ability or intelligence.
+* Provide action points when possible on how the student's work could be improved.
+* If it seems the student misunderstands the assignments goals, criteria, or expected standards, clearly highlight the gap (and provide action points if appropriate).
 """.strip()
 
-EDUCATION_WORDS = [
-    "onderwijs",
-    "leren",
-    "doelen",
-    "kennis",
-    "begrip",
-    "studie",
-    "onderwijzen",
-    "opleiding",
-    "ontwikkeling",
-    "curriculum",
-    "pedagogie",
-    "geletterdheid",
-    "rekenvaardigheid",
-    "vaardigheid",
-    "beheersing",
-    "prestatie",
-    "vooruitgang",
-    "vooruitgang",
-    "verlichting",
-    "discipline",
-    "onderzoek",
-    "theorie",
-    "praktijk",
-    "toepassing",
-    "analyse",
-    "begrip",
-    "retentie",
-    "herinneren",
-    "inzicht",
-    "innovatie",
-    "creativiteit",
-    "kritisch",
-    "denken",
-    "problemen oplossen",
-    "communicatie",
-    "samenwerking",
-    "motivatie",
-    "inspiratie",
-    "aspiratie",
-    "succes",
-    "inspanning",
-    "doorzettingsvermogen",
-    "toewijding",
-    "discipline",
-    "focus",
-    "begeleiding",
-    "feedback",
-    "evaluatie",
-    "verbetering",
-]
+SMART_RUBRIC = """
+A SMART learning goal must be Specific, Measurable, Action-oriented, Relevant, and Time-bound as described further below:
+Specific: Concrete and unambiguous definition of the goal: is it clear what you want to achieve?
+Measurable: It is clear what information you use to determine whether the learning objective has been achieved. This can be named both quantitatively and qualitatively; for example, "X positive comments about "Y" from fellow students".
+Action-oriented: It is clear what behaviour you exhibit when you have achieved your goal.
+Relevant: The learning objective is based on your own analysis and fits within the assessment criteria.
+Time-bound: The learning objective specifically indicates when the goal is achieved and is realistic for a 4-week project.
 
+Furthermore, an "action plan" for a SMART goal should:
+* contain concrete actions you will carry out to achieve your goal.
+* Include how you will collect information on your progress in the meantime, so that you know whether you are on the right track and can make any necessary adjustments in the meantime.
+* Be clear and follow logically from the formulated learning objective  .
+* Be achievable within the stipulated time.
+* Allow for interim evaluation and adjustment.
+""".strip()
+
+# TODO: add few-shot examples (store in text or csv file)
 # get raw feedback as text (no scores requested)
 PROMPT_SMART_FEEDBACK_TEXT_ONLY = """
 You are a peer reviewer, tasked with giving a student feedback about an assignment.
