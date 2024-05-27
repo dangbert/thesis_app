@@ -1,6 +1,7 @@
 from app.models.base import Base
-from app.models.course import Attempt
+from app.models.course import Attempt, Feedback
 import config
+from app.settings import get_settings
 from sqlalchemy.orm import Mapped, mapped_column, Session
 from sqlalchemy import JSON, Integer, Enum
 from typing import Optional, Any, Callable
@@ -8,10 +9,11 @@ from pydantic import BaseModel, ValidationError
 import enum
 from uuid import UUID
 import json
-import app.feedback as feedback
 from app.hardcoded import SMARTData, FeedbackData
+import app.feedback_utils as feedback_utils
 
 logger = config.get_logger(__name__)
+settings = get_settings()
 
 
 class JobType(enum.Enum):
@@ -57,11 +59,6 @@ class Job(Base):
 class AI_FEEDBACK_JOB_DATA(BaseModel):
     attempt_id: UUID
 
-    class Config:
-        json_encoders = {
-            UUID: lambda uuid: str(uuid),  # Convert UUIDs to strings
-        }
-
     def custom_dump_dict(self):
         # hack to avoid sqlalchemy.exc.StatementError: (builtins.TypeError) Object of type UUID is not JSON serializable
         return json.loads(json.dumps(self.dict(), default=str))
@@ -105,17 +102,47 @@ def _run_ai_feedback(job: Job, session: Session):
     job.status = JobStatus.IN_PROGRESS
     session.commit()
 
-    prompt = feedback.prompts.PROMPT_SMART_FEEDBACK_TEXT_ONLY.format(
-        FEEDBACK_PRINCIPLES=feedback.prompts.FEEDBACK_PRINCIPLES,
-        SMART_RUBRIC=feedback.prompts.SMART_RUBRIC,
+    prompt = feedback_utils.prompts.PROMPT_SMART_FEEDBACK_TEXT_ONLY.format(
+        FEEDBACK_PRINCIPLES=feedback_utils.prompts.FEEDBACK_PRINCIPLES,
+        SMART_RUBRIC=feedback_utils.prompts.SMART_RUBRIC,
         learning_goal=smart_data.goal,
         action_plan=smart_data.plan,
         language="Dutch",
     )
 
+    gpt = feedback_utils.GPTModel(
+        api_key=settings.openai_api_key, model_name=settings.gpt_model
+    )
+    outputs, meta = gpt(
+        [prompt],
+        max_tokens=settings.gpt_max_tokens,
+        temperature=settings.gpt_temperature,
+    )
+    cost = gpt.compute_price(meta)
+    logger.info(
+        f"generated feedback for attempt {attempt.id}, cost=${cost:.2f}, {gpt.model_name=}"
+    )
+
+    feedback_data = FeedbackData(
+        feedback=outputs[0],
+        prompt=prompt,
+        cost=cost,
+        approved=False,  # only relevant for teacher feedback
+    )
+    ai_feedback = Feedback(
+        attempt_id=attempt.id,
+        user_id=attempt.user_id,
+        is_ai=False,
+        data=feedback_data.model_dump(),
+    )
+    session.add(ai_feedback)
+
     # TODO: for now noop function and marking job completed
     job.status = JobStatus.COMPLETED
     session.commit()
+    logger.info(
+        f"created feedback {ai_feedback.id} (length {len(feedback_data.feedback)})"
+    )
 
 
 JOB_RUN_MAP: dict[JobType, Callable[[Job, Session], None]] = {

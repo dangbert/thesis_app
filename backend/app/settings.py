@@ -71,6 +71,9 @@ class Settings(BaseSettings):
 
     # OpenAI
     openai_api_key: str
+    gpt_model: str
+    gpt_temperature: float = 0.5
+    gpt_max_tokens: int = 1000
 
     @property
     def db_uri(self):

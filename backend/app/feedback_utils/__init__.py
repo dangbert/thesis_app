@@ -6,3 +6,4 @@ import config
 
 from .AbstractModel import AbstractModel, IPrompt, IConversation
 from . import prompts
+from .gpt import GPTModel

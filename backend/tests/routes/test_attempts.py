@@ -171,9 +171,7 @@ def test_create_attempt(client, settings, session):
 
 
 def test_create_feedback(client, settings, session):
-    course = make_course(session)
-    as1 = make_assignment(session, course.id)
-    user = make_user(session)
+    course, as1, _, user = dummy.init_simple_course(session)
     at1 = make_attempt(session, as1.id, user.id)
     dummy.assert_not_authenticated(
         client.put(f"{settings.api_v1_str}/attempt/{at1.id}/feedback")

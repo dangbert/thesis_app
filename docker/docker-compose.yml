@@ -16,6 +16,7 @@ services:
       - AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET}
       - AUTH0_DOMAIN=${AUTH0_DOMAIN}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GPT_MODEL=${GPT_MODEL}
     volumes:
       - ${VOLUMES_DIR}/files:/files
 

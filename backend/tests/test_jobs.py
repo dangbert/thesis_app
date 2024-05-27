@@ -1,8 +1,10 @@
 import jobRunner
 from app.models.job import Job, JobStatus, JobType, AI_FEEDBACK_JOB_DATA
+from app.models import Feedback
 import tests.dummy as dummy
 from app.routes.attempts import build_feedback_job_for_attempt
 from app.hardcoded import SMARTData, FeedbackData
+import pytest_mock
 
 
 def test_pop_next_pending_job(session):
@@ -45,7 +47,17 @@ def test_pop_next_pending_job(session):
 # TODO: also test in test_attempts.py that creating an attempt also creates an associated job!
 
 
-def test_ai_feedback_job(session):
+def test_ai_feedback_job(session, mocker: pytest_mock.MockerFixture):
+    simulated_feedback = "simulated feedback from GPT-3"
+    simulated_cost = 0.0042
+
+    # mock GPT API calls
+    mock = mocker.patch("app.feedback_utils.GPTModel.__call__")
+    mock.return_value = ([simulated_feedback], [])
+
+    mock2 = mocker.patch("app.feedback_utils.GPTModel.compute_price")
+    mock2.return_value = simulated_cost
+
     course, assignment, teacher, student = dummy.init_simple_course(session)
 
     attempt = dummy.make_attempt(session, assignment.id, student.id)
@@ -56,9 +68,9 @@ def test_ai_feedback_job(session):
     assert attempt.feedbacks == []
 
     job.run(session)
-    # TODO: mock GPT call
-
     assert job.status == JobStatus.COMPLETED
+    assert session.query(Feedback).count() == 1, "1 feedback should be created"
+
     session.refresh(attempt)
     assert len(attempt.feedbacks) == 1
     feedback = attempt.feedbacks[0]
@@ -66,3 +78,6 @@ def test_ai_feedback_job(session):
     assert feedback.is_ai and feedback.user_id is None
 
     feedback_data = FeedbackData(**feedback.data)  # should validate
+
+    assert feedback_data.feedback == simulated_feedback
+    assert feedback_data.cost == simulated_cost

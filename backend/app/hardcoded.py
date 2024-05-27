@@ -16,6 +16,8 @@ class FeedbackData(BaseModel):
     """Schema for validating the Feedback.data column."""
 
     feedback: str
+    prompt: Optional[str] = None  # prompt given to GPT model if any
+    cost: float = 0.0  # GPT cost in USD (if any)
     other_comments: Optional[str] = None
     approved: bool  # whether the feedback is approved by the teacher
     score: Optional[int] = None
