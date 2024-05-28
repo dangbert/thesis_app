@@ -107,7 +107,7 @@ const HomePage = () => {
             variant="h6"
             style={{ flexGrow: 1, marginLeft: theme.spacing(2) }}
           >
-            Ezfeedback
+            EzFeedback
           </Typography>
           <div>
             <IconButton

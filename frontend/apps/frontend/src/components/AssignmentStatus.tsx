@@ -17,9 +17,13 @@ import {
   Checkbox,
   IconButton,
   Tooltip,
-  FormControlLabel,
   Switch,
   Box,
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
 } from '@mui/material';
 import { visuallyHidden } from '@mui/utils';
 import { alpha } from '@mui/material/styles';
@@ -37,6 +41,7 @@ import * as models from '../models';
 import * as API from '../api';
 import * as constants from '../constants';
 import { useUserContext } from '../providers';
+import * as utils from '../utils';
 
 interface AssignmentStatusProps {
   asData: AssignmentPublic;
@@ -44,6 +49,11 @@ interface AssignmentStatusProps {
 }
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
+  if (orderBy === 'last_attempt_date') {
+    const dateA = new Date(a[orderBy] as string).getTime();
+    const dateB = new Date(b[orderBy] as string).getTime();
+    return dateB < dateA ? -1 : dateB > dateA ? 1 : 0;
+  }
   if (b[orderBy] < a[orderBy]) {
     return -1;
   }
@@ -75,6 +85,7 @@ interface RowData {
   submissions: number;
   status: string;
   role: string;
+  last_attempt_date: string;
 }
 
 interface HeadCell {
@@ -98,16 +109,22 @@ const headCells: readonly HeadCell[] = [
     label: 'Email',
   },
   {
+    id: 'role',
+    numeric: false,
+    disablePadding: false,
+    label: 'role',
+  },
+  {
     id: 'group',
     numeric: true,
     disablePadding: false,
     label: 'Group',
   },
   {
-    id: 'role',
+    id: 'status',
     numeric: false,
     disablePadding: false,
-    label: 'role',
+    label: 'Assignment Status',
   },
   {
     id: 'submissions',
@@ -116,10 +133,10 @@ const headCells: readonly HeadCell[] = [
     label: 'Submissions',
   },
   {
-    id: 'status',
+    id: 'last_attempt_date',
     numeric: false,
     disablePadding: false,
-    label: 'Assignment Status',
+    label: 'Last Submission',
   },
 ];
 
@@ -201,6 +218,7 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
     })();
   }, [asData.id, userCtx.user?.id, reloadTime]);
 
+  const [groupFilter, setGroupFilter] = useState<'all' | 'even' | 'odd'>('all');
   const [order, setOrder] = React.useState<Order>('asc');
   const [orderBy, setOrderBy] = React.useState<keyof RowData>('name');
   const [page, setPage] = React.useState(0);
@@ -214,6 +232,9 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
     role: s.role,
     group: -1, // TODO todo for now
     submissions: s.attempt_count,
+    last_attempt_date: s.last_attempt_date
+      ? utils.friendlyDate(s.last_attempt_date)
+      : '',
     status: s.status,
   }));
 
@@ -241,6 +262,12 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
     setDense(event.target.checked);
   };
 
+  const applyGroupFilter = (row: RowData) => {
+    if (groupFilter === 'all') return true;
+    if (groupFilter === 'even') return row.group % 2 === 0;
+    return Math.abs(row.group % 2) === 1;
+  };
+
   // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
@@ -250,14 +277,41 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
       rows
         .slice()
         .sort(getComparator(order, orderBy))
-        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-    [JSON.stringify(statusData), order, orderBy, page, rowsPerPage]
+        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+        .filter(applyGroupFilter),
+    [JSON.stringify(statusData), order, orderBy, page, rowsPerPage, groupFilter]
+  );
+
+  const groupControls = (
+    <FormControl component="fieldset">
+      <FormLabel component="legend">Show Groups:</FormLabel>
+      <RadioGroup
+        row
+        name="goal"
+        value={groupFilter}
+        onChange={(event) =>
+          setGroupFilter(event.target.value as 'all' | 'even' | 'odd')
+        }
+      >
+        <FormControlLabel
+          value="all"
+          control={<Radio />}
+          label="All"
+          // disabled={readOnly}
+        />
+        <FormControlLabel value="even" control={<Radio />} label="Even" />
+        <FormControlLabel value="odd" control={<Radio />} label="Odd" />
+      </RadioGroup>
+    </FormControl>
   );
 
   // TODO: use MIT DataGrid! https://mui.com/x/react-data-grid/#mit-version-free-forever
   if (!userCtx.user) return null;
   return (
-    <Paper sx={{ width: '100%', mb: 2 }} elevation={2}>
+    <Paper
+      sx={{ width: '100%', mb: 2, padding: '0px 14px 0px 14px' }}
+      elevation={2}
+    >
       {error && <Alert severity="error">{error}</Alert>}
       <Toolbar
         sx={{
@@ -320,10 +374,11 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
                   <TableCell align="left">
                     <a href={'mailto:' + row.email}>{row.email}</a>
                   </TableCell>
-                  <TableCell align="left">{row.group}</TableCell>
                   <TableCell align="left">{row.role}</TableCell>
-                  <TableCell align="left">{row.submissions}</TableCell>
+                  <TableCell align="left">{row.group}</TableCell>
                   <TableCell align="left">{row.status}</TableCell>
+                  <TableCell align="left">{row.submissions}</TableCell>
+                  <TableCell align="left">{row.last_attempt_date}</TableCell>
                 </TableRow>
               );
             })}
@@ -339,16 +394,19 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
           </TableBody>
         </Table>
       </TableContainer>
-      <TablePagination
-        rowsPerPageOptions={[25, 50, 100, { label: 'All', value: -1 }]}
-        component="div"
-        count={rows.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
-      <Box sx={{ paddingLeft: '14px' }}>
+      {rowsPerPage !== -1 && (
+        <TablePagination
+          rowsPerPageOptions={[25, 50, 100, { label: 'All', value: -1 }]}
+          component="div"
+          count={rows.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
+      )}
+      <Box style={{ display: 'flex', gap: '36px', marginTop: '12px' }}>
+        {groupControls}
         <FormControlLabel
           control={<Switch checked={dense} onChange={handleChangeDense} />}
           label="Dense padding"

@@ -97,7 +97,11 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
         </Alert>
       )}
       {!creatingAttempt && (
-        <Button variant="contained" onClick={() => setCreatingAttempt(true)}>
+        <Button
+          variant="contained"
+          onClick={() => setCreatingAttempt(true)}
+          sx={{ marginTop: '14px' }}
+        >
           New Submission
         </Button>
       )}
