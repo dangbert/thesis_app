@@ -55,7 +55,7 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
 
   if (!userCtx.user) return null;
   return (
-    <div style={{ border: '2px dashed purple' }}>
+    <div>
       <Snackbar
         open={snackbarTxt !== ''}
         autoHideDuration={constants.SNACKBAR_DUR_MS}
@@ -81,19 +81,12 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
       {isTeacher && (
         <>
           <AssignmentStatus asData={asData} />
-          <hr />
-          <br />
           <br />
         </>
       )}
 
-      {!creatingAttempt && (
-        <Button variant="contained" onClick={() => setCreatingAttempt(true)}>
-          New Submission
-        </Button>
-      )}
       <Typography variant="h6" component="h4" style={{ marginTop: '24px' }}>
-        Your submission history:
+        Your submissions:
       </Typography>
       {attempts.length === 0 && (
         <Alert
@@ -102,6 +95,11 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
         >
           You've made no submissions on this assignment yet!
         </Alert>
+      )}
+      {!creatingAttempt && (
+        <Button variant="contained" onClick={() => setCreatingAttempt(true)}>
+          New Submission
+        </Button>
       )}
 
       {creatingAttempt && (

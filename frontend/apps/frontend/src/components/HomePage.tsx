@@ -98,7 +98,7 @@ const HomePage = () => {
   return (
     <div className={classes.fullHeightDiv}>
       {/* header bar */}
-      <AppBar position="static">
+      <AppBar position="sticky">
         <Toolbar>
           {/* <IconButton edge="start" color="inherit" aria-label="menu">
             <MenuIcon />
@@ -203,7 +203,7 @@ const useStyles = makeStyles((theme) => ({
     width: '100vw',
     margin: 0,
     padding: 0,
-    overflow: 'hidden', // Optional: to manage overflow of child components
+    overflowY: 'scroll', // Optional: to manage overflow of child components
   },
   centeredContent: {
     display: 'flex',

@@ -205,7 +205,7 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
   const [orderBy, setOrderBy] = React.useState<keyof RowData>('name');
   const [page, setPage] = React.useState(0);
   const [dense, setDense] = React.useState(false);
-  const [rowsPerPage, setRowsPerPage] = React.useState(100);
+  const [rowsPerPage, setRowsPerPage] = React.useState(-1); // show all
 
   const rows = statusData.map((s) => ({
     id: s.student.id,
@@ -257,106 +257,104 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
   // TODO: use MIT DataGrid! https://mui.com/x/react-data-grid/#mit-version-free-forever
   if (!userCtx.user) return null;
   return (
-    <div>
+    <Paper sx={{ width: '100%', mb: 2 }} elevation={2}>
       {error && <Alert severity="error">{error}</Alert>}
-      <Box sx={{ width: '100%' }}>
-        <Paper sx={{ width: '100%', mb: 2 }}>
-          <Toolbar
-            sx={{
-              pl: { sm: 2 },
-              pr: { xs: 1, sm: 1 },
-            }}
-          >
-            <Typography
-              sx={{ flex: '1 1 100%' }}
-              variant="h6"
-              id="tableTitle"
-              component="div"
-            >
-              Course Members
-            </Typography>
-            <>
-              <Tooltip title="Filter list">
+      <Toolbar
+        sx={{
+          pl: { sm: 2 },
+          pr: { xs: 1, sm: 1 },
+        }}
+      >
+        <Typography
+          sx={{ flex: '1 1 100%' }}
+          variant="h6"
+          id="tableTitle"
+          component="div"
+        >
+          Course Members ({statusData.length})
+        </Typography>
+        <>
+          {/* <Tooltip title="Filter list">
                 <IconButton>
                   <FilterListIcon />
                 </IconButton>
-              </Tooltip>
+              </Tooltip> */}
 
-              <Tooltip title="Filter list">
-                <span>
-                  <LoadingButton
-                    onClick={() => setReloadTime(Date.now() / 1000)}
-                    color="primary"
-                    loading={loading}
-                    disabled={loading}
-                  >
-                    Refresh Table
-                  </LoadingButton>
-                </span>
-              </Tooltip>
-            </>
-          </Toolbar>
-          <TableContainer>
-            <Table
-              sx={{ minWidth: 750 }}
-              aria-labelledby="tableTitle"
-              size={dense ? 'small' : 'medium'}
-              stickyHeader
-            >
-              <EnhancedTableHead
-                order={order}
-                orderBy={orderBy}
-                onRequestSort={handleRequestSort}
-                rowCount={rows.length}
-              />
-              <TableBody>
-                {visibleRows.map((row, index) => {
-                  return (
-                    <TableRow
-                      hover
-                      tabIndex={-1}
-                      key={row.id}
-                      sx={{ cursor: 'pointer' }}
-                    >
-                      <TableCell align="left">{row.name}</TableCell>
-                      <TableCell align="left">
-                        <a href={'mailto:' + row.email}>{row.email}</a>
-                      </TableCell>
-                      <TableCell align="left">{row.group}</TableCell>
-                      <TableCell align="left">{row.role}</TableCell>
-                      <TableCell align="left">{row.submissions}</TableCell>
-                      <TableCell align="left">{row.status}</TableCell>
-                    </TableRow>
-                  );
-                })}
-                {emptyRows > 0 && (
-                  <TableRow
-                    style={{
-                      height: (dense ? 33 : 53) * emptyRows,
-                    }}
-                  >
-                    <TableCell colSpan={6} />
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={rows.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
+          <Tooltip title="Filter list">
+            <span>
+              <LoadingButton
+                onClick={() => setReloadTime(Date.now() / 1000)}
+                color="primary"
+                loading={loading}
+                disabled={loading}
+              >
+                Refresh Table
+              </LoadingButton>
+            </span>
+          </Tooltip>
+        </>
+      </Toolbar>
+      <TableContainer sx={{ maxHeight: '60vh' }}>
+        <Table
+          sx={{ minWidth: 750 }}
+          aria-labelledby="tableTitle"
+          size={dense ? 'small' : 'medium'}
+          stickyHeader
+        >
+          <EnhancedTableHead
+            order={order}
+            orderBy={orderBy}
+            onRequestSort={handleRequestSort}
+            rowCount={rows.length}
           />
-        </Paper>
+          <TableBody>
+            {visibleRows.map((row, index) => {
+              return (
+                <TableRow
+                  hover
+                  tabIndex={-1}
+                  key={row.id}
+                  sx={{ cursor: 'pointer' }}
+                >
+                  <TableCell align="left">{row.name}</TableCell>
+                  <TableCell align="left">
+                    <a href={'mailto:' + row.email}>{row.email}</a>
+                  </TableCell>
+                  <TableCell align="left">{row.group}</TableCell>
+                  <TableCell align="left">{row.role}</TableCell>
+                  <TableCell align="left">{row.submissions}</TableCell>
+                  <TableCell align="left">{row.status}</TableCell>
+                </TableRow>
+              );
+            })}
+            {emptyRows > 0 && (
+              <TableRow
+                style={{
+                  height: (dense ? 33 : 53) * emptyRows,
+                }}
+              >
+                <TableCell colSpan={6} />
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <TablePagination
+        rowsPerPageOptions={[25, 50, 100, { label: 'All', value: -1 }]}
+        component="div"
+        count={rows.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
+      <Box sx={{ paddingLeft: '14px' }}>
         <FormControlLabel
           control={<Switch checked={dense} onChange={handleChangeDense} />}
           label="Dense padding"
         />
       </Box>
-    </div>
+    </Paper>
   );
 };
 
