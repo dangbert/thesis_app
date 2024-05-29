@@ -7,12 +7,12 @@ import app.models as models
 import app.models.schemas as schemas
 import tests.dummy as dummy
 import pytest_mock
-from app.routes.auth import oauth, USE_CONNECTION, LOGIN_URL
+from app.routes.auth import oauth, LOGIN_URL
 
 settings = get_settings()
 
 
-def test_login(client: TestClient, session, mocker: pytest_mock.MockerFixture):
+def test_login(client: TestClient, mocker: pytest_mock.MockerFixture):
     # user = dummy.make_user(session)
     mock = mocker.patch.object(oauth.auth0, "authorize_redirect")
     mock.return_value = RedirectResponse(f"https://{settings.auth0_domain}/login/", 302)
@@ -21,7 +21,7 @@ def test_login(client: TestClient, session, mocker: pytest_mock.MockerFixture):
     mock.assert_called_once_with(
         mocker.ANY,
         "http://localhost:2222/api/v1/auth/callback",
-        connection=USE_CONNECTION,
+        connection="google-oauth2",
     )
     assert res.is_redirect
 

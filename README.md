@@ -9,7 +9,7 @@ This repo corresponds to my VU A.I. Master's thesis project.
 For instructions on running the website locally see [./docker/README.md](./docker/README.md)
 
 
-For instructions on how to deploy the ezfeedback site for production use, see [../terraform/README.md](../terraform/README.md)!
+For instructions on how to deploy the ezfeedback site for production use, see [./terraform/README.md](./terraform/README.md)!
 
 ### Experiments
 Install dependencies:

@@ -61,7 +61,7 @@ class AI_FEEDBACK_JOB_DATA(BaseModel):
 
     def custom_dump_dict(self):
         # hack to avoid sqlalchemy.exc.StatementError: (builtins.TypeError) Object of type UUID is not JSON serializable
-        return json.loads(json.dumps(self.dict(), default=str))
+        return json.loads(json.dumps(self.model_dump(), default=str))
 
 
 def _run_ai_feedback(job: Job, session: Session):
@@ -80,7 +80,7 @@ def _run_ai_feedback(job: Job, session: Session):
         return
 
     attempt_id = job_data.attempt_id
-    attempt = session.query(Attempt).get(attempt_id)
+    attempt = session.get(Attempt, attempt_id)
     if attempt is None:
         logger.error(
             f"Attempt with id {attempt_id} not found but referenced in job {job}"

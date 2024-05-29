@@ -68,6 +68,8 @@ class Settings(BaseSettings):
     auth0_domain: str
     auth0_client_id: str
     auth0_client_secret: str
+    # auth0 connection type to use for login
+    auth0_connection: Literal["google-oauth2", "email"] = "google-oauth2"
 
     # OpenAI
     openai_api_key: str

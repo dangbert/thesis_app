@@ -46,6 +46,23 @@ def get_assignment_or_fail(
 
 
 ### courses
+@router.get("/enroll", status_code=200)
+async def enroll_in_course(
+    user: AuthUserDep, invite_key: str, session: SessionDep
+) -> CoursePublic:
+    """Join the provided course (if the correct invite code is provided)."""
+    course = session.query(Course).filter_by(invite_key=invite_key).first()
+    if not course:
+        raise HTTPException(status_code=400, detail="invalid invite key")
+    existing_role = user.get_course_role(session, course.id)
+    if existing_role:
+        return course.to_public(your_role=user.get_course_role(session, course.id))
+
+    target_role = CourseRole.STUDENT  # TODO: could support a teacher_invite_key
+    user.enroll(session, course, target_role)
+    return course.to_public(your_role=target_role)
+
+
 @router.get("/")
 async def list_courses(user: AuthUserDep, session: SessionDep) -> list[CoursePublic]:
     links = session.query(CourseUserLink).filter_by(user_id=user.id).all()

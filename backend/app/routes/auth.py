@@ -19,7 +19,6 @@ logger = get_logger(__name__)
 IMPORTANT_LOGIN_STATE = {"destination"}  # import field in session to preserve
 
 
-USE_CONNECTION = "google-oauth2"  # set to "email" for passwordless login
 settings = get_settings()
 LOGIN_URL = (
     f"{settings.site_url}{settings.api_v1_str}/auth/login"  # request.url_for("login")
@@ -100,7 +99,7 @@ async def login(
         request,
         redirect_uri,
         # adding the connection parameter sends the user directly to the Google login page (skipping an auth0 intermediary page)
-        connection=USE_CONNECTION,
+        connection=settings.auth0_connection,
     )
 
 

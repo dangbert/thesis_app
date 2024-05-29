@@ -82,6 +82,31 @@ def test_get_course(client, settings, session):
         ) == course1.to_public(your_role=role)
 
 
+def test_enroll_in_course(client, settings, session):
+    course = dummy.make_course(session)
+    user = dummy.make_user(session)
+    dummy.assert_not_authenticated(
+        client.get(
+            f"{settings.api_v1_str}/course/enroll", params={"invite_key": "fake"}
+        )
+    )
+
+    dummy.login_user(client, user)
+    assert not user.can_view(session, course)
+    res = client.get(
+        f"{settings.api_v1_str}/course/enroll", params={"invite_key": "fake"}
+    )
+    assert res.status_code == 400 and res.json()["detail"] == "invalid invite key"
+    res = client.get(
+        f"{settings.api_v1_str}/course/enroll", params={"invite_key": course.invite_key}
+    )
+
+    assert res.status_code == 200
+    assert user.can_view(session, course) and not user.can_view(
+        session, course, edit=True
+    )
+
+
 def test_list_assignments(client, settings, session):
     user = dummy.make_user(session)
     course = make_course(session)
