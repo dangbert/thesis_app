@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     api_v1_str: str = "/api/v1"
     server_name: str  # e.g. "http://localhost:8000" or "example.com"
 
+    # only allow user signups with a valid invite code
+    invite_only_signup: bool = True
+
     @property
     def site_url(self):
         if self.server_name.startswith("http"):

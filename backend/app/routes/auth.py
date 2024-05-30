@@ -6,6 +6,7 @@ from authlib.integrations.base_client import OAuthError, MismatchingStateError
 from starlette.datastructures import URL
 from starlette.responses import RedirectResponse
 from sqlalchemy import select
+from app.models.course import Course, CourseRole
 from typing import Optional
 
 from app.deps import SessionDep
@@ -16,7 +17,10 @@ import app.hardcoded as hardcoded
 
 logger = get_logger(__name__)
 
-IMPORTANT_LOGIN_STATE = {"destination"}  # import field in session to preserve
+IMPORTANT_LOGIN_STATE = {
+    "destination",
+    "invite_key",
+}  # import field in session to preserve
 
 
 settings = get_settings()
@@ -91,7 +95,8 @@ async def login(
         )
     _cleanup_session(request)
     request.session["destination"] = destination  # remember for later
-    # TODO: validate invite_key and save in session
+    if invite_key:
+        request.session["invite_key"] = invite_key
 
     # after login, have Auth0 redirect to the /callback endpoint
     redirect_uri = f"{settings.site_url}{settings.api_v1_str}/auth/callback"
@@ -128,9 +133,15 @@ async def callback(request: Request, session: SessionDep):
     user_info = Auth0UserInfo.model_validate(token["userinfo"])
     logger.info(f"Received authenticated user: {user_info.email}")
 
+    invite_key = request.session.get("invite_key")
+    invite_course = None
+    if invite_key:
+        invite_course = session.query(Course).filter_by(invite_key=invite_key).first()
+
     # check if user exists in database and handle appropriately
     statement = select(User).where(User.email == user_info.email)
     user = session.execute(statement).scalars().first()
+
     if not user:
         if not hardcoded.email_can_signup(user_info.email):
             logger.warning(f"Rejecting unauthorized email: '{user_info.email}'")
@@ -138,11 +149,28 @@ async def callback(request: Request, session: SessionDep):
                 status_code=403,
                 detail="Only VU emails are permitted at present, please login with your vu.nl email.",
             )
+        if settings.invite_only_signup and not invite_course:
+            if not invite_key:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Invite link required to sign up, please request from your teacher.",
+                )
+            raise HTTPException(
+                status_code=403,
+                detail="Invalid invite link, please request a new one from your teacher.",
+            )
+
         logger.info(f"Creating new user not found in database: '{user_info.email}'")
         user = User(email=user_info.email, name=user_info.name, sub=user_info.sub)
         session.add(user)
         session.commit()
         session.refresh(user)
+
+    if invite_course:
+        if not user.get_course_role(session, invite_course.id):
+            target_role = CourseRole.STUDENT  # TODO: could support a teacher_invite_key
+            user.enroll(session, invite_course, target_role)
+            logger.info(f"Enrolled user {user.email} in course {invite_course.id}")
 
     destination = request.session.get("destination") or "/"
     if not is_relative_url(URL(destination)):

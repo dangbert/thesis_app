@@ -25,6 +25,10 @@ def test_login(client: TestClient, mocker: pytest_mock.MockerFixture):
     )
     assert res.is_redirect
 
+    # TODO: test invite_key and destination are stored in session when provided
+    # for params in [{"invite_key": "1234"}, {"destination": "/example"}, {"invite_key": "1234", "destination": "/example"}]:
+    #     res = client.get(f"{settings.api_v1_str}/auth/login", params=params)
+
 
 def test_logout(client: TestClient, session):
     user = dummy.make_user(session)
@@ -56,6 +60,8 @@ def test_callback(
             "extra": "extra",
         }
     }
+
+    # TODO: test also with invite_only_signup=True
 
     # note default TestClientbase_url is "http://testserver"
     client.cookies.clear()  # User is not logged in
