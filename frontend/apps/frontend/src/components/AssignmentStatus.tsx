@@ -204,14 +204,14 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
       console.log(`requesting assignment status ${asData.id}`);
 
       setLoading(true);
+      setError(error);
       const res = await API.getAssignmentStatus(asData.course_id, asData.id);
       if (cancel) return;
       if (res.error) {
         console.error(res.error);
         setStatusData([]);
-      } else {
-        setStatusData(res.data);
-      }
+        setError(error);
+      } else setStatusData(res.data);
       setLoading(false);
 
       return () => (cancel = true);
@@ -272,15 +272,21 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
-  const visibleRows = React.useMemo(
-    () =>
-      rows
-        .slice()
-        .sort(getComparator(order, orderBy))
-        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-        .filter(applyGroupFilter),
-    [JSON.stringify(statusData), order, orderBy, page, rowsPerPage, groupFilter]
-  );
+  const visibleRows = React.useMemo(() => {
+    let tmp = rows.slice().sort(getComparator(order, orderBy));
+    if (rowsPerPage !== -1)
+      tmp = tmp.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+    return tmp.filter(applyGroupFilter);
+  }, [
+    JSON.stringify(statusData),
+    order,
+    orderBy,
+    page,
+    rowsPerPage,
+    groupFilter,
+  ]);
+  console.log('visibleRows = ');
+  console.log(visibleRows);
 
   const groupControls = (
     <FormControl component="fieldset">
@@ -325,7 +331,7 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
           id="tableTitle"
           component="div"
         >
-          Course Members ({statusData.length})
+          Course Members (showing {visibleRows.length}/{rows.length})
         </Typography>
         <>
           {/* <Tooltip title="Filter list">

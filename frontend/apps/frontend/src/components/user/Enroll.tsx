@@ -36,6 +36,7 @@ export default function Enroll() {
     (async () => {
       console.log('requesting course list');
       setLoading(true);
+      setError('');
       const res = await api.getEnrollDetails(inviteKey);
       if (cancel) return;
       setLoading(false);

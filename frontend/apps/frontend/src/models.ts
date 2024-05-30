@@ -4,7 +4,7 @@
 interface BaseFields {
   id: string;
   created_at: string;
-  updated_at?: string; // TODO: maybe should be string | null
+  updated_at: string | null;
 }
 
 /* must match backend/app/hardcoded.py */
@@ -15,10 +15,10 @@ export interface SMARTData {
 
 export interface FeedbackData {
   feedback: string;
-  other_comments?: string;
+  other_comments: string | null;
   approved: boolean;
-  score?: number;
-  metrics?: EvalMetrics;
+  score: number | null;
+  metrics: EvalMetrics | null;
 }
 
 export interface EvalMetrics {
@@ -31,7 +31,7 @@ export interface UserPublic extends BaseFields {
   name: string;
   email: string;
   // TODO: store in DB
-  picture?: string;
+  picture?: string | null;
 }
 
 export enum CourseRole {
@@ -45,9 +45,9 @@ export interface CourseCreate {
 }
 
 export interface CoursePublic extends CourseCreate, BaseFields {
-  your_role?: CourseRole;
-  invite_role?: CourseRole;
-  your_group?: number;
+  your_role: CourseRole | null;
+  invite_role: CourseRole | null;
+  your_group: number | null;
 }
 
 export interface AssignmentCreate {
@@ -86,9 +86,9 @@ export enum AssignmentAttemptStatus {
 export interface AssignmentStudentStatus {
   student: UserPublic;
   role: CourseRole;
-  group_num?: number;
+  group_num: number | null;
   attempt_count: number;
-  last_attempt_date?: string;
+  last_attempt_date: string | null;
   status: AssignmentAttemptStatus;
 }
 
@@ -104,7 +104,7 @@ export interface FeedbackCreate {
 
 export interface FeedbackPublic extends BaseFields {
   attempt_id: string;
-  user_id?: string;
+  user_id: string | null;
   is_ai: boolean;
   data: FeedbackData;
 }

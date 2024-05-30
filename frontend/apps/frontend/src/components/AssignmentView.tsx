@@ -41,6 +41,7 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
         setAttempts([]);
         return;
       }
+      setError('');
       const res = await courseApi.listAttempts(asData.id, userCtx.user.id);
       if (cancel) return;
       if (res.error) {

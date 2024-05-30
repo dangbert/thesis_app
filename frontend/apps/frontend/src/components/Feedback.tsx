@@ -47,7 +47,8 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
     feedback: '',
     other_comments: '',
     approved: false,
-    score: undefined,
+    score: null,
+    metrics: null,
   };
 
   const [feedbackData, setFeedbackData] = useState<FeedbackData>(
@@ -75,6 +76,7 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
       return;
     }
     setSubmitting(true);
+    setError('');
     const feedbackToCreate: FeedbackCreate = {
       attempt_id: attemptId,
       data: feedbackData,

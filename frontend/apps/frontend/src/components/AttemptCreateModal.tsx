@@ -73,6 +73,7 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
 
     let cancelled = false;
     setSubmitting(true);
+    setError('');
 
     // batch upload files
     const fileUploads = files.map((file) => courseApi.createFile(file));

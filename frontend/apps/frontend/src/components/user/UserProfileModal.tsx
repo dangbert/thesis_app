@@ -38,9 +38,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
   course,
 }) => {
   const userCtx = useUserContext();
-  const [groupNum, setGroupNum] = useState<number | undefined>(
-    course.your_group
-  );
+  const [groupNum, setGroupNum] = useState<number | null>(course.your_group);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -50,6 +48,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
     }
 
     setSubmitting(true);
+    setError('');
     const res = await api.setEnrollDetails(course.id, groupNum!);
     if (res.error) {
       setError(res.error);
@@ -88,7 +87,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
           value={utils.isUndefined(groupNum) ? '' : groupNum}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             const newGroupNum = parseInt(event.target.value);
-            setGroupNum(isNaN(newGroupNum) ? undefined : newGroupNum);
+            setGroupNum(isNaN(newGroupNum) ? null : newGroupNum);
           }}
           InputLabelProps={{
             shrink: true,
