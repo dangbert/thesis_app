@@ -12,6 +12,7 @@ import {
   ListItemText,
   ListItemSecondaryAction,
   Typography,
+  Alert,
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -79,15 +80,17 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
     let failedFiles = 0;
     const fileIds = [];
     console.log('fileResults', fileResults);
+    let fileError = '';
     for (const res of fileResults) {
       if (res.error) {
         failedFiles++;
+        fileError = res.error;
       } else {
         fileIds.push(res.data.id);
       }
     }
     if (failedFiles) {
-      setError(`Failed to upload ${failedFiles} files`);
+      setError(`Failed to upload ${failedFiles} file(s): ${fileError}`);
       setSubmitting(false);
       return;
     }
@@ -124,7 +127,7 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
         Create New Attempt: {asData.name}
       </DialogTitle>
       <DialogContent>
-        {error && <div style={{ color: 'red' }}>{error}</div>}
+        {error && <Alert severity="error">{error}</Alert>}
         <TextField
           placeholder=""
           autoFocus

@@ -17,7 +17,7 @@ const NotLoggedIn = () => {
         </Typography>
         <Typography variant="h5" gutterBottom sx={{ fontStyle: 'bold' }}>
           You can login to an existing account below, otherwise ask your teacher
-          for an invite link!
+          for an invite link to signup.
         </Typography>
         <Button
           size="large"

@@ -32,7 +32,9 @@ export const jsonOrError = async (
       result.data = await res.json();
     }
   } catch (caughtError) {
-    result.error = `API error: "${caughtError}"`;
+    if (result.status === 500)
+      result.error = 'Internal server error :( please report';
+    else result.error = `API error: ${caughtError}`;
   } finally {
     if (result.data?.detail) result.error = result.data.detail; // use this error message if available
   }

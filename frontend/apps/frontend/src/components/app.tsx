@@ -10,7 +10,7 @@ import INITIAL_THEME, {
 } from '../theme';
 import Typography from '@mui/material/Typography';
 
-import Enroll from './login/Enroll';
+import Enroll from './user/Enroll';
 import HomePage from './HomePage';
 
 import { IUserProviderContext, UserContext } from '../providers';

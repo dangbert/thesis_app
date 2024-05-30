@@ -32,8 +32,6 @@ const AttemptHistory: React.FC<AttemptHistoryProps> = ({
   const [viewAttemptIdx, setViewAttemptIdx] = useState(-1);
   const [snackbarTxt, setSnackbarTxt] = useState('');
 
-  console.log('history attempts', attempts);
-
   let curAttempt = undefined;
   let curFeedback = undefined;
   if (

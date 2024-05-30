@@ -32,6 +32,7 @@ export interface UserPublic extends BaseFields {
   email: string;
   // TODO: store in DB
   picture?: string;
+  group?: number;
 }
 
 export enum CourseRole {

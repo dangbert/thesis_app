@@ -23,6 +23,7 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
   isTeacher,
 }) => {
   const [attempts, setAttempts] = useState<models.AttemptPublic[]>([]);
+  const [error, setError] = useState<string>('');
   const [attemptLoadTime, setAttemptLoadTime] = useState<number>(
     Date.now() / 1000
   );
@@ -40,11 +41,11 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
         setAttempts([]);
         return;
       }
-      console.log(`requesting attempts for assignment ${asData.id}`);
       const res = await courseApi.listAttempts(asData.id, userCtx.user.id);
       if (cancel) return;
       if (res.error) {
         console.error(res.error);
+        setError(`failed to load assignment submissions: ${res.error}`);
         setAttempts([]);
       } else {
         setAttempts(res.data);
@@ -77,6 +78,8 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
       >
         {asData.about}
       </Markdown>
+
+      {error && <Alert severity="error">{error}</Alert>}
 
       {isTeacher && (
         <>

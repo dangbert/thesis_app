@@ -13,8 +13,10 @@ import {
 } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import AssignmentView from './AssignmentView';
+import UserProfileModal from './user/UserProfileModal';
 import * as models from '../models';
 import * as courseApi from '../api';
+import * as utils from '../utils';
 import { useUserContext } from '../providers';
 import Markdown from 'react-markdown';
 
@@ -26,9 +28,9 @@ const CourseView: React.FC<CourseViewProps> = ({ course }) => {
   const [asList, setAsList] = useState<models.AssignmentPublic[]>([]); // assignments for current course
   const [asIdx, setAsIdx] = useState<number>(-1); // curent assignment index
   const [loadingAssignments, setLoadingAssignments] = useState<boolean>(true);
+  const [userProfileOpen, setUserProfileOpen] = useState<boolean>(false);
 
   const userCtx = useUserContext();
-
   const isTeacher = course.your_role === models.CourseRole.TEACHER;
   // const asData = asIdx > -1 && asIdx < asList.length ? asList[asIdx] : null;
 
@@ -37,7 +39,6 @@ const CourseView: React.FC<CourseViewProps> = ({ course }) => {
     let cancel = false;
     (async () => {
       setLoadingAssignments(true);
-      console.log(`requesting assignment list for course ${course.id}`);
       const res = await courseApi.listAssignments(course.id);
       if (cancel) return;
       setLoadingAssignments(false);
@@ -45,7 +46,6 @@ const CourseView: React.FC<CourseViewProps> = ({ course }) => {
         console.error(res.error);
         setAsList([]);
       } else {
-        console.log('fetched assignment list\n', res.data);
         setAsList(res.data);
         setAsIdx(res.data.length > 0 ? 0 : -1);
       }
@@ -71,6 +71,9 @@ const CourseView: React.FC<CourseViewProps> = ({ course }) => {
   };
 
   if (!userCtx.user) return null;
+  const mustCompleteProfile =
+    utils.isUndefined(userCtx.user.group) && !isTeacher;
+  if (mustCompleteProfile && !userProfileOpen) setUserProfileOpen(true);
   return (
     <div>
       <Card variant="outlined">
@@ -90,6 +93,17 @@ const CourseView: React.FC<CourseViewProps> = ({ course }) => {
           </Markdown>
         </CardContent>
       </Card>
+
+      {/* force user to define group number */}
+      {userProfileOpen && (
+        <UserProfileModal
+          course={course}
+          open={mustCompleteProfile}
+          onClose={
+            mustCompleteProfile ? undefined : () => setUserProfileOpen(false)
+          }
+        />
+      )}
 
       <br />
       <br />

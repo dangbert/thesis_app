@@ -14,6 +14,7 @@ import {
   Icon,
   Alert,
   Card,
+  Tooltip,
 } from '@mui/material';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -26,11 +27,13 @@ import { useUserContext } from '../providers';
 import * as models from '../models';
 import * as courseApi from '../api';
 import * as constants from '../constants';
-import NotLoggedIn from './login/NotLoggedIn';
+import * as utils from '../utils';
+import NotLoggedIn from './user/NotLoggedIn';
 
 const HomePage = () => {
   const [courseList, setCourseList] = useState<models.CoursePublic[]>([]);
   const [loadingCourses, setLoadingCourses] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
   const [courseIdx, setCourseIdx] = useState<number>(-1);
   const userCtx = useUserContext();
   const theme = useTheme();
@@ -46,9 +49,8 @@ const HomePage = () => {
       if (cancel) return;
       if (res.error) {
         console.error(`failed to load current user: ${res.error}`);
+        setError(`failed to load current user: ${res.error}`);
       } else {
-        console.log('fetched attempt list\n', res.data);
-        console.log('loaded user:');
         console.log(res.data);
         userCtx.onChange(res.data);
       }
@@ -61,7 +63,6 @@ const HomePage = () => {
   useEffect(() => {
     let cancel = false;
     (async () => {
-      console.log('requesting course list');
       setLoadingCourses(true);
       const res = await courseApi.listCourses();
       if (cancel) return;
@@ -69,8 +70,8 @@ const HomePage = () => {
       if (res.error) {
         console.error(res.error);
         setCourseList([]);
+        setError(`failed to load course list: ${res.error}`);
       } else {
-        console.log('fetched course list\n', res.data);
         setCourseIdx(res.data.length > 0 ? 0 : -1);
         setCourseList(res.data);
       }
@@ -103,17 +104,19 @@ const HomePage = () => {
             EzFeedback
           </Typography>
           <div>
-            <IconButton
-              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
-                if (userCtx.user) setUserMenuEl(event.currentTarget); // open user menu
-              }}
-            >
-              {userCtx.user && userCtx.user.picture ? (
-                <Avatar alt={userCtx.user.name} src={userCtx.user.picture} />
-              ) : (
-                <Avatar {...stringAvatar(userCtx.user.name)} />
-              )}
-            </IconButton>
+            <Tooltip title={`Logged in as ${userCtx.user.email}`}>
+              <IconButton
+                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                  if (userCtx.user) setUserMenuEl(event.currentTarget); // open user menu
+                }}
+              >
+                {userCtx.user && userCtx.user.picture ? (
+                  <Avatar alt={userCtx.user.name} src={userCtx.user.picture} />
+                ) : (
+                  <Avatar {...stringAvatar(userCtx.user.name)} />
+                )}
+              </IconButton>
+            </Tooltip>
 
             <Menu
               anchorEl={userMenuEl}
@@ -135,6 +138,7 @@ const HomePage = () => {
       </AppBar>
 
       {/* main content */}
+      {error && <Alert severity="error">{error}</Alert>}
 
       <div className={classes.centeredContent}>
         {/*map courselist to simple list of names */}
@@ -152,39 +156,10 @@ const HomePage = () => {
   );
 };
 
-function getInitials(name: string): string {
-  const firstname = name.split(' ')[0];
-  // get last name considering there may be a middle name
-  const lastname = name.split(' ').slice(-1)[0];
-  if (name.split(' ').length >= 2) {
-    return firstname[0] + lastname[0];
-  }
-  return firstname[0];
-}
-
-// from https://mui.com/material-ui/react-avatar/#letter-avatars
-function stringToColor(string: string) {
-  let hash = 0;
-  let i;
-
-  /* eslint-disable no-bitwise */
-  for (i = 0; i < string.length; i += 1) {
-    hash = string.charCodeAt(i) + ((hash << 5) - hash);
-  }
-
-  let color = '#';
-  for (i = 0; i < 3; i += 1) {
-    const value = (hash >> (i * 8)) & 0xff;
-    color += `00${value.toString(16)}`.slice(-2);
-  }
-  /* eslint-enable no-bitwise */
-  return color;
-}
-
 function stringAvatar(name: string) {
   return {
     sx: {
-      bgcolor: stringToColor(name),
+      bgcolor: utils.stringToColor(name),
     },
     children: `${name.split(' ')[0][0]}${name.split(' ')[1][0]}`,
   };

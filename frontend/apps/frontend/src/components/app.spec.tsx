@@ -1,9 +1,9 @@
 import { render } from '@testing-library/react';
 
 // import App from './app';
-import Enroll from './login/Enroll';
+import Enroll from './user/Enroll';
 
-import NotLoggedIn from './login/NotLoggedIn';
+import NotLoggedIn from './user/NotLoggedIn';
 
 // disabled due to ReferenceError: fetch is not defined
 /*

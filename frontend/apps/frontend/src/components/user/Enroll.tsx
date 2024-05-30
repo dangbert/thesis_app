@@ -24,11 +24,7 @@ export default function Enroll() {
   const [course, setCourse] = useState<models.CoursePublic | null>();
   const [loading, setLoading] = useState(true);
 
-  // const handleRedirect = () => {
-  //   window.location.href = LOGIN_URL; // force page reload
-  // };
-
-  // load course list
+  // load course details
   useEffect(() => {
     let cancel = false;
     if (!inviteKey) {
@@ -48,6 +44,7 @@ export default function Enroll() {
         setCourse(null);
       } else {
         setCourse(res.data);
+        // TODO: if course.your_role already exists, notify user and redirect to course page
       }
       return () => (cancel = true);
     })();
