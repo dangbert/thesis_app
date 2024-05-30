@@ -25,6 +25,7 @@ import { useUserContext } from '../../providers';
 interface UserProfileModalProps {
   open: boolean;
   onClose?: () => void;
+  onUpdate: () => void; // callback after form is submitted
   course: models.CoursePublic;
 }
 /**
@@ -33,16 +34,31 @@ interface UserProfileModalProps {
 const UserProfileModal: React.FC<UserProfileModalProps> = ({
   open,
   onClose,
+  onUpdate,
   course,
 }) => {
   const userCtx = useUserContext();
   const [groupNum, setGroupNum] = useState<number | undefined>(
-    userCtx.user?.group
+    course.your_group
   );
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = () => {};
+  const handleSubmit = async () => {
+    if (!userCtx.user || utils.isUndefined(groupNum)) {
+      return;
+    }
+
+    setSubmitting(true);
+    const res = await api.setEnrollDetails(course.id, groupNum!);
+    if (res.error) {
+      setError(res.error);
+    } else {
+      onUpdate();
+      if (onClose) onClose();
+    }
+    setSubmitting(false);
+  };
 
   const canSubmit = !utils.isUndefined(groupNum);
   if (!userCtx) return <div>not logged in</div>;
@@ -66,16 +82,16 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
         <br />
         <TextField
-          sx={{ marginTop: '10px', maxWidth: '200px' }}
+          sx={{ marginTop: '30px', maxWidth: '200px' }}
           type="number"
           label="Group Number"
-          value={utils.isUndefined(groupNum) ? '' : groupNum} // Bind state to the TextField value
+          value={utils.isUndefined(groupNum) ? '' : groupNum}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             const newGroupNum = parseInt(event.target.value);
             setGroupNum(isNaN(newGroupNum) ? undefined : newGroupNum);
           }}
           InputLabelProps={{
-            shrink: true, // Ensures the label does not overlap with the input value
+            shrink: true,
           }}
         />
       </DialogContent>

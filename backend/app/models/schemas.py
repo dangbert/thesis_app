@@ -92,6 +92,7 @@ class AssignmentStudentStatus(BaseModel):
 
     student: UserPublic
     role: CourseRole
+    group_num: Optional[int] = None
     attempt_count: int = 0
     last_attempt_date: Optional[datetime] = None
     status: AssignmentAttemptStatus = AssignmentAttemptStatus.NOT_STARTED

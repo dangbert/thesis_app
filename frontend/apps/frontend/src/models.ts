@@ -32,7 +32,6 @@ export interface UserPublic extends BaseFields {
   email: string;
   // TODO: store in DB
   picture?: string;
-  group?: number;
 }
 
 export enum CourseRole {
@@ -48,6 +47,7 @@ export interface CourseCreate {
 export interface CoursePublic extends CourseCreate, BaseFields {
   your_role?: CourseRole;
   invite_role?: CourseRole;
+  your_group?: number;
 }
 
 export interface AssignmentCreate {
@@ -86,6 +86,7 @@ export enum AssignmentAttemptStatus {
 export interface AssignmentStudentStatus {
   student: UserPublic;
   role: CourseRole;
+  group_num?: number;
   attempt_count: number;
   last_attempt_date?: string;
   status: AssignmentAttemptStatus;

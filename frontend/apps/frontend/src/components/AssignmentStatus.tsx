@@ -230,7 +230,7 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
     name: s.student.name,
     email: s.student.email,
     role: s.role,
-    group: -1, // TODO todo for now
+    group: (utils.isUndefined(s.group_num) ? -1 : s.group_num) as number,
     submissions: s.attempt_count,
     last_attempt_date: s.last_attempt_date
       ? utils.friendlyDate(s.last_attempt_date)

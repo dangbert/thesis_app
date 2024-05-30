@@ -10,6 +10,7 @@ import {
   Tab,
   Box,
   AppBar,
+  Link,
 } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import AssignmentView from './AssignmentView';
@@ -22,9 +23,10 @@ import Markdown from 'react-markdown';
 
 interface CourseViewProps {
   course: models.CoursePublic;
+  refreshCourse: () => void;
 }
 
-const CourseView: React.FC<CourseViewProps> = ({ course }) => {
+const CourseView: React.FC<CourseViewProps> = ({ course, refreshCourse }) => {
   const [asList, setAsList] = useState<models.AssignmentPublic[]>([]); // assignments for current course
   const [asIdx, setAsIdx] = useState<number>(-1); // curent assignment index
   const [loadingAssignments, setLoadingAssignments] = useState<boolean>(true);
@@ -72,7 +74,7 @@ const CourseView: React.FC<CourseViewProps> = ({ course }) => {
 
   if (!userCtx.user) return null;
   const mustCompleteProfile =
-    utils.isUndefined(userCtx.user.group) && !isTeacher;
+    utils.isUndefined(course.your_group) && !isTeacher;
   if (mustCompleteProfile && !userProfileOpen) setUserProfileOpen(true);
   return (
     <div>
@@ -91,6 +93,15 @@ const CourseView: React.FC<CourseViewProps> = ({ course }) => {
           >
             {course.about}
           </Markdown>
+          <Typography variant="caption">
+            You're a {course.your_role} in this course, and your group number is{' '}
+            {utils.isUndefined(course.your_group)
+              ? 'not set'
+              : course.your_group}
+            . <br />
+            If you need to change your group number{' '}
+            <Link onClick={() => setUserProfileOpen(true)}>click here.</Link>
+          </Typography>
         </CardContent>
       </Card>
 
@@ -98,10 +109,11 @@ const CourseView: React.FC<CourseViewProps> = ({ course }) => {
       {userProfileOpen && (
         <UserProfileModal
           course={course}
-          open={mustCompleteProfile}
+          open={userProfileOpen}
           onClose={
             mustCompleteProfile ? undefined : () => setUserProfileOpen(false)
           }
+          onUpdate={refreshCourse}
         />
       )}
 

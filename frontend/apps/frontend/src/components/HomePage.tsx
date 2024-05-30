@@ -32,6 +32,7 @@ import NotLoggedIn from './user/NotLoggedIn';
 
 const HomePage = () => {
   const [courseList, setCourseList] = useState<models.CoursePublic[]>([]);
+  const [reloadTime, setReloadTime] = useState<number>(Date.now() / 1000);
   const [loadingCourses, setLoadingCourses] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
   const [courseIdx, setCourseIdx] = useState<number>(-1);
@@ -57,7 +58,7 @@ const HomePage = () => {
 
       return () => (cancel = true);
     })();
-  }, []);
+  }, [reloadTime]);
 
   // load course list
   useEffect(() => {
@@ -77,7 +78,7 @@ const HomePage = () => {
       }
       return () => (cancel = true);
     })();
-  }, []);
+  }, [reloadTime]);
 
   const curCourse =
     courseIdx > -1 && courseIdx < courseList.length
@@ -150,7 +151,12 @@ const HomePage = () => {
             invite link...
           </Alert>
         )}
-        {curCourse && <CourseView course={curCourse} />}
+        {curCourse && (
+          <CourseView
+            course={curCourse}
+            refreshCourse={() => setReloadTime(Date.now() / 1000)}
+          />
+        )}
       </div>
     </div>
   );

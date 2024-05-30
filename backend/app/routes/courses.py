@@ -212,7 +212,7 @@ async def get_assignment_status(
         .all()
     )
 
-    user_role_map = {link.user_id: link.role for link in links}
+    user_link_map = {link.user_id: link for link in links}
     user_attempt_count_map = {
         user_id: attempt_count for user_id, attempt_count in user_attempt_counts
     }
@@ -222,10 +222,20 @@ async def get_assignment_status(
     for user in users:
         # TODO: handle other statuses
         last_attempt = user_last_attempt_map.get(user.id, None)
+        user_link = user_link_map.get(user.id)
+        if not user_link:
+            # user link will always exist, but providing default for mypy
+            user_link = CourseUserLink(
+                user_id=user.id,
+                role=CourseRole.STUDENT,
+                course_id=course_id,
+                group_num=None,
+            )
+
         cur = AssignmentStudentStatus(
             student=user.to_public(),
-            # user role will always exist, but providing default for mypy
-            role=user_role_map.get(user.id, CourseRole.STUDENT),
+            role=user_link.role,
+            group_num=user_link.group_num,
             attempt_count=user_attempt_count_map.get(user.id, 0),
             last_attempt_date=last_attempt.created_at if last_attempt else None,
         )
