@@ -36,21 +36,23 @@ def test_list_courses(client, settings, session):
     assert res.status_code == 200
     assert len(res.json()) == 0
 
-    user.enroll(session, course1, CourseRole.STUDENT)
-    res = client.get(f"{settings.api_v1_str}/course/")
-    assert res.status_code == 200
-    res_list = res.json()
-    res_course = CoursePublic(**res_list[0])
-    assert (
-        res_course == course1.to_public(your_role=CourseRole.STUDENT)
-        and len(res_list) == 1
-    )
+    for role, group_num in [(CourseRole.STUDENT, None), (CourseRole.STUDENT, 7)]:
+        user.enroll(session, course1, role, group_num=group_num)
+        res = client.get(f"{settings.api_v1_str}/course/")
+        assert res.status_code == 200
+        res_list = res.json()
+        res_course = CoursePublic(**res_list[0])
+        assert (
+            res_course
+            == course1.to_public(your_role=CourseRole.STUDENT, your_group=group_num)
+            and len(res_list) == 1
+        )
 
     user.enroll(session, course2, CourseRole.TEACHER)
     res = client.get(f"{settings.api_v1_str}/course/")
     assert res.status_code == 200
     assert [CoursePublic(**item) for item in res.json()] == [
-        course1.to_public(your_role=CourseRole.STUDENT),
+        course1.to_public(your_role=CourseRole.STUDENT, your_group=7),
         course2.to_public(your_role=CourseRole.TEACHER),
     ]
 
@@ -73,13 +75,17 @@ def test_get_course(client, settings, session):
         assert res.status_code == 404 and res.json()["detail"] == COURSE_NOT_FOUND
 
     prof = dummy.make_user(session, email="prof@example.com")
-    for user, role in [(user1, CourseRole.STUDENT), (prof, CourseRole.TEACHER)]:
-        user.enroll(session, course1, role)
+    for user, role, group_num in [
+        (user1, CourseRole.STUDENT, None),
+        (user1, CourseRole.STUDENT, None),
+        (prof, CourseRole.TEACHER, None),
+    ]:
+        user.enroll(session, course1, role, group_num=group_num)
         dummy.login_user(client, user)
         res = client.get(f"{settings.api_v1_str}/course/{course1.id}")
         assert res.status_code == 200 and CoursePublic(
             **res.json()
-        ) == course1.to_public(your_role=role)
+        ) == course1.to_public(your_role=role, your_group=group_num)
 
 
 def test_get_enroll_details(client, settings, session):
@@ -111,6 +117,34 @@ def test_get_enroll_details(client, settings, session):
     assert CoursePublic(**res.json()) == course.to_public(
         invite_role=CourseRole.STUDENT, your_role=CourseRole.TEACHER
     )
+
+
+def test_set_enroll_details(client, settings, session):
+    course = dummy.make_course(session)
+    user = dummy.make_user(session)
+    dummy.assert_not_authenticated(
+        client.post(
+            f"{settings.api_v1_str}/course/{course.id}/enroll_details",
+            params={"group_num": 4},
+        ),
+    )
+
+    dummy.login_user(client, user)
+    res = client.post(
+        f"{settings.api_v1_str}/course/{course.id}/enroll_details",
+        params={"group_num": 4},
+    )
+    # non-enrolled user can't access
+    assert res.status_code == 404 and res.json()["detail"] == COURSE_NOT_FOUND
+
+    # enrolled user can change their group number
+    user.enroll(session, course, CourseRole.STUDENT)
+    res = client.post(
+        f"{settings.api_v1_str}/course/{course.id}/enroll_details",
+        params={"group_num": 4},
+    )
+    assert res.status_code == 200
+    assert user.get_course_link(session, course.id).group_num == 4
 
 
 def test_list_assignments(client, settings, session):

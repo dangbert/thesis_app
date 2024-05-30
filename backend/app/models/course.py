@@ -15,7 +15,7 @@ from app.models.schemas import (
     AssignmentAttemptStatus,
 )
 from app.hardcoded import FeedbackData
-from sqlalchemy import String, ForeignKey, JSON, Boolean
+from sqlalchemy import String, ForeignKey, JSON, Boolean, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PUUID
 from uuid import UUID
@@ -50,6 +50,7 @@ class Course(Base):
         self,
         your_role: Optional[CourseRole] = None,
         invite_role: Optional[CourseRole] = None,
+        your_group: Optional[int] = None,
     ) -> CoursePublic:
         """
         Return a public representation of the course, including the user's role in it (if provided).
@@ -62,6 +63,7 @@ class Course(Base):
             **super().to_public().model_dump(),
             your_role=your_role,
             invite_role=invite_role,
+            your_group=your_group,
         )
 
 
@@ -76,6 +78,10 @@ class CourseUserLink(Base):
         ForeignKey("user.id"),
     )
     role: Mapped[CourseRole]
+    # group number of user within course
+    group_num: Mapped[Optional[int]] = mapped_column(
+        Integer, nullable=True, default=None
+    )
 
     course: Mapped["Course"] = relationship("Course")
     user: Mapped["User"] = relationship("User")

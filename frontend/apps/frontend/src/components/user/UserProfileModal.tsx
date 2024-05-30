@@ -69,15 +69,10 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
           sx={{ marginTop: '10px', maxWidth: '200px' }}
           type="number"
           label="Group Number"
-          value={groupNum} // Bind state to the TextField value
+          value={utils.isUndefined(groupNum) ? '' : groupNum} // Bind state to the TextField value
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-            console.log('event.target.value=', event.target.value);
             const newGroupNum = parseInt(event.target.value);
-            if (isNaN(newGroupNum)) {
-              console.log('isnan');
-              setGroupNum(undefined);
-            }
-            setGroupNum(newGroupNum);
+            setGroupNum(isNaN(newGroupNum) ? undefined : newGroupNum);
           }}
           InputLabelProps={{
             shrink: true, // Ensures the label does not overlap with the input value

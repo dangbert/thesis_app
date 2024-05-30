@@ -30,7 +30,7 @@ ASSIGNMENT_NOT_FOUND = "Assignment not found or unauthorized"
 def get_course_or_fail(session: SessionDep, course_id: UUID, user: User) -> Course:
     """Get's a course by ID, or raises a 404 if it doesn't exist or the user doesn't have access."""
     course = session.get(Course, course_id)
-    if not course or (course and not user.can_view(session, course)):
+    if not course or not user.can_view(session, course):
         raise HTTPException(status_code=404, detail=COURSE_NOT_FOUND)
     return course
 
@@ -67,10 +67,30 @@ async def get_enroll_details(
     return course.to_public(invite_role=invite_role, your_role=existing_role)
 
 
+@router.post("/{course_id}/enroll_details", status_code=200)
+async def set_enroll_details(
+    user: AuthUserDep, course_id: UUID, group_num: int, session: SessionDep
+) -> None:
+    """Allow student to set their group number within a given course."""
+    course = session.get(Course, course_id)
+    if not course or not user.can_view(session, course):
+        raise HTTPException(status_code=404, detail="Course not found or unauthorized")
+
+    cur_role = user.get_course_role(session, course_id)
+    if not cur_role:
+        raise HTTPException(
+            status_code=403, detail="you're not enrolled in this course"
+        )
+    user.enroll(session, course, cur_role, group_num=group_num)
+
+
 @router.get("/")
 async def list_courses(user: AuthUserDep, session: SessionDep) -> list[CoursePublic]:
     links = session.query(CourseUserLink).filter_by(user_id=user.id).all()
-    return [link.course.to_public(your_role=link.role) for link in links]
+    return [
+        link.course.to_public(your_role=link.role, your_group=link.group_num)
+        for link in links
+    ]
 
 
 @router.get("/{course_id}")
@@ -78,10 +98,10 @@ async def get_course(
     user: AuthUserDep, course_id: UUID, session: SessionDep
 ) -> CoursePublic:
     course = session.get(Course, course_id)
-    if not course or (course and not user.can_view(session, course)):
+    link = user.get_course_link(session, course_id)
+    if not course or not user.can_view(session, course) or not link:
         raise HTTPException(status_code=404, detail="Course not found or unauthorized")
-    user_role = user.get_course_role(session, course_id)
-    return course.to_public(your_role=user_role)
+    return course.to_public(your_role=link.role, your_group=link.group_num)
 
 
 @router.put("/", status_code=201)

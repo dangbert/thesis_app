@@ -31,17 +31,19 @@ class User(Base):
             **super().to_public().model_dump(),
         )
 
-    def enroll(self, session: Session, course: "Course", role: Optional["CourseRole"]):
+    def enroll(
+        self,
+        session: Session,
+        course: "Course",
+        role: Optional["CourseRole"],
+        group_num: Optional[int] = None,
+    ):
         """
         Enroll user in given course with a given role.
         Removes user access if role is None.
         """
 
-        link = (
-            session.query(CourseUserLink)
-            .filter_by(user_id=self.id, course_id=course.id)
-            .first()
-        )
+        link = self.get_course_link(session, course.id)
         if not role:
             if link:
                 session.delete(link)
@@ -51,19 +53,23 @@ class User(Base):
         if link is None:
             link = CourseUserLink(user_id=self.id, course_id=course.id, role=role)
             session.add(link)
-            session.commit()
-            return
 
         link.role = role
+        link.group_num = group_num
         session.commit()
 
     def get_course_role(self, session, course_id: UUID) -> Optional["CourseRole"]:
-        link = (
+        link = self.get_course_link(session, course_id)
+        return link.role if link else None
+
+    def get_course_link(
+        self, session: Session, course_id: UUID
+    ) -> Optional["CourseUserLink"]:
+        return (
             session.query(CourseUserLink)
             .filter_by(user_id=self.id, course_id=course_id)
             .first()
         )
-        return link.role if link else None
 
     def can_view(
         self,

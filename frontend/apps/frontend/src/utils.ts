@@ -42,6 +42,7 @@ export function stringToColor(string: string): string {
   return color;
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * return true if value is null or undefined
  */
