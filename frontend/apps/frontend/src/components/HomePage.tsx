@@ -13,6 +13,7 @@ import {
   ListItemText,
   Icon,
   Alert,
+  Card,
 } from '@mui/material';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -24,6 +25,8 @@ import CourseView from './CourseView';
 import { useUserContext } from '../providers';
 import * as models from '../models';
 import * as courseApi from '../api';
+import * as constants from '../constants';
+import NotLoggedIn from './login/NotLoggedIn';
 
 const HomePage = () => {
   const [courseList, setCourseList] = useState<models.CoursePublic[]>([]);
@@ -84,17 +87,7 @@ const HomePage = () => {
     window.location.href = courseApi.LOGOUT_URL; // force page reload
   };
 
-  if (!userCtx.user) {
-    return (
-      <>
-        <div>not logged in...</div>
-        <Button variant="contained" href="/join">
-          Onboard now!
-        </Button>
-      </>
-    );
-  }
-
+  if (!userCtx.user) return <NotLoggedIn />;
   return (
     <div className={classes.fullHeightDiv}>
       {/* header bar */}

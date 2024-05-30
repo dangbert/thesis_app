@@ -46,6 +46,7 @@ export interface CourseCreate {
 
 export interface CoursePublic extends CourseCreate, BaseFields {
   your_role?: CourseRole;
+  invite_role?: CourseRole;
 }
 
 export interface AssignmentCreate {

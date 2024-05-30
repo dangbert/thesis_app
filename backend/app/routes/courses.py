@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException
-from app.deps import SessionDep, AuthUserDep
+from fastapi import APIRouter, HTTPException, Request
+from app.deps import SessionDep, AuthUserDep, cur_user
 from app.models import User
 from app.models.course import (
     Course,
@@ -46,21 +46,25 @@ def get_assignment_or_fail(
 
 
 ### courses
-@router.get("/enroll", status_code=200)
-async def enroll_in_course(
-    user: AuthUserDep, invite_key: str, session: SessionDep
+@router.get("/enroll_details", status_code=200)
+async def get_enroll_details(
+    invite_key: str, session: SessionDep, request: Request
 ) -> CoursePublic:
-    """Join the provided course (if the correct invite code is provided)."""
+    """Get info about course given a valid invite key."""
     course = session.query(Course).filter_by(invite_key=invite_key).first()
     if not course:
-        raise HTTPException(status_code=400, detail="invalid invite key")
-    existing_role = user.get_course_role(session, course.id)
-    if existing_role:
-        return course.to_public(your_role=user.get_course_role(session, course.id))
+        raise HTTPException(status_code=400, detail="invalid invite link")
 
-    target_role = CourseRole.STUDENT  # TODO: could support a teacher_invite_key
-    user.enroll(session, course, target_role)
-    return course.to_public(your_role=target_role)
+    # check if user is logged in and already enrolled
+    existing_role = None
+    try:
+        user = cur_user(request, session)
+        existing_role = user.get_course_role(session, course.id)
+    except HTTPException:
+        pass
+
+    invite_role = CourseRole.STUDENT  # TODO: support teacher invite_key
+    return course.to_public(invite_role=invite_role, your_role=existing_role)
 
 
 @router.get("/")

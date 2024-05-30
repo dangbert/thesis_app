@@ -10,7 +10,7 @@ import INITIAL_THEME, {
 } from '../theme';
 import Typography from '@mui/material/Typography';
 
-import Onboard from './Onboard';
+import Enroll from './login/Enroll';
 import HomePage from './HomePage';
 
 import { IUserProviderContext, UserContext } from '../providers';
@@ -50,7 +50,7 @@ export function App() {
               {/* if user got soft linked to a /api url, refresh the page */}
               <Route path="/api/*" element={<ApiRedirect />} />
               <Route path="/" element={<HomePage />} />
-              <Route path="/join" element={<Onboard />} />
+              <Route path="/enroll/:inviteKey" element={<Enroll />} />
               <Route
                 path="/test"
                 element={

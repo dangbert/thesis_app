@@ -32,6 +32,13 @@ export const getCourse = async (course_id: string) => {
   );
 };
 
+export const getEnrollDetails = async (invite_key: string) => {
+  const params = new URLSearchParams({ invite_key });
+  return await jsonOrError(
+    fetch(`${coursePath}/enroll_details?${params}`, { method: 'GET' })
+  );
+};
+
 // export const createCourse = async (id: string) => {
 //   const url = `${basePath}/${id}`;
 //   return await jsonOrError(fetch(url, { method: 'GET' }));

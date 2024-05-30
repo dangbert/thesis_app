@@ -1,7 +1,9 @@
 import { render } from '@testing-library/react';
 
 // import App from './app';
-import Onboard from './Onboard';
+import Enroll from './login/Enroll';
+
+import NotLoggedIn from './login/NotLoggedIn';
 
 // disabled due to ReferenceError: fetch is not defined
 /*
@@ -18,9 +20,16 @@ describe('App', () => {
 });
 */
 
-describe('Onboard', () => {
+describe('Enroll', () => {
   it('should render successfully', () => {
-    const { baseElement } = render(<Onboard />);
+    const { baseElement } = render(<Enroll />);
+    expect(baseElement).toBeTruthy();
+  });
+});
+
+describe('NotLoggedIn', () => {
+  it('should render successfully', () => {
+    const { baseElement } = render(<NotLoggedIn />);
     expect(baseElement).toBeTruthy();
   });
 });

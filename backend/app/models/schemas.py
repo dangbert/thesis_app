@@ -47,6 +47,7 @@ class CoursePublic(CourseCreate, DateFields):
 
     id: UUID
     your_role: Optional[CourseRole] = None
+    invite_role: Optional[CourseRole] = None
 
 
 class AssignmentCreate(BaseModel):

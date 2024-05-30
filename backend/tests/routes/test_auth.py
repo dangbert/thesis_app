@@ -44,6 +44,9 @@ def test_logout(client: TestClient, session):
     # assert res.json() == {"detail": "Logged out"}
 
 
+# TODO: test invite_key behaviour on callback
+
+
 def test_callback(
     client: TestClient,
     session,

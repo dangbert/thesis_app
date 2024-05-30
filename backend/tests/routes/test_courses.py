@@ -82,28 +82,34 @@ def test_get_course(client, settings, session):
         ) == course1.to_public(your_role=role)
 
 
-def test_enroll_in_course(client, settings, session):
+def test_get_enroll_details(client, settings, session):
     course = dummy.make_course(session)
     user = dummy.make_user(session)
-    dummy.assert_not_authenticated(
-        client.get(
-            f"{settings.api_v1_str}/course/enroll", params={"invite_key": "fake"}
-        )
-    )
 
     dummy.login_user(client, user)
     assert not user.can_view(session, course)
     res = client.get(
-        f"{settings.api_v1_str}/course/enroll", params={"invite_key": "fake"}
+        f"{settings.api_v1_str}/course/enroll_details", params={"invite_key": "fake"}
     )
-    assert res.status_code == 400 and res.json()["detail"] == "invalid invite key"
+    assert res.status_code == 400 and res.json()["detail"] == "invalid invite link"
     res = client.get(
-        f"{settings.api_v1_str}/course/enroll", params={"invite_key": course.invite_key}
+        f"{settings.api_v1_str}/course/enroll_details",
+        params={"invite_key": course.invite_key},
+    )
+    assert res.status_code == 200
+    assert CoursePublic(**res.json()) == course.to_public(
+        invite_role=CourseRole.STUDENT
     )
 
+    # existing user should see their role
+    user.enroll(session, course, CourseRole.TEACHER)
+    res = client.get(
+        f"{settings.api_v1_str}/course/enroll_details",
+        params={"invite_key": course.invite_key},
+    )
     assert res.status_code == 200
-    assert user.can_view(session, course) and not user.can_view(
-        session, course, edit=True
+    assert CoursePublic(**res.json()) == course.to_public(
+        invite_role=CourseRole.STUDENT, your_role=CourseRole.TEACHER
     )
 
 

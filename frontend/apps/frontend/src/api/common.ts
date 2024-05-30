@@ -34,7 +34,7 @@ export const jsonOrError = async (
   } catch (caughtError) {
     result.error = `API error: "${caughtError}"`;
   } finally {
-    if (result.data?.error) result.error = result.data.error; // use this error message if available
+    if (result.data?.detail) result.error = result.data.detail; // use this error message if available
   }
   result.timeMs = new Date().getTime() - result.timeMs;
   return result;
