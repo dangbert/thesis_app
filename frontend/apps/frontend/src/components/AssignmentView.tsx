@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button, Typography, Snackbar, Alert, Paper } from '@mui/material';
 import AttemptCreateModal from './AttemptCreateModal';
-import AttemptView from './AttemptView';
 import AttemptHistory from './AttemptHistory';
 import AssignmentStatus from './AssignmentStatus';
 import Markdown from 'react-markdown';
@@ -162,7 +161,7 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
           </Button>
         )}
         <Typography>
-          <b>{isTeacher ? 'Their' : 'Your'} Assignment Status</b>:{' '}
+          <b>{spoofUser ? 'Their' : 'Your'} assignment status</b>:{' '}
           {assignmentStatus}
         </Typography>
 

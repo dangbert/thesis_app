@@ -33,17 +33,15 @@ const AttemptHistory: React.FC<AttemptHistoryProps> = ({
   const [snackbarTxt, setSnackbarTxt] = useState('');
 
   let curAttempt = undefined;
-  let curFeedback = undefined;
+  let curHumanFeedback;
+  let curAiFeedback;
   if (
     attempts.length > 0 &&
     viewAttemptIdx > -1 &&
     viewAttemptIdx < attempts.length
   ) {
     curAttempt = attempts[viewAttemptIdx];
-    if (curAttempt.feedbacks.length > 0) {
-      // TODO: get latest feedback (preferring human feedback if available)
-      curFeedback = curAttempt.feedbacks[curAttempt.feedbacks.length - 1];
-    }
+    [curHumanFeedback, curAiFeedback] = splitAttemptFeedback(curAttempt);
   }
 
   return (
@@ -57,11 +55,12 @@ const AttemptHistory: React.FC<AttemptHistoryProps> = ({
       {curAttempt && (
         <AttemptView
           attempt={curAttempt}
-          feedback={curFeedback}
+          humanFeedback={curHumanFeedback}
+          aiFeedback={curAiFeedback}
           asData={asData}
           open={true}
           onClose={() => setViewAttemptIdx(-1)}
-          mode={isTeacher && !curFeedback ? 'createFeedback' : 'view'}
+          isTeacher={isTeacher}
           onCreateFeedback={(feedback: models.FeedbackPublic) => {
             setSnackbarTxt('Feedback submitted ✅');
             setViewAttemptIdx(-1);
@@ -85,13 +84,21 @@ const AttemptHistory: React.FC<AttemptHistoryProps> = ({
             const realIndex = attempts.length - attemptIndex - 1;
             let mustResubmit = false;
             if (attempt.feedbacks.length > 0) {
-              const hasHumanFeedback = attempt.feedbacks.some((x) => !x.is_ai);
-              // const hasAiFeedback = attempt.feedbacks.some((x) => x.is_ai);
-              if (hasHumanFeedback)
-                mustResubmit = !attempt.feedbacks.some((x) => x.data.approved);
+              const [humanFeedback, aiFeedback] = splitAttemptFeedback(attempt);
+              if (humanFeedback && !humanFeedback.data.approved)
+                mustResubmit = true;
             }
 
             const isLatestAttempt = attemptIndex === 0;
+            let publicStatus = attempt.status;
+            if (
+              publicStatus ===
+                models.AssignmentAttemptStatus.AWAITING_AI_FEEDBACK &&
+              !isTeacher
+            ) {
+              publicStatus =
+                models.AssignmentAttemptStatus.AWAITING_TEACHER_FEEDBACK;
+            }
             return (
               <React.Fragment key={attempt.id}>
                 {/* Timeline for each Attempt */}
@@ -113,14 +120,22 @@ const AttemptHistory: React.FC<AttemptHistoryProps> = ({
                       </Typography>
                       {/* TODO: create a <FeedbackStatus> component with an icon (also for user table) */}
                       <Typography style={{ marginTop: '8px' }}>
-                        {isLatestAttempt && <b>{attempt.status}</b>}
-                        {!isLatestAttempt && `${attempt.status}`}
+                        {isLatestAttempt &&
+                          (mustResubmit ? (
+                            <Alert
+                              severity="warning"
+                              style={{ marginTop: '8px' }}
+                            >
+                              <>
+                                <b>Resubmission requested</b> (view feedback
+                                below)
+                              </>
+                            </Alert>
+                          ) : (
+                            <b>{publicStatus}</b>
+                          ))}
+                        {!isLatestAttempt && `${publicStatus}`}
                       </Typography>
-                      {isLatestAttempt && mustResubmit && (
-                        <Alert severity="warning" style={{ marginTop: '8px' }}>
-                          Resumission requested
-                        </Alert>
-                      )}
                       <Button
                         variant="outlined"
                         style={{ marginTop: '8px' }}
@@ -131,38 +146,6 @@ const AttemptHistory: React.FC<AttemptHistoryProps> = ({
                     </Paper>
                   </TimelineContent>
                 </TimelineItem>
-
-                {/* Timeline for each feedback entry within the attempt */}
-                {/* {attempt.feedback.map((feedback: FeedbackPublic, index: number) => (
-            <TimelineItem key={feedback.id}>
-              <TimelineSeparator>
-                <TimelineDot
-                  color={feedback.data.approved ? 'secondary' : 'grey'}
-                />
-                {index < attempt.feedback.length - 1 ||
-                  (attemptIndex < attempts.length - 1 && <TimelineConnector />)}
-              </TimelineSeparator>
-              <TimelineContent>
-                <Paper elevation={3} style={{ padding: '6px 16px' }}>
-                  <Typography variant="h6" component="h1">
-                    {feedback.data.approved
-                      ? 'Feedback Approved'
-                      : 'Feedback Pending'}
-                  </Typography>
-                  <Typography>
-                    Feedback from{' '}
-                    {new Date(feedback.created_at).toLocaleString()}
-                  </Typography>
-                  <Typography variant="body2">
-                    {feedback.data.feedback}
-                  </Typography>
-                  {feedback.data.approved && (
-                    <Typography color="secondary">Approval received</Typography>
-                  )}
-                </Paper>
-              </TimelineContent>
-            </TimelineItem>
-          ))} */}
               </React.Fragment>
             );
           })}
@@ -170,5 +153,18 @@ const AttemptHistory: React.FC<AttemptHistoryProps> = ({
     </>
   );
 };
+
+/**
+ * Given an attempt return [humanFeedback, aiFeedback] (where either or both can be undefined).
+ * Helps determinstically handle edge cause of multiple feedbacks of the same type (by taking the latest).
+ */
+function splitAttemptFeedback(attempt: models.AttemptPublic) {
+  if (attempt.feedbacks.length === 0) return [undefined, undefined];
+
+  const humanFeedbacks = attempt.feedbacks.filter((x) => !x.is_ai);
+  const aiFeedbacks = attempt.feedbacks.filter((x) => x.is_ai);
+
+  return [humanFeedbacks.at(-1), aiFeedbacks.at(-1)];
+}
 
 export default AttemptHistory;

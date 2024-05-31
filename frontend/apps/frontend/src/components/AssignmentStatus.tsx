@@ -27,6 +27,7 @@ import { alpha } from '@mui/material/styles';
 import { LoadingButton } from '@mui/lab';
 import { visuallyHidden } from '@mui/utils';
 
+import UserAvatar from './user/UserAvatar';
 import * as API from '../api';
 import * as constants from '../constants';
 import * as models from '../models';
@@ -238,6 +239,7 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
       ? utils.friendlyDate(s.last_attempt_date)
       : '',
     status: s.status,
+    userObj: s.student,
   }));
 
   const handleRequestSort = (
@@ -386,7 +388,18 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
                       }}
                     />
                   </TableCell>
-                  <TableCell align="left">{row.name}</TableCell>
+                  <TableCell align="left">
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                      }}
+                    >
+                      {/* {!dense && <UserAvatar user={row.userObj} />} */}
+                      {row.name}
+                    </div>
+                  </TableCell>
                   <TableCell align="left">
                     <a href={'mailto:' + row.email}>{row.email}</a>
                   </TableCell>

@@ -23,8 +23,9 @@ interface AttemptViewProps {
   open: boolean;
   onClose: () => void;
   onCreateFeedback?: (feedback: models.FeedbackPublic) => void;
-  mode: 'view' | 'createFeedback';
-  feedback?: models.FeedbackPublic;
+  isTeacher: boolean; // whether teacher is viewing this component
+  humanFeedback?: models.FeedbackPublic;
+  aiFeedback?: models.FeedbackPublic;
 }
 
 const AttemptView: React.FC<AttemptViewProps> = ({
@@ -33,10 +34,14 @@ const AttemptView: React.FC<AttemptViewProps> = ({
   open,
   onClose,
   onCreateFeedback,
-  mode,
-  feedback,
+  isTeacher,
+  humanFeedback,
+  aiFeedback,
 }) => {
-  const canCreateFeedback = mode === 'createFeedback' && !feedback;
+  const readOnly = Boolean(!isTeacher || humanFeedback);
+  console.log('readOnly = ', readOnly);
+  console.log('humanFeedback = ', humanFeedback);
+  console.log('aiFeedback = ', aiFeedback);
   return (
     <Dialog
       open={open}
@@ -104,14 +109,14 @@ const AttemptView: React.FC<AttemptViewProps> = ({
           </Grid>
           <Grid item xs={12} md={6}>
             <Typography variant="h6" gutterBottom>
-              {canCreateFeedback ? 'Create Feedback' : 'View Feedback'}
+              {readOnly ? 'View Feedback' : 'Create Feedback'}
             </Typography>
-            {mode === 'view' ? (
-              feedback ? (
+            {readOnly &&
+              (humanFeedback ? (
                 <FeedbackView
                   attemptId={attempt.id}
                   asData={asData}
-                  feedback={feedback}
+                  feedback={humanFeedback}
                   readOnly={true}
                   onClose={onClose}
                 />
@@ -121,13 +126,13 @@ const AttemptView: React.FC<AttemptViewProps> = ({
                     No feedback available yet, stay tuned...
                   </Alert>
                 </>
-              )
-            ) : (
+              ))}
+            {!readOnly && (
               <FeedbackView
                 attemptId={attempt.id}
                 asData={asData}
-                feedback={feedback}
-                readOnly={!canCreateFeedback}
+                feedback={humanFeedback || aiFeedback || undefined}
+                readOnly={readOnly}
                 onClose={onClose}
                 onCreate={onCreateFeedback}
               />

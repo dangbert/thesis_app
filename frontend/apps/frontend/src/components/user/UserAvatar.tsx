@@ -4,17 +4,30 @@ import * as utils from '../../utils';
 
 interface UserAvatarProps {
   user: models.UserPublic;
+  // TODO: sizePx doesn't change the font size of the initals
+  sizePx?: number;
 }
 
 /**
  * Display user's initials in a colored circle.
  */
-const UserAvatar: React.FC<UserAvatarProps> = ({ user }) => {
-  console.log('user avatar, ', user);
+const UserAvatar: React.FC<UserAvatarProps> = ({ user, sizePx }) => {
+  const variant = 'circular';
+  const sx = sizePx ? { width: '18px', height: '18px' } : {};
+
+  const defaultSx = { ...stringAvatar(user.name) }.sx;
+  const stringProps = sizePx
+    ? {
+        ...stringAvatar(user.name),
+        sx: { ...defaultSx, width: sizePx, height: sizePx },
+      }
+    : stringAvatar(user.name);
   return (
     <>
-      {user.picture && <Avatar alt={user.name} src={user.picture} />}
-      {!user.picture && <Avatar {...stringAvatar(user.name)} />}
+      {user.picture && (
+        <Avatar sx={sx} alt={user.name} src={user.picture} variant={variant} />
+      )}
+      {!user.picture && <Avatar {...stringProps} variant={variant} />}
     </>
   );
 };
@@ -22,8 +35,6 @@ const UserAvatar: React.FC<UserAvatarProps> = ({ user }) => {
 // TODO: unit test this can handle weird names
 function stringAvatar(name: string) {
   const names = name.split(' ');
-  console.log('names=');
-  console.log(names);
   // safely read considering name could be empty string etc
   const firstInitial = names[0] ? names[0][0] : '';
   const lastInitial = names[names.length - 1] ? names[names.length - 1][0] : '';

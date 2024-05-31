@@ -44,7 +44,8 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
   onCreate,
 }) => {
   const DEFAULT_FEEDBACK: FeedbackData = {
-    feedback: '',
+    // default to provided feedback (e.g. if using AI feedback is starting point)
+    feedback: feedback?.data.feedback || '',
     other_comments: '',
     approved: false,
     score: null,
@@ -117,7 +118,7 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
         InputProps={{ readOnly }}
         multiline
         minRows={FEEDBACK_MIN_ROWS}
-        maxRows={FEEDBACK_MAX_ROWS}
+        maxRows={FEEDBACK_MAX_ROWS + 2}
         variant={readOnly ? 'filled' : 'outlined'}
       />
       <TextField
@@ -129,7 +130,7 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
         margin="dense"
         InputProps={{ readOnly }}
         multiline
-        minRows={FEEDBACK_MIN_ROWS}
+        minRows={2}
         maxRows={FEEDBACK_MAX_ROWS}
         variant={readOnly ? 'filled' : 'outlined'}
       />
@@ -147,20 +148,21 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
             setNeedsApprovalResponse(false);
             setFeedbackData((prev) => ({
               ...prev,
-              approved: event.target.value === 'approved',
+              approved: event.target.value === 'approve',
             }));
           }}
         >
           <FormControlLabel
-            value="approved"
+            value="approve"
             control={<Radio />}
             label="Approved"
-            // disabled={readOnly}
+            disabled={readOnly}
           />
           <FormControlLabel
             value="resubmit"
             control={<Radio />}
             label="Needs resubmission"
+            disabled={readOnly}
           />
         </RadioGroup>
       </FormControl>
@@ -182,10 +184,15 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
               }));
             }}
           >
-            <FormControlLabel value="0" control={<Radio />} label="0" />
-            <FormControlLabel value="1" control={<Radio />} label="1" />
-            <FormControlLabel value="2" control={<Radio />} label="2" />
-            <FormControlLabel value="3" control={<Radio />} label="3" />
+            {[0, 1, 2, 3].map((score) => (
+              <FormControlLabel
+                key={score}
+                disabled={readOnly}
+                value={score.toString()}
+                control={<Radio />}
+                label={score.toString()}
+              />
+            ))}
           </RadioGroup>
         </FormControl>
       )}

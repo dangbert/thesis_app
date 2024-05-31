@@ -148,9 +148,12 @@ class Attempt(Base):
     )
 
     def to_public(self) -> AttemptPublic:
+        # TODO: avoid returning AI feedbacks to the frontend if !is_teacher
         feed_objs = [feed.to_public() for feed in self.feedbacks]
         feed_objs = sorted(feed_objs, key=lambda x: x.created_at)
 
+        # TODO: possibly status map AWAITING_AI_FEEDBACK -> AWAITING_TEACHER_FEEDBACK if user is not a teacher
+        #   (instead this is done in the frontend in AttemptHistory.tsx)
         return AttemptPublic(
             id=self.id,
             assignment_id=self.assignment_id,
