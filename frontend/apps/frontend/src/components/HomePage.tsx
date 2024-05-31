@@ -29,6 +29,7 @@ import * as courseApi from '../api';
 import * as constants from '../constants';
 import * as utils from '../utils';
 import NotLoggedIn from './user/NotLoggedIn';
+import UserAvatar from './user/UserAvatar';
 
 const HomePage = () => {
   const [courseList, setCourseList] = useState<models.CoursePublic[]>([]);
@@ -52,7 +53,6 @@ const HomePage = () => {
         console.error(`failed to load current user: ${res.error}`);
         setError(`failed to load current user: ${res.error}`);
       } else {
-        console.log(res.data);
         userCtx.onChange(res.data);
       }
 
@@ -111,11 +111,7 @@ const HomePage = () => {
                   if (userCtx.user) setUserMenuEl(event.currentTarget); // open user menu
                 }}
               >
-                {userCtx.user && userCtx.user.picture ? (
-                  <Avatar alt={userCtx.user.name} src={userCtx.user.picture} />
-                ) : (
-                  <Avatar {...stringAvatar(userCtx.user.name)} />
-                )}
+                {userCtx.user && <UserAvatar user={userCtx.user} />}
               </IconButton>
             </Tooltip>
 
@@ -161,15 +157,6 @@ const HomePage = () => {
     </div>
   );
 };
-
-function stringAvatar(name: string) {
-  return {
-    sx: {
-      bgcolor: utils.stringToColor(name),
-    },
-    children: `${name.split(' ')[0][0]}${name.split(' ')[1][0]}`,
-  };
-}
 
 const useStyles = makeStyles((theme) => ({
   fullHeightDiv: {

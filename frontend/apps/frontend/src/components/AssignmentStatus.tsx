@@ -1,8 +1,16 @@
-import React from 'react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  Snackbar,
   Alert,
+  Box,
+  Checkbox,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  Paper,
+  Radio,
+  RadioGroup,
+  Snackbar,
+  Switch,
   Table,
   TableBody,
   TableCell,
@@ -12,46 +20,33 @@ import {
   TableRow,
   TableSortLabel,
   Toolbar,
-  Typography,
-  Paper,
-  Checkbox,
-  IconButton,
   Tooltip,
-  Switch,
-  Box,
-  FormControl,
-  FormLabel,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
+  Typography,
 } from '@mui/material';
-import { visuallyHidden } from '@mui/utils';
 import { alpha } from '@mui/material/styles';
-import DeleteIcon from '@mui/icons-material/Delete';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import { LoadingButton } from '@mui/lab';
+import { visuallyHidden } from '@mui/utils';
 
-import AttemptCreateModal from './AttemptCreateModal';
-import AttemptView from './AttemptView';
-import AttemptHistory from './AttemptHistory';
-import Markdown from 'react-markdown';
-
-import { AssignmentPublic } from '../models';
-import * as models from '../models';
 import * as API from '../api';
 import * as constants from '../constants';
+import * as models from '../models';
+import { AssignmentPublic } from '../models';
 import { useUserContext } from '../providers';
 import * as utils from '../utils';
 
 interface AssignmentStatusProps {
   asData: AssignmentPublic;
-  // dueDate: string;
+  onSelectStudent: (student: models.AssignmentStudentStatus) => void;
 }
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (orderBy === 'last_attempt_date') {
-    const dateA = new Date(a[orderBy] as string).getTime();
-    const dateB = new Date(b[orderBy] as string).getTime();
+    let dateA = new Date(a[orderBy] as string).getTime();
+    let dateB = new Date(b[orderBy] as string).getTime();
+    // handle when last_attempt_date is null
+    if (isNaN(dateA)) dateA = 0;
+    if (isNaN(dateB)) dateB = 0;
+    console.log(`comparing ${a} (${dateA}) to ${b} (${dateB}`);
     return dateB < dateA ? -1 : dateB > dateA ? 1 : 0;
   }
   if (b[orderBy] < a[orderBy]) {
@@ -78,7 +73,7 @@ function getComparator<Key extends keyof any>(
 type Order = 'asc' | 'desc';
 
 interface RowData {
-  id: string; // user id
+  id: string;
   name: string;
   email: string;
   group: number;
@@ -112,7 +107,7 @@ const headCells: readonly HeadCell[] = [
     id: 'role',
     numeric: false,
     disablePadding: false,
-    label: 'role',
+    label: 'Role',
   },
   {
     id: 'group',
@@ -161,10 +156,10 @@ function EnhancedTableHead(props: EnhancedTableProps) {
   return (
     <TableHead>
       <TableRow>
+        <TableCell></TableCell>
         {headCells.map((headCell) => (
           <TableCell
             key={headCell.id}
-            // align={headCell.numeric ? 'right' : 'left'}
             align={'left'}
             padding={headCell.disablePadding ? 'none' : 'normal'}
             sortDirection={orderBy === headCell.id ? order : false}
@@ -188,13 +183,17 @@ function EnhancedTableHead(props: EnhancedTableProps) {
   );
 }
 
-const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
+const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
+  asData,
+  onSelectStudent,
+}) => {
   const [statusData, setStatusData] = useState<
     models.AssignmentStudentStatus[]
   >([]);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [reloadTime, setReloadTime] = useState<number>(Date.now() / 1000);
+  const [selectedRow, setSelectedRow] = useState<string | null>(null);
   const userCtx = useUserContext();
 
   useEffect(() => {
@@ -210,7 +209,9 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
         console.error(res.error);
         setStatusData([]);
         setError(error);
-      } else setStatusData(res.data);
+      } else {
+        setStatusData(res.data);
+      }
       setLoading(false);
 
       return () => (cancel = true);
@@ -267,7 +268,20 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
     return Math.abs(row.group % 2) === 1;
   };
 
-  // Avoid a layout jump when reaching the last page with empty rows.
+  const handleRowSelect = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    id: string
+  ) => {
+    const selectedId = event.target.checked ? id : null;
+    setSelectedRow(selectedId);
+    const selectedStudent = statusData.find(
+      (student) => student.student.id === selectedId
+    );
+    if (selectedStudent) {
+      onSelectStudent(selectedStudent);
+    }
+  };
+
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
@@ -296,19 +310,13 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
           setGroupFilter(event.target.value as 'all' | 'even' | 'odd')
         }
       >
-        <FormControlLabel
-          value="all"
-          control={<Radio />}
-          label="All"
-          // disabled={readOnly}
-        />
+        <FormControlLabel value="all" control={<Radio />} label="All" />
         <FormControlLabel value="even" control={<Radio />} label="Even" />
         <FormControlLabel value="odd" control={<Radio />} label="Odd" />
       </RadioGroup>
     </FormControl>
   );
 
-  // TODO: use MIT DataGrid! https://mui.com/x/react-data-grid/#mit-version-free-forever
   if (!userCtx.user) return null;
   return (
     <Paper
@@ -330,26 +338,18 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
         >
           Course Members (showing {visibleRows.length}/{rows.length})
         </Typography>
-        <>
-          {/* <Tooltip title="Filter list">
-                <IconButton>
-                  <FilterListIcon />
-                </IconButton>
-              </Tooltip> */}
-
-          <Tooltip title="Filter list">
-            <span>
-              <LoadingButton
-                onClick={() => setReloadTime(Date.now() / 1000)}
-                color="primary"
-                loading={loading}
-                disabled={loading}
-              >
-                Refresh Table
-              </LoadingButton>
-            </span>
-          </Tooltip>
-        </>
+        <Tooltip title="Filter list">
+          <span>
+            <LoadingButton
+              onClick={() => setReloadTime(Date.now() / 1000)}
+              color="primary"
+              loading={loading}
+              disabled={loading}
+            >
+              Refresh Table
+            </LoadingButton>
+          </span>
+        </Tooltip>
       </Toolbar>
       <TableContainer sx={{ maxHeight: '60vh' }}>
         <Table
@@ -366,6 +366,7 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
           />
           <TableBody>
             {visibleRows.map((row, index) => {
+              const isItemSelected = row.id === selectedRow;
               return (
                 <TableRow
                   hover
@@ -373,6 +374,16 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
                   key={row.id}
                   sx={{ cursor: 'pointer' }}
                 >
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      color="primary"
+                      checked={isItemSelected}
+                      onChange={(event) => handleRowSelect(event, row.id)}
+                      inputProps={{
+                        'aria-labelledby': `enhanced-table-checkbox-${index}`,
+                      }}
+                    />
+                  </TableCell>
                   <TableCell align="left">{row.name}</TableCell>
                   <TableCell align="left">
                     <a href={'mailto:' + row.email}>{row.email}</a>
