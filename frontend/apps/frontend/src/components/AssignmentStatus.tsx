@@ -201,10 +201,9 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
     let cancel = false;
     (async () => {
       if (!userCtx.user) return;
-      console.log(`requesting assignment status ${asData.id}`);
 
       setLoading(true);
-      setError(error);
+      setError('');
       const res = await API.getAssignmentStatus(asData.course_id, asData.id);
       if (cancel) return;
       if (res.error) {
@@ -285,8 +284,6 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ asData }) => {
     rowsPerPage,
     groupFilter,
   ]);
-  console.log('visibleRows = ');
-  console.log(visibleRows);
 
   const groupControls = (
     <FormControl component="fieldset">

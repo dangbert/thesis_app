@@ -68,7 +68,7 @@ export const getAssignment = async (
   assignment_id: string
 ) => {
   return await jsonOrError(
-    fetch(`${coursePath}/${course_id}/assignment`, {
+    fetch(`${coursePath}/${course_id}/assignment/${assignment_id}`, {
       method: 'GET',
     })
   );

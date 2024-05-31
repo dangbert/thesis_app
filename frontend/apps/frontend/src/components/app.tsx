@@ -51,14 +51,6 @@ export function App() {
               <Route path="/api/*" element={<ApiRedirect />} />
               <Route path="/" element={<HomePage />} />
               <Route path="/enroll/:inviteKey" element={<Enroll />} />
-              <Route
-                path="/test"
-                element={
-                  <Typography variant="h2" gutterBottom>
-                    Testing
-                  </Typography>
-                }
-              />
 
               <Route
                 path="*"

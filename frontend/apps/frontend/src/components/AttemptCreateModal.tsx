@@ -114,7 +114,8 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
     return () => (cancelled = true);
   };
 
-  const canSubmit = !submitting && data.goal.trim() && data.plan.trim();
+  const canSubmit =
+    !submitting && data.goal.trim() && data.plan.trim() && files.length > 0;
 
   return (
     <Dialog
@@ -165,6 +166,11 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
         </Typography>
 
         <FileUploadButton onChange={handleFileChange} />
+        {files.length == 0 && (
+          <Alert severity="info" sx={{ marginTop: '14px' }}>
+            Please add an attachment
+          </Alert>
+        )}
         <List dense>
           {files.map((file, index) => (
             <ListItem key={index}>

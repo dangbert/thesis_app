@@ -83,6 +83,15 @@ const CourseView: React.FC<CourseViewProps> = ({ course, refreshCourse }) => {
           <Typography variant="h3" component="h2">
             {course.name}
           </Typography>
+          <Typography variant="caption">
+            You're a {course.your_role} in this course, and your group number is{' '}
+            {utils.isUndefined(course.your_group)
+              ? 'not set'
+              : course.your_group}
+            . <br />
+            If you need to change your group number{' '}
+            <Link onClick={() => setUserProfileOpen(true)}>click here.</Link>
+          </Typography>
           <Markdown
             // make links open in a new page
             components={{
@@ -93,15 +102,6 @@ const CourseView: React.FC<CourseViewProps> = ({ course, refreshCourse }) => {
           >
             {course.about}
           </Markdown>
-          <Typography variant="caption">
-            You're a {course.your_role} in this course, and your group number is{' '}
-            {utils.isUndefined(course.your_group)
-              ? 'not set'
-              : course.your_group}
-            . <br />
-            If you need to change your group number{' '}
-            <Link onClick={() => setUserProfileOpen(true)}>click here.</Link>
-          </Typography>
         </CardContent>
       </Card>
 
