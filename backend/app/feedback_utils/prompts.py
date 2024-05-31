@@ -50,6 +50,9 @@ Time-bound: "during my video pitch and literature presentation"
 And Analyzing the sample action plan we see it specifically indicates which steps are taken in preparation ("don't literally memorise", "make video recordings and check if people are looking into the camera", and "by asking feedback from group members after a live presentation"). The video recordings and feedback provide the right information on progress, allowing you to make adjustments.
 =====
 
+{FEW_SHOT_INSTRUCTIONS}
+====
+
 Now provide feedback (written in {language}) and adhere to the feedback principles on the following assignment:
 
 smart goal:

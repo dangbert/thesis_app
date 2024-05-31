@@ -5,6 +5,7 @@ import tests.dummy as dummy
 from app.routes.attempts import build_feedback_job_for_attempt
 from app.hardcoded import SMARTData, FeedbackData
 import pytest_mock
+from app.feedback_utils import build_few_shot_instructions
 
 
 def test_pop_next_pending_job(session, mocker: pytest_mock.MockerFixture):
@@ -77,3 +78,9 @@ def test_ai_feedback_job(session, mocker: pytest_mock.MockerFixture):
 
     assert feedback_data.feedback == simulated_feedback
     assert feedback_data.cost == simulated_cost
+
+
+def test_build_few_shot_instructions():
+    few_shot = build_few_shot_instructions()
+    breakpoint()
+    print()
