@@ -221,7 +221,8 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
     })();
   }, [asData.id, userCtx.user?.id, reloadTime, refreshTime]);
 
-  const [groupFilter, setGroupFilter] = useState<'all' | 'even' | 'odd'>('all');
+  const [filterGroup, setFilterGroup] = useState<'all' | 'even' | 'odd'>('all');
+  const [filterNeedsReview, setFilterNeedsReview] = useState(false);
   const [order, setOrder] = React.useState<Order>('asc');
   const [orderBy, setOrderBy] = React.useState<keyof RowData>('name');
   const [page, setPage] = React.useState(0);
@@ -267,9 +268,16 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
   };
 
   const applyGroupFilter = (row: RowData) => {
-    if (groupFilter === 'all') return true;
-    if (groupFilter === 'even') return row.group % 2 === 0;
+    if (filterGroup === 'all') return true;
+    if (filterGroup === 'even') return row.group % 2 === 0;
     return Math.abs(row.group % 2) === 1;
+  };
+  const applyNeedsReviewFilter = (row: RowData) => {
+    if (!filterNeedsReview) return true;
+    return (
+      row.status === models.AssignmentAttemptStatus.AWAITING_AI_FEEDBACK ||
+      row.status === models.AssignmentAttemptStatus.AWAITING_TEACHER_FEEDBACK
+    );
   };
 
   const handleRowSelect = (
@@ -293,14 +301,15 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
     let tmp = rows.slice().sort(getComparator(order, orderBy));
     if (rowsPerPage !== -1)
       tmp = tmp.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-    return tmp.filter(applyGroupFilter);
+    return tmp.filter(applyGroupFilter).filter(applyNeedsReviewFilter);
   }, [
     JSON.stringify(statusData),
     order,
     orderBy,
     page,
     rowsPerPage,
-    groupFilter,
+    filterGroup,
+    filterNeedsReview,
   ]);
 
   const groupControls = (
@@ -309,9 +318,9 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
       <RadioGroup
         row
         name="goal"
-        value={groupFilter}
+        value={filterGroup}
         onChange={(event) =>
-          setGroupFilter(event.target.value as 'all' | 'even' | 'odd')
+          setFilterGroup(event.target.value as 'all' | 'even' | 'odd')
         }
       >
         <FormControlLabel value="all" control={<Radio />} label="All" />
@@ -436,9 +445,19 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
       )}
       <Box style={{ display: 'flex', gap: '36px', marginTop: '12px' }}>
         {groupControls}
+
+        <FormControlLabel
+          control={
+            <Switch
+              checked={filterNeedsReview}
+              onChange={(event) => setFilterNeedsReview(event?.target.checked)}
+            />
+          }
+          label="Filter by review needed"
+        />
         <FormControlLabel
           control={<Switch checked={dense} onChange={handleChangeDense} />}
-          label="Dense padding"
+          label="Compact table"
         />
       </Box>
     </Paper>
