@@ -15,7 +15,14 @@ GOLDEN_PATH = os.path.join(SCRIPT_DIR, "golden_feedback.csv")
 
 
 def build_few_shot_instructions(fname: str = GOLDEN_PATH) -> str:
+    """Construct a (partial) prompt for few-shot learning from a CSV file."""
     assert os.path.isfile(GOLDEN_PATH)
     df = pd.read_csv(GOLDEN_PATH)
 
-    df.columns()
+    prompt = ""
+    TEMPLATE = "smart goal: {goal}\n\naction plan:\n\n{plan}\n\n good feedback example: {feedback}\n"
+    for _, row in df.iterrows():
+        prompt += TEMPLATE.format(
+            goal=row["goal"], plan=row["plan"], feedback=row["feedback"]
+        )
+    return prompt

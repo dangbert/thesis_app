@@ -102,11 +102,16 @@ def _run_ai_feedback(job: Job, session: Session):
     job.status = JobStatus.IN_PROGRESS
     session.commit()
 
+    few_shot_prompt = (
+        "examples of good feedback follow:\n"
+        + feedback_utils.build_few_shot_instructions()
+    )
     prompt = feedback_utils.prompts.PROMPT_SMART_FEEDBACK_TEXT_ONLY.format(
         FEEDBACK_PRINCIPLES=feedback_utils.prompts.FEEDBACK_PRINCIPLES,
         SMART_RUBRIC=feedback_utils.prompts.SMART_RUBRIC,
         learning_goal=smart_data.goal,
         action_plan=smart_data.plan,
+        few_shot_prompt=few_shot_prompt,
         language="Dutch",
     )
 

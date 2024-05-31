@@ -81,6 +81,6 @@ def test_ai_feedback_job(session, mocker: pytest_mock.MockerFixture):
 
 
 def test_build_few_shot_instructions():
+    # just verifying the function runs without an error
     few_shot = build_few_shot_instructions()
-    breakpoint()
-    print()
+    assert isinstance(few_shot, str)
