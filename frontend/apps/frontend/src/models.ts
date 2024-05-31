@@ -73,13 +73,14 @@ export interface AttemptPublic extends BaseFields {
   data: SMARTData;
   feedbacks: FeedbackPublic[];
   files: FilePublic[];
+  status: AssignmentAttemptStatus;
 }
 
 export enum AssignmentAttemptStatus {
   NOT_STARTED = 'not started',
   AWAITING_AI_FEEDBACK = 'awaiting AI feedback',
   AWAITING_TEACHER_FEEDBACK = 'awaiting teacher feedback',
-  AWAITING_RESUBMISSION = 'awaiting resubmission',
+  RESUBMISSION_REQUESTED = 'resubmission requested',
   COMPLETE = 'complete',
 }
 

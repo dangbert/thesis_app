@@ -306,7 +306,7 @@ def test_get_assignment_status(client, settings, session):
     )
     res = client.get(get_status_url(as1))
     assert res.status_code == 200
-    expected[1].status = AssignmentAttemptStatus.AWAITING_RESUBMISSION
+    expected[1].status = AssignmentAttemptStatus.RESUBMISSION_REQUESTED
     assert [AssignmentStudentStatus(**item) for item in res.json()] == expected
 
     teacher_feedback.data = dummy.EXAMPLE_APPROVED_FEEDBACK.model_dump()

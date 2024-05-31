@@ -37,6 +37,7 @@ import * as utils from '../utils';
 interface AssignmentStatusProps {
   asData: AssignmentPublic;
   onSelectStudent: (student: models.AssignmentStudentStatus) => void;
+  refreshTime: number; // trigger table refresh by changing this value
 }
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
@@ -186,6 +187,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
   asData,
   onSelectStudent,
+  refreshTime,
 }) => {
   const [statusData, setStatusData] = useState<
     models.AssignmentStudentStatus[]
@@ -216,7 +218,7 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
 
       return () => (cancel = true);
     })();
-  }, [asData.id, userCtx.user?.id, reloadTime]);
+  }, [asData.id, userCtx.user?.id, reloadTime, refreshTime]);
 
   const [groupFilter, setGroupFilter] = useState<'all' | 'even' | 'odd'>('all');
   const [order, setOrder] = React.useState<Order>('asc');

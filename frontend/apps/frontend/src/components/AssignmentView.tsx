@@ -71,6 +71,15 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
   // user (other than current user) that's being viewed (if any)
   let spoofUser = viewingStatus?.student;
   if (spoofUser?.id === userCtx.user.id) spoofUser = undefined;
+
+  let assignmentStatus = models.AssignmentAttemptStatus.NOT_STARTED;
+  if (attempts.length > 0) {
+    assignmentStatus = attempts[attempts.length - 1].status;
+  }
+  const canResubmit =
+    assignmentStatus === models.AssignmentAttemptStatus.NOT_STARTED ||
+    assignmentStatus === models.AssignmentAttemptStatus.RESUBMISSION_REQUESTED;
+
   return (
     <div>
       <Snackbar
@@ -102,6 +111,9 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
           <AssignmentStatus
             asData={asData}
             onSelectStudent={(studentStatus) => setViewingStatus(studentStatus)}
+            // when attempts are updated here (e.g. after resubmission or feedback providedl)
+            // also trigger the status table to update
+            refreshTime={attemptLoadTime}
           />
           <br />
         </>
@@ -140,7 +152,7 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
             assignment yet!
           </Alert>
         )}
-        {!creatingAttempt && !spoofUser && (
+        {!creatingAttempt && !spoofUser && canResubmit && (
           <Button
             variant="contained"
             onClick={() => setCreatingAttempt(true)}
@@ -149,6 +161,10 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
             New Submission
           </Button>
         )}
+        <Typography>
+          <b>{isTeacher ? 'Their' : 'Your'} Assignment Status</b>:{' '}
+          {assignmentStatus}
+        </Typography>
 
         {creatingAttempt && (
           <AttemptCreateModal
@@ -156,7 +172,7 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
             open={creatingAttempt}
             onClose={() => setCreatingAttempt(false)}
             onCreate={(att: models.AttemptPublic) => {
-              setAttempts((prev) => [...prev, att]);
+              setAttemptLoadTime(Date.now() / 1000); // trigger formal refresh
               setSnackbarTxt('Attempt submitted ✅');
             }}
           />

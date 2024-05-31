@@ -120,7 +120,7 @@ def _run_ai_feedback(job: Job, session: Session):
     )
     cost = gpt.compute_price(meta)
     logger.info(
-        f"generated feedback for attempt {attempt.id}, cost=${cost:.2f}, {gpt.model_name=}"
+        f"generated feedback for attempt {attempt.id}, cost=${cost:.5f}, {gpt.model_name=}"
     )
 
     feedback_data = FeedbackData(

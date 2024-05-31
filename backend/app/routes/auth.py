@@ -145,6 +145,7 @@ async def callback(request: Request, session: SessionDep):
     if not user:
         if not hardcoded.email_can_signup(user_info.email):
             logger.warning(f"Rejecting unauthorized email: '{user_info.email}'")
+            # TODO: ideally now delete the new user from Auth0 as well
             raise HTTPException(
                 status_code=403,
                 detail="Only VU emails are permitted at present, please login with your vu.nl email.",

@@ -158,6 +158,7 @@ class Attempt(Base):
             data=self.data,
             feedbacks=feed_objs,
             files=[file.to_public() for file in self.files],
+            status=self.describe_status(),
             **super().to_public().model_dump(),
         )
 
@@ -180,7 +181,7 @@ class Attempt(Base):
             if feedback_data.approved:
                 return AssignmentAttemptStatus.COMPLETE
             else:
-                return AssignmentAttemptStatus.AWAITING_RESUBMISSION
+                return AssignmentAttemptStatus.RESUBMISSION_REQUESTED
 
         elif ai_feedbacks:
             return AssignmentAttemptStatus.AWAITING_TEACHER_FEEDBACK

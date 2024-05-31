@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Paper, Typography, Button, Snackbar } from '@mui/material';
+import { Paper, Typography, Button, Snackbar, Alert } from '@mui/material';
 import {
   Timeline,
   TimelineItem,
@@ -83,19 +83,15 @@ const AttemptHistory: React.FC<AttemptHistoryProps> = ({
           .reverse()
           .map((attempt, attemptIndex) => {
             const realIndex = attempts.length - attemptIndex - 1;
-            let status = isTeacher
-              ? 'awaiting AI feedback'
-              : 'awaiting teacher review';
+            let mustResubmit = false;
             if (attempt.feedbacks.length > 0) {
               const hasHumanFeedback = attempt.feedbacks.some((x) => !x.is_ai);
-              const hasAiFeedback = attempt.feedbacks.some((x) => x.is_ai);
-              if (hasHumanFeedback) {
-                status = 'feedback available';
-              } else if (hasAiFeedback) {
-                status = 'awaiting teacher review';
-              }
+              // const hasAiFeedback = attempt.feedbacks.some((x) => x.is_ai);
+              if (hasHumanFeedback)
+                mustResubmit = !attempt.feedbacks.some((x) => x.data.approved);
             }
 
+            const isLatestAttempt = attemptIndex === 0;
             return (
               <React.Fragment key={attempt.id}>
                 {/* Timeline for each Attempt */}
@@ -104,21 +100,27 @@ const AttemptHistory: React.FC<AttemptHistoryProps> = ({
                     {friendlyDate(attempt.created_at)}
                   </TimelineOppositeContent>
                   <TimelineSeparator>
-                    <TimelineDot color="primary" />
+                    <TimelineDot color={isLatestAttempt ? 'primary' : 'grey'} />
                     {attemptIndex < attempts.length - 1 && (
                       <TimelineConnector />
                     )}
                   </TimelineSeparator>
-                  <TimelineContent>
+                  <TimelineContent sx={{ opacity: isLatestAttempt ? 1 : 0.75 }}>
                     <Paper elevation={3} style={{ padding: '6px 16px' }}>
                       <Typography variant="h6" component="h1">
                         Submission {realIndex + 1}
-                        {attemptIndex === 0 ? ' (latest)' : ''}
+                        {isLatestAttempt ? ' (latest)' : ''}
                       </Typography>
                       {/* TODO: create a <FeedbackStatus> component with an icon (also for user table) */}
                       <Typography style={{ marginTop: '8px' }}>
-                        Status: {status}
+                        {isLatestAttempt && <b>{attempt.status}</b>}
+                        {!isLatestAttempt && `${attempt.status}`}
                       </Typography>
+                      {isLatestAttempt && mustResubmit && (
+                        <Alert severity="warning" style={{ marginTop: '8px' }}>
+                          Resumission requested
+                        </Alert>
+                      )}
                       <Button
                         variant="outlined"
                         style={{ marginTop: '8px' }}

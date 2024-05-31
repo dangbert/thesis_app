@@ -107,7 +107,6 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
 
   return (
     <>
-      {/* TODO: start textfield short, and support it growing up to maxlines? */}
       <TextField
         label="Feedback"
         name="feedback"

@@ -75,6 +75,7 @@ class AttemptPublic(DateFields):
     data: dict[str, Any]
     feedbacks: list["FeedbackPublic"]
     files: list["FilePublic"]
+    status: "AssignmentAttemptStatus"
 
 
 class AssignmentAttemptStatus(enum.Enum):
@@ -83,7 +84,7 @@ class AssignmentAttemptStatus(enum.Enum):
     NOT_STARTED = "not started"
     AWAITING_AI_FEEDBACK = "awaiting AI feedback"
     AWAITING_TEACHER_FEEDBACK = "awaiting teacher feedback"
-    AWAITING_RESUBMISSION = "awaiting resubmission"
+    RESUBMISSION_REQUESTED = "resubmission requested"
     COMPLETE = "complete"
 
 
