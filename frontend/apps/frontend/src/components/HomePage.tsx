@@ -30,13 +30,20 @@ import * as constants from '../constants';
 import * as utils from '../utils';
 import NotLoggedIn from './user/NotLoggedIn';
 import UserAvatar from './user/UserAvatar';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const HomePage = () => {
+  const queryParams = new URLSearchParams(window.location.search);
+  const navigate = useNavigate();
+  const location = useLocation();
   const [courseList, setCourseList] = useState<models.CoursePublic[]>([]);
   const [reloadTime, setReloadTime] = useState<number>(Date.now() / 1000);
   const [loadingCourses, setLoadingCourses] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
-  const [courseIdx, setCourseIdx] = useState<number>(-1);
+  const [curCourseId, setCurCourseId] = useState<string | undefined>(
+    queryParams.get('course') || undefined
+  );
+
   const userCtx = useUserContext();
   const theme = useTheme();
   const classes = useStyles(theme);
@@ -73,17 +80,33 @@ const HomePage = () => {
         setCourseList([]);
         setError(`failed to load course list: ${res.error}`);
       } else {
-        setCourseIdx(res.data.length > 0 ? 0 : -1);
-        setCourseList(res.data);
+        const newCourses = res.data as models.CoursePublic[];
+        const preferredCourse = newCourses.find((c) => c.id === curCourseId);
+        if (!preferredCourse) setCurCourseId(newCourses.at(0)?.id);
+        setCourseList(newCourses);
       }
       return () => (cancel = true);
     })();
-  }, [reloadTime]);
+  }, [reloadTime, curCourseId]);
 
-  const curCourse =
-    courseIdx > -1 && courseIdx < courseList.length
-      ? courseList[courseIdx]
-      : null;
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    if (curCourseId) {
+      searchParams.set('course', curCourseId);
+    } else {
+      searchParams.delete('course');
+    }
+
+    navigate(
+      {
+        pathname: location.pathname,
+        search: `?${searchParams.toString()}`,
+      },
+      { replace: true }
+    );
+  }, [curCourseId]);
+
+  const curCourse = courseList.find((c) => c.id === curCourseId);
 
   const handleLogout = () => {
     window.location.href = courseApi.LOGOUT_URL; // force page reload

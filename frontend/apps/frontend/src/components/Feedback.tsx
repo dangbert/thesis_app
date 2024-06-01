@@ -12,6 +12,7 @@ import {
   FormControlLabel,
   Radio,
 } from '@mui/material';
+
 import {
   FeedbackPublic,
   FeedbackData,
@@ -26,7 +27,7 @@ import { FEEDBACK_MAX_ROWS, FEEDBACK_MIN_ROWS } from '../constants';
 interface FeedbackViewProps {
   attemptId: string;
   asData: AssignmentPublic;
-  feedback?: FeedbackPublic;
+  priorFeedback?: FeedbackPublic; // existing feedback (if any)
   readOnly: boolean;
   onClose: () => void;
   onCreate?: (feedback: FeedbackPublic) => void;
@@ -38,14 +39,14 @@ interface FeedbackViewProps {
 const FeedbackView: React.FC<FeedbackViewProps> = ({
   attemptId,
   asData,
-  feedback,
+  priorFeedback,
   readOnly,
   onClose,
   onCreate,
 }) => {
   const DEFAULT_FEEDBACK: FeedbackData = {
-    // default to provided feedback (e.g. if using AI feedback is starting point)
-    feedback: feedback?.data.feedback || '',
+    // default to provided feedback (e.g. if using AI feedback as starting point)
+    feedback: priorFeedback?.data.feedback || '',
     other_comments: '',
     approved: false,
     score: null,
@@ -53,7 +54,7 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
   };
 
   const [feedbackData, setFeedbackData] = useState<FeedbackData>(
-    feedback?.data || DEFAULT_FEEDBACK
+    priorFeedback?.data || DEFAULT_FEEDBACK
   );
   // when to make the approve button blank...
   const [needsApprovalResponse, setNeedsApprovalResponse] = useState<boolean>(

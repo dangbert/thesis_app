@@ -37,8 +37,6 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
   const [viewingStatus, setViewingStatus] =
     useState<models.AssignmentStudentStatus | null>(null);
 
-  // user
-
   // load attempts
   useEffect(() => {
     let cancel = false;

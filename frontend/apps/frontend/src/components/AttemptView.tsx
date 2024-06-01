@@ -62,7 +62,7 @@ const AttemptView: React.FC<AttemptViewProps> = ({
             }}
           >
             <Typography variant="h6" gutterBottom>
-              Attempt Details
+              Attempt Details: {asData.name}
             </Typography>
             <TextField
               label="SMART Goal"
@@ -116,7 +116,7 @@ const AttemptView: React.FC<AttemptViewProps> = ({
                 <FeedbackView
                   attemptId={attempt.id}
                   asData={asData}
-                  feedback={humanFeedback}
+                  priorFeedback={humanFeedback}
                   readOnly={true}
                   onClose={onClose}
                 />
@@ -131,7 +131,7 @@ const AttemptView: React.FC<AttemptViewProps> = ({
               <FeedbackView
                 attemptId={attempt.id}
                 asData={asData}
-                feedback={humanFeedback || aiFeedback || undefined}
+                priorFeedback={humanFeedback || aiFeedback || undefined}
                 readOnly={readOnly}
                 onClose={onClose}
                 onCreate={onCreateFeedback}

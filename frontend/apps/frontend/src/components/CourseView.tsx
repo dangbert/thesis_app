@@ -20,6 +20,7 @@ import * as courseApi from '../api';
 import * as utils from '../utils';
 import { useUserContext } from '../providers';
 import Markdown from 'react-markdown';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface CourseViewProps {
   course: models.CoursePublic;
@@ -27,14 +28,30 @@ interface CourseViewProps {
 }
 
 const CourseView: React.FC<CourseViewProps> = ({ course, refreshCourse }) => {
-  const [asList, setAsList] = useState<models.AssignmentPublic[]>([]); // assignments for current course
-  const [asIdx, setAsIdx] = useState<number>(-1); // curent assignment index
-  const [loadingAssignments, setLoadingAssignments] = useState<boolean>(true);
-  const [userProfileOpen, setUserProfileOpen] = useState<boolean>(false);
+  const queryParams = new URLSearchParams(window.location.search);
+  const navigate = useNavigate();
+  const location = useLocation();
+  // assignments in current course
+  const [asList, setAsList] = useState<models.AssignmentPublic[]>([]);
+  // curent visible assignment
+  const [curAsId, setCurAsId] = useState<string | undefined>(
+    queryParams.get('assignment') || undefined
+  );
+  const [loadingAssignments, setLoadingAssignments] = useState(true);
+  const [userProfileOpen, setUserProfileOpen] = useState(false);
+  const [mustCompleteProfile, setMustCompleteProfile] = useState(false);
 
   const userCtx = useUserContext();
   const isTeacher = course.your_role === models.CourseRole.TEACHER;
-  // const asData = asIdx > -1 && asIdx < asList.length ? asList[asIdx] : null;
+  const curAs = asList.find((as) => as.id === curAsId);
+
+  useEffect(() => {
+    const newVal = utils.isUndefined(course.your_group) && !isTeacher;
+    // console.log(`updating mustCompleteProfile to: ${newVal}`);
+    // console.log(`course.your_group = ${course.your_group}`);
+    setMustCompleteProfile(newVal);
+    setUserProfileOpen(newVal);
+  }, [course.your_group, isTeacher]);
 
   // load assignments for current course
   useEffect(() => {
@@ -48,13 +65,34 @@ const CourseView: React.FC<CourseViewProps> = ({ course, refreshCourse }) => {
         console.error(res.error);
         setAsList([]);
       } else {
-        setAsList(res.data);
-        setAsIdx(res.data.length > 0 ? 0 : -1);
+        const newAssignments = res.data as models.AssignmentPublic[];
+        const preferredAs = newAssignments.find((x) => x.id === curAsId);
+        if (!preferredAs) setCurAsId(newAssignments.at(0)?.id);
+        setAsList(newAssignments);
       }
 
       return () => (cancel = true);
     })();
   }, [course.id]);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    // Update or set the course parameter to curCourseId
+    if (curAs) {
+      searchParams.set('course', curAs.id);
+      searchParams.set('assignment', curAs.id);
+    } else {
+      searchParams.delete('assignment');
+    }
+
+    navigate(
+      {
+        pathname: location.pathname,
+        search: `?${searchParams.toString()}`,
+      },
+      { replace: true }
+    );
+  }, [curAs?.id]);
 
   const handleCreateAs = async () => {
     console.log('creating assignment');
@@ -73,14 +111,11 @@ const CourseView: React.FC<CourseViewProps> = ({ course, refreshCourse }) => {
   };
 
   if (!userCtx.user) return null;
-  const mustCompleteProfile =
-    utils.isUndefined(course.your_group) && !isTeacher;
-  if (mustCompleteProfile && !userProfileOpen) setUserProfileOpen(true);
   return (
     <div>
       <Card variant="outlined">
         <CardContent>
-          <Typography variant="h3" component="h2">
+          <Typography variant="h4" component="h3">
             {course.name}
           </Typography>
           <Typography variant="caption">
@@ -145,19 +180,16 @@ const CourseView: React.FC<CourseViewProps> = ({ course, refreshCourse }) => {
               <Box sx={{ width: '100%' }}>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                   <Tabs
-                    value={asIdx >= 0 ? asIdx : false}
-                    onChange={(
-                      event: React.SyntheticEvent,
-                      newValue: number
-                    ) => {
-                      setAsIdx(newValue);
-                    }}
+                    value={curAs ? curAs.id : false}
+                    onChange={(event: React.SyntheticEvent, newValue: string) =>
+                      setCurAsId(newValue.toString())
+                    }
                     aria-label="Assignment Tabs"
                   >
                     {asList.map((as, idx) => (
                       <Tab
                         label={as.name}
-                        value={idx}
+                        value={as.id}
                         key={as.id}
                         {...a11yProps(idx)}
                       />
@@ -165,7 +197,11 @@ const CourseView: React.FC<CourseViewProps> = ({ course, refreshCourse }) => {
                   </Tabs>
                 </Box>
                 {asList.map((as, idx) => (
-                  <CustomTabPanel value={asIdx} index={idx} key={as.id}>
+                  <CustomTabPanel
+                    value={as.id}
+                    curValue={curAsId || ''}
+                    key={as.id}
+                  >
                     <AssignmentView asData={as} isTeacher={isTeacher} />
                   </CustomTabPanel>
                 ))}
@@ -182,23 +218,23 @@ const CourseView: React.FC<CourseViewProps> = ({ course, refreshCourse }) => {
 
 interface TabPanelProps {
   children?: React.ReactNode;
-  index: number;
-  value: number;
+  value: string;
+  curValue: string; // visible tab's value
 }
 
 // https://mui.com/material-ui/react-tabs/#introduction
 function CustomTabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
+  const { children, value, curValue, ...other } = props;
 
   return (
     <div
       role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
+      hidden={value !== curValue}
+      id={`simple-tabpanel-${curValue}`}
+      aria-labelledby={`simple-tab-${curValue}`}
       {...other}
     >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+      {value === curValue && <Box sx={{ p: 3 }}>{children}</Box>}
     </div>
   );
 }
