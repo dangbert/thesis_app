@@ -24,6 +24,9 @@ class FeedbackData(BaseModel):
     eval_metrics: Optional["EvalMetrics"] = None
 
 
+MAX_SCORE = 3  # reflection score max points
+
+
 class EvalMetrics(BaseModel):
     """Evaluation metrics for AI feedback."""
 

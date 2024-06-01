@@ -5,6 +5,12 @@ In summary the site is deployed on a single AWS EC2 instance (manually deployed 
 
 Note: before committing in this folder run `terraform fmt -recursive`
 
+### Common Infrastructure
+The [./common](./common) folder defines cloud resources (e.g. SES email templates) needed by all deployment environments.
+
+Start by running `terraform init && terraform apply` in `common/`, be sure to then manually verify your domain on [AWS SES](https://console.aws.amazon.com/ses/home#/homepage) (and "Request production access" to leave the sandbox) before you'll be able to freely send emails.  Be sure to do this in the same region selected in [common/main.tf](./common/main.tf).
+* If you don't want to use SES or you haven't yet fully verified it, you can still run the site locally (DEV mode) or in PRD by omitting the "email_from" variable in your `docker/.env` file (in which case email notifications are disabled).
+
 ### Auth0 and EC2 Setup
 
 1. Login/signup to https://auth0.com and create a new tenant.
@@ -32,9 +38,3 @@ Note: before committing in this folder run `terraform fmt -recursive`
   * ssh into the server, and run `bash ~/setup.sh -i` to install certbot and create your SSL certificates.
 
 7. Then follow the production instructions in [../docker/README.md](../docker/README.md) to launch the site!
-
-### Common Infrastructure
-
-The [./common](./common) folder defines cloud resources (e.g. SES email templates) needed by all deployment environments.
-
-After running `terraform init && terraform apply` in `common/`, be sure to then manually verify your domain on [AWS SES](https://console.aws.amazon.com/ses/home#/homepage) (and "Request production access" to leave the sandbox) before you'll be able to freely send emails.  Be sure to do this in the same region selected in [common/main.tf](./common/main.tf).

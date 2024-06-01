@@ -32,6 +32,12 @@ variable "from_email" {
   default     = "notifications@ezfeedback.engbert.me"
 }
 
+variable "ses_error_email" {
+  description = "The email address to which SES rendering errors are sent for debugging (omit to disable)"
+  type        = string
+  default     = ""
+}
+
 locals {
   aws = {
     region  = "eu-west-1"
@@ -60,11 +66,18 @@ resource "aws_ses_event_destination" "sns" {
   name                   = "${local.namespace}-ses"
   configuration_set_name = aws_ses_configuration_set.email_failures.name
   enabled                = true
-  matching_types         = ["renderingFailure", "reject", "bounce", "complaint", "delivery"]
+  matching_types         = ["renderingFailure"] #, "reject", "bounce", "complaint", "delivery"]
 
   sns_destination {
     topic_arn = aws_sns_topic.ses.arn
   }
+}
+
+resource "aws_sns_topic_subscription" "email" {
+  topic_arn = aws_sns_topic.ses.arn
+  protocol  = "email"
+  endpoint  = var.ses_error_email
+  count     = var.ses_error_email != "" ? 1 : 0
 }
 
 resource "aws_sns_topic" "ses" {

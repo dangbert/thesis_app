@@ -51,3 +51,13 @@ follow_imports = "skip"
 module = "openai.*"
 ignore_missing_imports = true
 follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = "boto3.*"
+ignore_missing_imports = true
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = "botocore.*"
+ignore_missing_imports = true
+follow_imports = "skip"

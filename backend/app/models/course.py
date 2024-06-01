@@ -22,7 +22,8 @@ from uuid import UUID
 import os
 from typing import Optional, Any
 import secrets
-import enum
+
+settings = get_settings()
 
 
 class Course(Base):
@@ -66,6 +67,10 @@ class Course(Base):
             your_group=your_group,
         )
 
+    def page_url(self) -> str:
+        """URL to view this course in the frontend."""
+        return f"{settings.site_url}?course={self.course_id}"
+
 
 class CourseUserLink(Base):
     __tablename__ = "course_user_link"
@@ -107,6 +112,10 @@ class Assignment(Base):
         back_populates="assignments",
         cascade="all, delete",
     )
+
+    def page_url(self) -> str:
+        """URL to view this assignment in the frontend."""
+        return f"{settings.site_url}?course={self.course_id}&assignment={self.id}"
 
     def to_public(self) -> AssignmentPublic:
         return AssignmentPublic(
@@ -214,7 +223,6 @@ class File(Base):
     )
 
     def to_public(self) -> FilePublic:
-        settings = get_settings()
         # read URL is the API endpoint to GET the file  e.g. "/api/v1/file/c773cf48-cf50-4a21-a8e0-863cca1c8e3b"
         # see backend/app/routes/files.py
         read_url = f"{settings.api_v1_str}/file/{self.id}"
@@ -227,7 +235,6 @@ class File(Base):
 
     @property
     def disk_path(self) -> str:
-        settings = get_settings()
         return os.path.join(settings.file_dir, f"{self.id}.{self.ext}")
 
 
@@ -281,6 +288,7 @@ class Feedback(Base):
     data: Mapped[dict[str, Any]] = mapped_column(JSON)
 
     attempt: Mapped["Attempt"] = relationship("Attempt", back_populates="feedbacks")
+    user: Mapped[Optional["User"]] = relationship("User")
 
     def to_public(self) -> FeedbackPublic:
         return FeedbackPublic(

@@ -17,16 +17,20 @@ from app.models.course import (
     FeedbackPublic,
     Feedback,
 )
-import json
+import app.notifications as notifications
 from app.models.job import Job, AI_FEEDBACK_JOB_DATA, JobStatus, JobType
 from app.routes.courses import get_assignment_or_fail
 from app.routes.files import get_files_or_fail
 from app.hardcoded import SMARTData, FeedbackData
+from app.settings import get_settings
 from uuid import UUID
 from pydantic import ValidationError
 from typing import Optional
+import config
 
 router = APIRouter()
+settings = get_settings()
+logger = config.get_logger(__name__)
 
 ATTEMPT_NOT_FOUND = "Attempt not found or unauthorized"
 
@@ -131,6 +135,13 @@ async def create_feedback(
     session.flush()  # to get ID
     session.add(AttemptFeedbackLink(attempt_id=attempt.id, feedback_id=feedback.id))
     session.commit()
+
+    # send email to user if configured
+    if not settings.notifications_enabled:
+        logger.info("skipping email send (email notifications disabled)")
+        return feedback.to_public()
+
+    notifications.send_feedback_email(feedback)
     return feedback.to_public()
 
 

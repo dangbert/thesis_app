@@ -41,6 +41,13 @@
         font-size: 18px;
         line-height: 28px;
       }
+      .emailHeader a {
+        font-weight: inherit;
+        font-size: inherit;
+        line-height: inherit;
+        /* color: blue; */
+        text-decoration: underline;
+      }
       .solid {
         width: 100%;
         border-top: 3px solid rgba(145, 158, 171, 0.24);
@@ -91,26 +98,14 @@
       <tr>
         <td>
           <h1 class="emailHeader">
-            <b>You've received feedback on submission to "{assignment_name}"</b>
+            You've received feedback on your submission to <a href="{{assignment_url}}">{{assignment_name}}</a>
           </h1>
         </td>
       </tr>
       <tr>
         <td>
           <pre>
-            Your submission was approved by the teacher, no further action is currently necessary. Make sure to implement any feedback in your next reflection assignment!
-            <br />
-            (OR)
-            Your teacher has requested you resubmit this assignment. Follow the instructions mentioned in the feedback.
-
-            <b>teacher feedback</b>:
-            {teacher_feedback}
-
-            <b>other comments</b>:
-            {other_comments}
-
-            <b>reflection score</b>: {reflection_score}/3
-
+            {{message}}
           </pre>
         </td>
       </tr>
@@ -123,8 +118,8 @@
         <td>
           <div class="footer">
             <p class="footer-links footer-smallFont_light">
-              This email was sent due to your enrollment on <a href="{{site_url}}">ezfeedback.engbert.me</a><br />
-              If you have any technical issues or complaints please contact <a href="mailto:{{support_email}}">d.engbert@student.vu.nl</a>
+              This email was sent due to your enrollment on <a href="{{site_url}}">{{site_url}}</a><br />
+              If you have any technical issues with the website please contact <a href="mailto:{{support_email}}">{{support_email}}</a>
             </p>
           </div>
         </td>

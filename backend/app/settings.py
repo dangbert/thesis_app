@@ -37,7 +37,6 @@ class Settings(BaseSettings):
 
     api_v1_str: str = "/api/v1"
     server_name: str  # e.g. "http://localhost:8000" or "example.com"
-    support_email: Optional[str] = None  # to include in email alerts
 
     # only allow user signups with a valid invite code
     invite_only_signup: bool = True
@@ -87,7 +86,11 @@ class Settings(BaseSettings):
     # email to send notifications from (should match terraform/instances/common/main.tf:from_email)
     #   omit to disable sending emails
     email_from: Optional[str] = None
-    support_email: Optional[str] = None  # email to send support emails to
+    support_email: str  # for students with technical issues
+
+    @property
+    def notifications_enabled(self) -> bool:
+        return bool(self.email_from)
 
     @property
     def db_uri(self):

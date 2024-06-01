@@ -38,6 +38,17 @@ locals {
   namespace = "ezfeedback-${lower(local.env_name)}"
 }
 
+# read data from common environment
+data "terraform_remote_state" "common" {
+  backend = "s3"
+  config = {
+    bucket         = "dangbert-tf-backend"
+    dynamodb_table = "dangbert-tf-backend-lock"
+    region         = "us-west-2"
+    key            = "thesis/common/terraform.tfstate"
+  }
+}
+
 
 provider "aws" {
   region = local.aws.region
@@ -58,7 +69,7 @@ variable "auth0_provider" {
 }
 
 variable "google_oauth" {
-  description = "Your google oauth credentials, see installation steps here https://marketplace.auth0.com/integrations/google-social-connectio"
+  description = "Your google oauth credentials, see installation steps here https://marketplace.auth0.com/integrations/google-social-connection"
   sensitive   = true
   type = object({
     client_id     = string
