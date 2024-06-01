@@ -37,6 +37,7 @@ class Settings(BaseSettings):
 
     api_v1_str: str = "/api/v1"
     server_name: str  # e.g. "http://localhost:8000" or "example.com"
+    support_email: Optional[str] = None  # to include in email alerts
 
     # only allow user signups with a valid invite code
     invite_only_signup: bool = True
@@ -79,6 +80,14 @@ class Settings(BaseSettings):
     gpt_model: str
     gpt_temperature: float = 0.5
     gpt_max_tokens: int = 1000
+
+    # AWS
+    aws_region: str
+
+    # email to send notifications from (should match terraform/instances/common/main.tf:from_email)
+    #   omit to disable sending emails
+    email_from: Optional[str] = None
+    support_email: Optional[str] = None  # email to send support emails to
 
     @property
     def db_uri(self):

@@ -17,8 +17,7 @@ terraform {
 variable "aws_region" {
   description = "The AWS region to deploy to"
   type        = string
-  # TODO: in my case I accidentally used us-east-1 instead of eu-west-1 like the rest of the infrastructure
-  default = "eu-west-1"
+  default     = "eu-west-1"
 }
 
 variable "email_domain" {
@@ -27,15 +26,20 @@ variable "email_domain" {
   default     = "ezfeedback.engbert.me"
 }
 
+variable "from_email" {
+  description = "The email address from which emails can be sent"
+  type        = string
+  default     = "notifications@ezfeedback.engbert.me"
+}
+
 locals {
   aws = {
     region  = "eu-west-1"
     profile = "default"
   }
-  tags           = {}
-  templates_dir  = "${path.module}/ses-templates"
-  ses_templates  = [for file in fileset(local.templates_dir, "*.html") : "${local.templates_dir}/${file}"]
-  no_reply_email = "no-reply@${var.email_domain}"
+  tags          = {}
+  templates_dir = "${path.module}/email-templates"
+  ses_templates = [for file in fileset(local.templates_dir, "*.html") : "${local.templates_dir}/${file}"]
 
   env_name  = basename(abspath(path.module))
   namespace = "ezfeedback-${lower(local.env_name)}"
@@ -86,11 +90,10 @@ resource "aws_ses_template" "templates" {
   html = file(each.value)
 }
 
-# https://auth0.com/docs/customize/email/smtp-email-providers/configure-amazon-ses-as-external-smtp-email-provider
 # https://docs.aws.amazon.com/ses/latest/dg/sending-authorization-policy-examples.html
 resource "aws_iam_policy" "ses_send" {
   name        = "${local.namespace}-ses-send"
-  description = "Allow sending SES emails from ${local.no_reply_email}"
+  description = "Allow sending SES emails from ${var.from_email}"
   policy = jsonencode({
     "Version" : "2012-10-17",
     "Statement" : [
@@ -101,13 +104,23 @@ resource "aws_iam_policy" "ses_send" {
           "ses:SendEmail"
         ],
         "Resource" : aws_ses_domain_identity.this.arn,
-
         "Condition" : {
           "StringLike" : {
-            "ses:FromAddress" : local.no_reply_email
+            "ses:FromAddress" : var.from_email,
           }
         }
       }
     ]
   })
+}
+
+output "ses" {
+  value = {
+    templates   = [for t in aws_ses_template.templates : t.name]
+    config_sets = [aws_ses_configuration_set.email_failures.name]
+    iam = {
+      send_arn = aws_iam_policy.ses_send.arn
+    }
+    from_email = var.from_email
+  }
 }

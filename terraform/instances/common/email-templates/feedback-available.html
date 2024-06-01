@@ -91,13 +91,27 @@
       <tr>
         <td>
           <h1 class="emailHeader">
-            <b>You've received feedback on your "{assignment_name}" assignment submission.</b>
+            <b>You've received feedback on submission to "{assignment_name}"</b>
           </h1>
         </td>
       </tr>
       <tr>
         <td>
-          <pre>{{message}}</pre>
+          <pre>
+            Your submission was approved by the teacher, no further action is currently necessary. Make sure to implement any feedback in your next reflection assignment!
+            <br />
+            (OR)
+            Your teacher has requested you resubmit this assignment. Follow the instructions mentioned in the feedback.
+
+            <b>teacher feedback</b>:
+            {teacher_feedback}
+
+            <b>other comments</b>:
+            {other_comments}
+
+            <b>reflection score</b>: {reflection_score}/3
+
+          </pre>
         </td>
       </tr>
       <tr>
@@ -109,8 +123,8 @@
         <td>
           <div class="footer">
             <p class="footer-links footer-smallFont_light">
-              This email was sent due to your enrollment on <a href="{{site_url}}">{{site_url}}</a><br />
-              If you have any technical issues or complaints please contact <a href="mailto:{{support_email}}">{{support_email}}</a>
+              This email was sent due to your enrollment on <a href="{{site_url}}">ezfeedback.engbert.me</a><br />
+              If you have any technical issues or complaints please contact <a href="mailto:{{support_email}}">d.engbert@student.vu.nl</a>
             </p>
           </div>
         </td>
