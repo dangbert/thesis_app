@@ -130,7 +130,7 @@ resource "aws_iam_access_key" "this" {
 }
 
 resource "aws_iam_user_policy_attachment" "ses" {
-  user       = aws_iam_user.ses.name
+  user       = aws_iam_user.this.name
   policy_arn = local.common.ses.iam.send_arn
 }
 

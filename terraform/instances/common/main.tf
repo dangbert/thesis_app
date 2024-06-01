@@ -114,9 +114,19 @@ resource "aws_iam_policy" "ses_send" {
         "Effect" : "Allow",
         "Action" : [
           "ses:SendRawEmail",
-          "ses:SendEmail"
+          "ses:SendEmail",
         ],
         "Resource" : aws_ses_domain_identity.this.arn,
+        "Condition" : {
+          "StringLike" : {
+            "ses:FromAddress" : var.from_email,
+          }
+        }
+      },
+      {
+        "Effect" : "Allow",
+        "Action" : ["ses:SendTemplatedEmail"],
+        "Resource" : "*",
         "Condition" : {
           "StringLike" : {
             "ses:FromAddress" : var.from_email,
