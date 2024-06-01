@@ -31,7 +31,7 @@ def send_feedback_email(feedback: models.Feedback) -> bool:
     if feedback.is_ai or feedback.user is None:
         logger.error(f"send_feedback_email called for AI feedback: {feedback.id}")
         return False
-    ses_client = boto3.client("sesv2", region_name=settings.aws_region)
+    ses_client = boto3.client("sesv2", region_name=settings.aws_default_region)
 
     attempt = feedback.attempt
     assignment = attempt.assignment

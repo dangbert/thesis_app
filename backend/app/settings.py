@@ -81,7 +81,7 @@ class Settings(BaseSettings):
     gpt_max_tokens: int = 1000
 
     # AWS
-    aws_region: str
+    aws_default_region: str
 
     # email to send notifications from (should match terraform/instances/common/main.tf:from_email)
     #   omit to disable sending emails

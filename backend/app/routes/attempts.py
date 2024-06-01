@@ -141,7 +141,11 @@ async def create_feedback(
         logger.info("skipping email send (email notifications disabled)")
         return feedback.to_public()
 
-    notifications.send_feedback_email(feedback)
+    try:
+        notifications.send_feedback_email(feedback)
+    # out of precaution catch all exceptions (email sending is less critical)
+    except Exception as e:
+        logger.error(f"Failed to send feedback {feedback.id} email: {e}")
     return feedback.to_public()
 
 

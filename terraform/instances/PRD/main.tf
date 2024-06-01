@@ -119,6 +119,21 @@ module "ec2" {
   count         = var.create_ec2 ? 1 : 0
 }
 
+# attaching SES policy directly to EC2 doesn't seem to help the Docker service
+# so explicitly creating credentials as env vars
+resource "aws_iam_user" "this" {
+  name = "${local.namespace}-user"
+}
+
+resource "aws_iam_access_key" "this" {
+  user = aws_iam_user.this.name
+}
+
+resource "aws_iam_user_policy_attachment" "ses" {
+  user       = aws_iam_user.ses.name
+  policy_arn = local.common.ses.iam.send_arn
+}
+
 output "auth0" {
   sensitive = true
   value     = module.auth0_tenant
@@ -135,5 +150,14 @@ output "ec2" {
       start  = "aws ec2 start-instances --instance-ids ${module.ec2[0].instance_id} --region ${local.aws.region} --profile ${local.aws.profile}"
       status = "aws ec2 describe-instance-status --instance-ids ${module.ec2[0].instance_id} --region ${local.aws.region} --profile ${local.aws.profile}"
     }
+  }
+}
+
+output "iam_credentials" {
+  description = "Credentials needed by this environment (to use SES)."
+  sensitive   = true
+  value = {
+    access_key_id     = aws_iam_access_key.this.id
+    secret_access_key = aws_iam_access_key.this.secret
   }
 }
