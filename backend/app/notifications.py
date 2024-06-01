@@ -8,7 +8,8 @@ import config
 from pydantic import BaseModel
 from typing import Optional
 import app.models as models
-from app.hardcoded import FeedbackData, MAX_SCORE
+from app.hardcoded import FeedbackData, MAX_SCORE, RELECTION_SCORE_EXPLANATION
+
 from pydantic import ValidationError
 
 logger = config.get_logger(__name__)
@@ -61,8 +62,7 @@ def send_feedback_email(feedback: models.Feedback) -> bool:
 
     reflection_msg = ""
     if fdata.score is not None:
-        reflection_msg = f"<br /><b>reflection score</b>: {fdata.score}/{MAX_SCORE}"
-
+        reflection_msg = f"<br /><b>reflection score</b>: {fdata.score}/{MAX_SCORE}\n{RELECTION_SCORE_EXPLANATION}"
 
     message = f"""
 {approval_msg}

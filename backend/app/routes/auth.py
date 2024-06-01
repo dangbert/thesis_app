@@ -216,4 +216,5 @@ async def me(request: Request, session: SessionDep) -> UserPublic | RedirectResp
         )
         return RedirectResponse(url=LOGIN_URL)
 
+    logger.info(f"user {user.email} is active")
     return user.to_public()

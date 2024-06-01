@@ -26,6 +26,8 @@ class FeedbackData(BaseModel):
 
 MAX_SCORE = 3  # reflection score max points
 
+RELECTION_SCORE_EXPLANATION = "See the following link for the explanation of your reflection score: https://docs.google.com/document/d/14_U6jYnL-a7vg9vo1GGBb7jpujDHCc7-/"
+
 
 class EvalMetrics(BaseModel):
     """Evaluation metrics for AI feedback."""
