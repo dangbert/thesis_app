@@ -42,3 +42,9 @@ variable "ingress_ports" {
   type        = list(number)
   description = "list of ports to expose for ingress"
 }
+
+variable "policies" {
+  type        = list(string)
+  description = "Optional list of policy ARNs to attach to server (e.g. for SES access)."
+  default     = []
+}

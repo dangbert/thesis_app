@@ -36,6 +36,18 @@ locals {
   }
   env_name  = basename(abspath(path.module))
   namespace = "ezfeedback-${lower(local.env_name)}"
+  common    = data.terraform_remote_state.common.outputs
+}
+
+# read data from common environment
+data "terraform_remote_state" "common" {
+  backend = "s3"
+  config = {
+    bucket         = "dangbert-tf-backend"
+    dynamodb_table = "dangbert-tf-backend-lock"
+    region         = "us-west-2"
+    key            = "thesis/common/terraform.tfstate"
+  }
 }
 
 
@@ -103,6 +115,7 @@ module "ec2" {
   instance_type = "t2.micro"
   volume_size   = 45
   ingress_ports = [22, 443, 80]
+  policies      = [local.common.ses.iam.send_arn]
   count         = var.create_ec2 ? 1 : 0
 }
 
