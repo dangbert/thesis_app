@@ -11,7 +11,7 @@ import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Chip from '@mui/material/Chip';
 
 const STAR_LABELS: { [index: string]: string } = {
-  1: ' Very dissatisfied',
+  1: 'Very dissatisfied',
   2: 'Dissatisfied',
   3: 'Unsure',
   4: 'Satisfied',
@@ -22,15 +22,35 @@ function getLabelText(value: number) {
   return `${value} Star${value !== 1 ? 's' : ''}, ${STAR_LABELS[value]}`;
 }
 
+interface LikertStarsProps {
+  value?: number;
+  setValue(value?: number): void;
+  readOnly: boolean;
+}
+
 // https://mui.com/material-ui/react-rating/#hover-feedback
-export function LikertStars() {
-  const [value, setValue] = React.useState<number | null>(2);
+
+export const LikertStars: React.FC<LikertStarsProps> = ({
+  value,
+  setValue,
+  readOnly,
+}) => {
   const [hover, setHover] = React.useState(-1);
+
+  // const curLabel = STAR_LABELS.hasOwnProperty(value || '') ? STAR_LABELS[value] : '';
+  // let curLabel = 'not specified';
+  // if (value !== undefined && value in STAR_LABELS) {
+  //   curLabel = STAR_LABELS[value];
+  // }
+  const curLabel =
+    value !== undefined
+      ? STAR_LABELS[value] ?? 'Not specified'
+      : 'Not specified';
+  console.log(`value=${value}`);
 
   return (
     <Box
       sx={{
-        width: 200,
         display: 'flex',
         alignItems: 'center',
       }}
@@ -41,19 +61,18 @@ export function LikertStars() {
         precision={1.0}
         getLabelText={getLabelText}
         onChange={(event, newValue) => {
-          setValue(newValue);
+          if (readOnly) return;
+          setValue(newValue || undefined);
         }}
         onChangeActive={(event, newHover) => {
           setHover(newHover);
         }}
         emptyIcon={<StarIcon style={{ opacity: 0.55 }} fontSize="inherit" />}
       />
-      {value !== null && (
-        <Box sx={{ ml: 2 }}>{STAR_LABELS[hover !== -1 ? hover : value]}</Box>
-      )}
+      {value !== null && <Box sx={{ ml: 2 }}>{curLabel}</Box>}
     </Box>
   );
-}
+};
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;

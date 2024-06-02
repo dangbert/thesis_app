@@ -32,7 +32,9 @@ RELECTION_SCORE_EXPLANATION = "See the following link for the explanation of you
 class EvalMetrics(BaseModel):
     """Evaluation metrics for AI feedback."""
 
+    # TODO: maybe make all optional?
     problems: list[str]
+    rating: int
 
 
 def email_can_signup(email: str):

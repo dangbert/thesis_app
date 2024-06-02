@@ -11,6 +11,7 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
+  Paper,
 } from '@mui/material';
 
 import {
@@ -18,17 +19,20 @@ import {
   FeedbackData,
   FeedbackCreate,
   AssignmentPublic,
-} from '../models';
-import * as courseApi from '../api';
-import { useUserContext } from '../providers';
+  EvalMetrics,
+} from '../../models';
+import * as courseApi from '../../api';
+import { useUserContext } from '../../providers';
+import EvalControls from './EvalControls';
 
-import { FEEDBACK_MAX_ROWS, FEEDBACK_MIN_ROWS } from '../constants';
+import { FEEDBACK_MAX_ROWS, FEEDBACK_MIN_ROWS } from '../../constants';
 
 interface FeedbackViewProps {
   attemptId: string;
   asData: AssignmentPublic;
   priorFeedback?: FeedbackPublic; // existing feedback (if any)
   readOnly: boolean;
+  isTeacher: boolean;
   onClose: () => void;
   onCreate?: (feedback: FeedbackPublic) => void;
 }
@@ -41,6 +45,7 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
   asData,
   priorFeedback,
   readOnly,
+  isTeacher,
   onClose,
   onCreate,
 }) => {
@@ -56,6 +61,9 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
   const [feedbackData, setFeedbackData] = useState<FeedbackData>(
     priorFeedback?.data || DEFAULT_FEEDBACK
   );
+  const [evalData, setEvalData] = useState<Partial<EvalMetrics>>(
+    priorFeedback?.data.metrics ? priorFeedback.data.metrics : {}
+  );
   // when to make the approve button blank...
   const [needsApprovalResponse, setNeedsApprovalResponse] = useState<boolean>(
     !readOnly
@@ -70,6 +78,10 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
+  };
+
+  const handleEvalChange = (evalData: Partial<EvalMetrics>) => {
+    setEvalData(evalData);
   };
 
   const handleSubmit = async () => {
@@ -138,64 +150,74 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
 
       <br />
       <br />
-      <FormControl component="fieldset">
-        <FormLabel component="legend">Goal/Plan:</FormLabel>
-        <RadioGroup
-          row
-          name="goal"
-          value={approvalStr}
-          onChange={(event) => {
-            if (readOnly) return;
-            setNeedsApprovalResponse(false);
-            setFeedbackData((prev) => ({
-              ...prev,
-              approved: event.target.value === 'approve',
-            }));
-          }}
-        >
-          <FormControlLabel
-            value="approve"
-            control={<Radio />}
-            label="Approved"
-            disabled={readOnly}
-          />
-          <FormControlLabel
-            value="resubmit"
-            control={<Radio />}
-            label="Needs resubmission"
-            disabled={readOnly}
-          />
-        </RadioGroup>
-      </FormControl>
-
-      <br />
-      {/* Reflection Score Section */}
-      {asData.scorable && (
+      <Paper elevation={1} variant="outlined" style={{ padding: '14px' }}>
         <FormControl component="fieldset">
-          <FormLabel component="legend">Reflection Score:</FormLabel>
+          <FormLabel component="legend">Goal/Plan:</FormLabel>
           <RadioGroup
             row
-            name="score"
-            value={feedbackData.score?.toString() || ''}
+            name="goal"
+            value={approvalStr}
             onChange={(event) => {
               if (readOnly) return;
+              setNeedsApprovalResponse(false);
               setFeedbackData((prev) => ({
                 ...prev,
-                score: parseInt(event.target.value),
+                approved: event.target.value === 'approve',
               }));
             }}
           >
-            {[0, 1, 2, 3].map((score) => (
-              <FormControlLabel
-                key={score}
-                disabled={readOnly}
-                value={score.toString()}
-                control={<Radio />}
-                label={score.toString()}
-              />
-            ))}
+            <FormControlLabel
+              value="approve"
+              control={<Radio />}
+              label="Approved"
+              // disabled={readOnly}
+            />
+            <FormControlLabel
+              value="resubmit"
+              control={<Radio />}
+              label="Needs resubmission"
+              // disabled={readOnly}
+            />
           </RadioGroup>
         </FormControl>
+
+        <br />
+        {/* Reflection Score Section */}
+        {asData.scorable && (
+          <FormControl component="fieldset">
+            <FormLabel component="legend">Reflection Score:</FormLabel>
+            <RadioGroup
+              row
+              name="score"
+              value={feedbackData.score?.toString() || ''}
+              onChange={(event) => {
+                if (readOnly) return;
+                setFeedbackData((prev) => ({
+                  ...prev,
+                  score: parseInt(event.target.value),
+                }));
+              }}
+            >
+              {[0, 1, 2, 3].map((score) => (
+                <FormControlLabel
+                  key={score}
+                  // disabled={readOnly}
+                  value={score.toString()}
+                  control={<Radio />}
+                  label={score.toString()}
+                />
+              ))}
+            </RadioGroup>
+          </FormControl>
+        )}
+      </Paper>
+
+      {isTeacher && (
+        <EvalControls
+          evalData={evalData}
+          onChange={handleEvalChange}
+          readOnly={readOnly}
+        />
       )}
 
       {error && <Typography color="error">{error}</Typography>}

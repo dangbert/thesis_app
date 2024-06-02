@@ -114,6 +114,7 @@ const AttemptView: React.FC<AttemptViewProps> = ({
             {readOnly &&
               (humanFeedback ? (
                 <FeedbackView
+                  isTeacher={isTeacher}
                   attemptId={attempt.id}
                   asData={asData}
                   priorFeedback={humanFeedback}
@@ -133,6 +134,7 @@ const AttemptView: React.FC<AttemptViewProps> = ({
                 asData={asData}
                 priorFeedback={humanFeedback || aiFeedback || undefined}
                 readOnly={readOnly}
+                isTeacher={isTeacher}
                 onClose={onClose}
                 onCreate={onCreateFeedback}
               />
