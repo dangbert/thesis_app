@@ -30,3 +30,24 @@ Now you can visit the site running on http://localhost:2222
 ````bash
 docker compose build && docker compose up -d
 ````
+
+## Manage Server
+
+````bash
+# backup database to .sql file:
+./manage.sh -d
+
+# OR backup database + all site files to a .tgz file:
+./manage.sh -b
+
+#### restore database from backup
+psql -U postgres
+# now inside psql delete database if it exists, and create a new empty one:
+drop database thesis;
+create database thesis;
+
+# now edit psql and run:
+ls -al /backups
+# pick the .sql file you want to import and run:
+psql -U postgres -d thesis < /backups/example.sql
+````

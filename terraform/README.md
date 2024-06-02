@@ -33,7 +33,7 @@ Start by running `terraform init && terraform apply` in `common/`, be sure to th
     * see `instances/PRD` for a complete example which also creates an EC2 server for deploying the production site!
     * And just run `terraform init && terraform apply` in one of these folders (or a copy based on them) to start managing your tenant with Terraform :) and to deploy a server which can be manually setup via ssh for hosting the site.
 
-6. DNS Setup:
+6. DNS/SSL Setup:
   * add an "A Record" pointing to the server's IP (visible in `terraform output`) on your domain provider's website.
   * ssh into the server, and run `bash ~/setup.sh -i` to install certbot and create your SSL certificates.
 

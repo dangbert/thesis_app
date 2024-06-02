@@ -1,2 +1,3 @@
 volumes/*
 full_backups/*
+*.tgz
