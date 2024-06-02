@@ -60,8 +60,8 @@ export const LikertStars: React.FC<LikertStarsProps> = ({
         value={value}
         precision={1.0}
         getLabelText={getLabelText}
+        readOnly={readOnly}
         onChange={(event, newValue) => {
-          if (readOnly) return;
           setValue(newValue || undefined);
         }}
         onChangeActive={(event, newHover) => {

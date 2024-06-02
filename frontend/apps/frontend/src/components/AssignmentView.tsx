@@ -147,13 +147,15 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
           {/* make it very clear to the teacher who they're viewing */}
           <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
             <Tooltip title="Refresh data">
-              <IconButton
-                onClick={() => setAttemptLoadTime(Date.now() / 1000)}
-                size="large"
-                disabled={loading}
-              >
-                <RefreshIcon />
-              </IconButton>
+              <span>
+                <IconButton
+                  onClick={() => setAttemptLoadTime(Date.now() / 1000)}
+                  size="large"
+                  disabled={loading}
+                >
+                  <RefreshIcon />
+                </IconButton>
+              </span>
             </Tooltip>
             {(spoofUser || isTeacher) && (
               <>

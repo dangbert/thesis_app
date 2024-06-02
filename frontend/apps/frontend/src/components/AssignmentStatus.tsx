@@ -353,13 +353,15 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
         </Typography>
 
         <Tooltip title="Refresh table">
-          <IconButton
-            onClick={() => setReloadTime(Date.now() / 1000)}
-            size="large"
-            disabled={loading}
-          >
-            <RefreshIcon />
-          </IconButton>
+          <span>
+            <IconButton
+              onClick={() => setReloadTime(Date.now() / 1000)}
+              size="large"
+              disabled={loading}
+            >
+              <RefreshIcon />
+            </IconButton>
+          </span>
         </Tooltip>
       </Toolbar>
       <TableContainer sx={{ maxHeight: '60vh' }}>

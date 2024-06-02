@@ -150,7 +150,7 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
 
       <br />
       <br />
-      <Paper elevation={1} variant="outlined" style={{ padding: '14px' }}>
+      <Paper variant="outlined" style={{ padding: '14px' }}>
         <FormControl component="fieldset">
           <FormLabel component="legend">Goal/Plan:</FormLabel>
           <RadioGroup

@@ -111,23 +111,31 @@ const AttemptHistory: React.FC<AttemptHistoryProps> = ({
                         {isLatestAttempt ? ' (latest)' : ''}
                       </Typography>
                       {/* TODO: create a <FeedbackStatus> component with an icon (also for user table) */}
-                      <Typography style={{ marginTop: '8px' }}>
-                        {isLatestAttempt &&
-                          (mustResubmit ? (
+
+                      {isLatestAttempt && (
+                        <>
+                          {mustResubmit && (
                             <Alert
                               severity="warning"
                               style={{ marginTop: '8px' }}
                             >
-                              <>
-                                <b>Resubmission requested</b> (view feedback
-                                below)
-                              </>
+                              <b>Resubmission requested</b> (view feedback
+                              below)
                             </Alert>
-                          ) : (
-                            <b>{publicStatus}</b>
-                          ))}
-                        {!isLatestAttempt && `${publicStatus}`}
-                      </Typography>
+                          )}
+                          {!mustResubmit && (
+                            <Typography style={{ marginTop: '8px' }}>
+                              <b>{publicStatus}</b>
+                            </Typography>
+                          )}
+                        </>
+                      )}
+                      {!isLatestAttempt && (
+                        <Typography style={{ marginTop: '8px' }}>
+                          {publicStatus}
+                        </Typography>
+                      )}
+
                       <Button
                         variant="outlined"
                         style={{ marginTop: '8px' }}

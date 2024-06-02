@@ -17,11 +17,7 @@ const EvalControls: React.FC<EvalControlsProps> = ({
   readOnly,
 }) => {
   return (
-    <Paper
-      elevation={1}
-      variant="outlined"
-      style={{ padding: '14px', marginTop: '7px' }}
-    >
+    <Paper variant="outlined" style={{ padding: '14px', marginTop: '7px' }}>
       <Typography variant="h6">AI Feedback Evaluation</Typography>
       <LikertStars
         value={evalData.rating}
