@@ -1,5 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Button, Typography, Snackbar, Alert, Paper } from '@mui/material';
+import {
+  Button,
+  Typography,
+  Snackbar,
+  Alert,
+  Paper,
+  Tooltip,
+  IconButton,
+} from '@mui/material';
+
 import AttemptCreateModal from './AttemptCreateModal';
 import AttemptHistory from './AttemptHistory';
 import AssignmentStatus from './AssignmentStatus';
@@ -11,6 +20,8 @@ import * as courseApi from '../api';
 import * as constants from '../constants';
 import { useUserContext } from '../providers';
 import UserAvatar from './user/UserAvatar';
+import { toPublicStatus } from './AttemptHistory';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 interface IAssignmentViewProps {
   asData: AssignmentPublic;
@@ -77,6 +88,7 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
     assignmentStatus === models.AssignmentAttemptStatus.NOT_STARTED ||
     assignmentStatus === models.AssignmentAttemptStatus.RESUBMISSION_REQUESTED;
 
+  assignmentStatus = toPublicStatus(assignmentStatus, isTeacher);
   return (
     <div>
       <Snackbar
@@ -107,7 +119,9 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
         <>
           <AssignmentStatus
             asData={asData}
-            onSelectStudent={(studentStatus) => setViewingStatus(studentStatus)}
+            onSelectStudent={(studentStatus) =>
+              setViewingStatus(studentStatus || null)
+            }
             // when attempts are updated here (e.g. after resubmission or feedback providedl)
             // also trigger the status table to update
             refreshTime={attemptLoadTime}
@@ -131,14 +145,25 @@ const AssignmentView: React.FC<IAssignmentViewProps> = ({
             {spoofUser ? `${spoofUser.name}'s` : 'Your'} submissions:
           </Typography>
           {/* make it very clear to the teacher who they're viewing */}
-          {(spoofUser || isTeacher) && (
-            <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-              <Typography sx={{ fontStyle: 'italic' }}>
-                {(spoofUser || userCtx.user).email}
-              </Typography>
-              <UserAvatar user={spoofUser || userCtx.user} />
-            </div>
-          )}
+          <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+            <Tooltip title="Refresh data">
+              <IconButton
+                onClick={() => setAttemptLoadTime(Date.now() / 1000)}
+                size="large"
+                disabled={loading}
+              >
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip>
+            {(spoofUser || isTeacher) && (
+              <>
+                <Typography sx={{ fontStyle: 'italic' }}>
+                  {(spoofUser || userCtx.user).email}
+                </Typography>
+                <UserAvatar user={spoofUser || userCtx.user} />
+              </>
+            )}
+          </div>
         </div>
         {attempts.length === 0 && (
           <Alert

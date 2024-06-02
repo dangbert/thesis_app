@@ -22,10 +22,12 @@ import {
   Toolbar,
   Tooltip,
   Typography,
+  IconButton,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { LoadingButton } from '@mui/lab';
 import { visuallyHidden } from '@mui/utils';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 import UserAvatar from './user/UserAvatar';
 import * as API from '../api';
@@ -37,7 +39,7 @@ import * as utils from '../utils';
 
 interface AssignmentStatusProps {
   asData: AssignmentPublic;
-  onSelectStudent: (student: models.AssignmentStudentStatus) => void;
+  onSelectStudent: (student?: models.AssignmentStudentStatus) => void;
   refreshTime: number; // trigger table refresh by changing this value
 }
 
@@ -289,9 +291,7 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
     const selectedStudent = statusData.find(
       (student) => student.student.id === selectedId
     );
-    if (selectedStudent) {
-      onSelectStudent(selectedStudent);
-    }
+    onSelectStudent(selectedStudent); // undefined if no student selected
   };
 
   const emptyRows =
@@ -351,17 +351,15 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
         >
           Course Members (showing {visibleRows.length}/{rows.length})
         </Typography>
-        <Tooltip title="Filter list">
-          <span>
-            <LoadingButton
-              onClick={() => setReloadTime(Date.now() / 1000)}
-              color="primary"
-              loading={loading}
-              disabled={loading}
-            >
-              Refresh Table
-            </LoadingButton>
-          </span>
+
+        <Tooltip title="Refresh table">
+          <IconButton
+            onClick={() => setReloadTime(Date.now() / 1000)}
+            size="large"
+            disabled={loading}
+          >
+            <RefreshIcon />
+          </IconButton>
         </Tooltip>
       </Toolbar>
       <TableContainer sx={{ maxHeight: '60vh' }}>
@@ -405,7 +403,7 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
                         gap: '8px',
                       }}
                     >
-                      {/* {!dense && <UserAvatar user={row.userObj} />} */}
+                      {!dense && <UserAvatar user={row.userObj} />}
                       {row.name}
                     </div>
                   </TableCell>

@@ -90,15 +90,7 @@ const AttemptHistory: React.FC<AttemptHistoryProps> = ({
             }
 
             const isLatestAttempt = attemptIndex === 0;
-            let publicStatus = attempt.status;
-            if (
-              publicStatus ===
-                models.AssignmentAttemptStatus.AWAITING_AI_FEEDBACK &&
-              !isTeacher
-            ) {
-              publicStatus =
-                models.AssignmentAttemptStatus.AWAITING_TEACHER_FEEDBACK;
-            }
+            const publicStatus = toPublicStatus(attempt.status, isTeacher);
             return (
               <React.Fragment key={attempt.id}>
                 {/* Timeline for each Attempt */}
@@ -165,6 +157,20 @@ function splitAttemptFeedback(attempt: models.AttemptPublic) {
   const aiFeedbacks = attempt.feedbacks.filter((x) => x.is_ai);
 
   return [humanFeedbacks.at(-1), aiFeedbacks.at(-1)];
+}
+
+export function toPublicStatus(
+  status: models.AssignmentAttemptStatus,
+  isTeacher: boolean
+) {
+  let publicStatus = status;
+  if (
+    publicStatus === models.AssignmentAttemptStatus.AWAITING_AI_FEEDBACK &&
+    !isTeacher
+  ) {
+    publicStatus = models.AssignmentAttemptStatus.AWAITING_TEACHER_FEEDBACK;
+  }
+  return publicStatus;
 }
 
 export default AttemptHistory;

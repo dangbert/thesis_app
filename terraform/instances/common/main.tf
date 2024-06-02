@@ -33,7 +33,7 @@ variable "from_email" {
 }
 
 variable "ses_error_email" {
-  description = "The email address to which SES rendering errors are sent for debugging (omit to disable)"
+  description = "The email address to which SES errors are sent for debugging (omit to disable)"
   type        = string
   default     = ""
 }
@@ -66,7 +66,7 @@ resource "aws_ses_event_destination" "sns" {
   name                   = "${local.namespace}-ses"
   configuration_set_name = aws_ses_configuration_set.email_failures.name
   enabled                = true
-  matching_types         = ["renderingFailure"] #, "reject", "bounce", "complaint", "delivery"]
+  matching_types         = ["renderingFailure", "reject", "bounce", "complaint"] #, "delivery"]
 
   sns_destination {
     topic_arn = aws_sns_topic.ses.arn
