@@ -3,8 +3,8 @@ import * as models from '../../models';
 import { LikertStars } from './FormHelpers';
 
 interface EvalControlsProps {
-  evalData: Partial<models.EvalMetrics>;
-  onChange: (evalData: Partial<models.EvalMetrics>) => void;
+  evalData: models.EvalMetrics;
+  onChange: (evalData: models.EvalMetrics) => void;
   readOnly: boolean;
 }
 
@@ -20,10 +20,10 @@ const EvalControls: React.FC<EvalControlsProps> = ({
     <Paper variant="outlined" style={{ padding: '14px', marginTop: '7px' }}>
       <Typography variant="h6">AI Feedback Evaluation</Typography>
       <LikertStars
-        value={evalData.rating}
+        value={evalData.rating || undefined}
         readOnly={readOnly}
         setValue={(newRating) => {
-          onChange({ ...evalData, rating: newRating });
+          onChange({ ...evalData, rating: newRating || null });
         }}
       />
     </Paper>

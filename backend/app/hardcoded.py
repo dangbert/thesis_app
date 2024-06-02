@@ -1,5 +1,3 @@
-"""Hardcoded implementation details for the SMART goal specific use case of this thesis project."""
-
 from pydantic import BaseModel
 from typing import Optional
 
@@ -30,11 +28,12 @@ RELECTION_SCORE_EXPLANATION = "See the following link for the explanation of you
 
 
 class EvalMetrics(BaseModel):
-    """Evaluation metrics for AI feedback."""
+    """
+    Evaluation metrics for AI feedback (all optional fields).
+    """
 
-    # TODO: maybe make all optional?
-    problems: list[str]
-    rating: int
+    problems: Optional[list[str]] = None
+    rating: Optional[int] = None
 
 
 def email_can_signup(email: str):

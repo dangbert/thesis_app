@@ -55,14 +55,11 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
     other_comments: '',
     approved: false,
     score: null,
-    metrics: null,
+    eval_metrics: null,
   };
 
   const [feedbackData, setFeedbackData] = useState<FeedbackData>(
     priorFeedback?.data || DEFAULT_FEEDBACK
-  );
-  const [evalData, setEvalData] = useState<Partial<EvalMetrics>>(
-    priorFeedback?.data.metrics ? priorFeedback.data.metrics : {}
   );
   // when to make the approve button blank...
   const [needsApprovalResponse, setNeedsApprovalResponse] = useState<boolean>(
@@ -80,8 +77,11 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
     }));
   };
 
-  const handleEvalChange = (evalData: Partial<EvalMetrics>) => {
-    setEvalData(evalData);
+  const handleEvalChange = (evalData: EvalMetrics) => {
+    setFeedbackData((prev) => ({
+      ...prev,
+      eval_metrics: evalData,
+    }));
   };
 
   const handleSubmit = async () => {
@@ -214,7 +214,7 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
 
       {isTeacher && (
         <EvalControls
-          evalData={evalData}
+          evalData={feedbackData.eval_metrics || ({} as EvalMetrics)}
           onChange={handleEvalChange}
           readOnly={readOnly}
         />

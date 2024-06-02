@@ -18,12 +18,12 @@ export interface FeedbackData {
   other_comments: string | null;
   approved: boolean;
   score: number | null;
-  metrics: EvalMetrics | null;
+  eval_metrics: EvalMetrics | null;
 }
 
 export interface EvalMetrics {
-  problems: string[];
-  rating: number;
+  problems: string[] | null;
+  rating: number | null;
 }
 
 /* must match backend/app/models/schemas.py */
