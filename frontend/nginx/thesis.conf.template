@@ -23,6 +23,9 @@ server {
 
   server_name ${SERVER_NAME};
 
+  # allow request up to 10MB (e.g. for file uploads)
+  client_max_body_size 10M;
+
   # let's encrypt SSL keys:
   ssl_certificate /etc/letsencrypt/live/${SERVER_NAME}/fullchain.pem;
   ssl_certificate_key /etc/letsencrypt/live/${SERVER_NAME}/privkey.pem;

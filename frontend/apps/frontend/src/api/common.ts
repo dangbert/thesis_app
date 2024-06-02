@@ -26,10 +26,22 @@ export const jsonOrError = async (
     if (!res.ok) {
       result.error = res.statusText;
     }
-    if (getText) {
-      result.data = await res.text();
-    } else {
-      result.data = await res.json();
+
+    try {
+      if (getText) {
+        result.data = await res.text();
+      } else {
+        result.data = await res.json();
+      }
+    } catch (parsingError) {
+      if (res.status === 413) {
+        result.error = 'Request was too large';
+      } else {
+        result.error = (result.error || '') + ' (Failed to parse response)';
+      }
+      // e.g. SyntaxError
+      console.error(res);
+      console.error(`parsingError: ${parsingError}`);
     }
   } catch (caughtError) {
     if (result.status === 500)

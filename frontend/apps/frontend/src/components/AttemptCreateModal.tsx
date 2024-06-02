@@ -85,7 +85,8 @@ const AttemptCreateModal: React.FC<AttemptCreateModalProps> = ({
     for (const res of fileResults) {
       if (res.error) {
         failedFiles++;
-        fileError = res.error;
+        if (res.status === 413) fileError = 'File too large';
+        else fileError = res.error;
       } else {
         fileIds.push(res.data.id);
       }
