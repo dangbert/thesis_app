@@ -38,5 +38,4 @@ class EvalMetrics(BaseModel):
 
 def email_can_signup(email: str):
     """Gatekeeper for email addresses that can sign up."""
-    return True
-    # return email.endswith("@vu.nl") or email.endswith("@student.vu.nl")
+    return email.endswith("@vu.nl") or email.endswith("@student.vu.nl")

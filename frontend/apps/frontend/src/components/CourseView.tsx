@@ -79,7 +79,7 @@ const CourseView: React.FC<CourseViewProps> = ({ course, refreshCourse }) => {
     const searchParams = new URLSearchParams(location.search);
     // Update or set the course parameter to curCourseId
     if (curAs) {
-      searchParams.set('course', curAs.id);
+      searchParams.set('course', curAs.course_id);
       searchParams.set('assignment', curAs.id);
     } else {
       searchParams.delete('assignment');
