@@ -48,4 +48,8 @@ def email_can_signup(email: str):
             f"allowing email '{email}' to sign up in non-production environment {settings.env}"
         )
         return True
-    return email.endswith("@vu.nl") or email.endswith("@student.vu.nl")
+    return (
+        email.endswith("@vu.nl")
+        or email.endswith("@student.vu.nl")
+        or email.endswith("@student.acta.nl")
+    )
