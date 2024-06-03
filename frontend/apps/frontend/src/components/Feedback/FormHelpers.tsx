@@ -9,6 +9,7 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Chip from '@mui/material/Chip';
+import { Typography } from '@mui/material';
 
 const STAR_LABELS: { [index: string]: string } = {
   1: 'Very dissatisfied',
@@ -26,27 +27,22 @@ interface LikertStarsProps {
   value?: number;
   setValue(value?: number): void;
   readOnly: boolean;
+  title: string;
 }
 
 // https://mui.com/material-ui/react-rating/#hover-feedback
-
 export const LikertStars: React.FC<LikertStarsProps> = ({
   value,
   setValue,
   readOnly,
+  title,
 }) => {
   const [hover, setHover] = React.useState(-1);
 
-  // const curLabel = STAR_LABELS.hasOwnProperty(value || '') ? STAR_LABELS[value] : '';
-  // let curLabel = 'not specified';
-  // if (value !== undefined && value in STAR_LABELS) {
-  //   curLabel = STAR_LABELS[value];
-  // }
   const curLabel =
     value !== undefined
       ? STAR_LABELS[value] ?? 'Not specified'
       : 'Not specified';
-  console.log(`value=${value}`);
 
   return (
     <Box
@@ -55,6 +51,7 @@ export const LikertStars: React.FC<LikertStarsProps> = ({
         alignItems: 'center',
       }}
     >
+      <Typography sx={{ marginRight: '8px' }}>{title}:</Typography>
       <Rating
         name="hover-feedback"
         value={value}
@@ -85,58 +82,59 @@ const MenuProps = {
   },
 };
 
-const SELECTION_OPTIONS = ['Grammar', 'Assignment Relevance', ''];
-
-function getStyles(name: string, personName: readonly string[], theme: Theme) {
-  return {
-    fontWeight:
-      personName.indexOf(name) === -1
-        ? theme.typography.fontWeightRegular
-        : theme.typography.fontWeightMedium,
-  };
+interface MultiSelectProps {
+  selected: string[] | undefined;
+  setSelected(selections: string[] | undefined): void;
+  choices: string[];
+  title: string;
+  readOnly: boolean;
 }
 
-export function MultipleSelectChip() {
+export const MultiSelect: React.FC<MultiSelectProps> = ({
+  selected,
+  setSelected,
+  choices,
+  title,
+  readOnly,
+}) => {
   const theme = useTheme();
-  const [personName, setPersonName] = React.useState<string[]>([]);
-
-  const handleChange = (event: SelectChangeEvent<typeof personName>) => {
+  const handleChange = (event: SelectChangeEvent<typeof selected>) => {
     const {
       target: { value },
     } = event;
-    setPersonName(
-      // On autofill we get a stringified value.
-      typeof value === 'string' ? value.split(',') : value
-    );
+    const newSelected = typeof value === 'string' ? value.split(',') : value;
+    setSelected(newSelected);
   };
 
   return (
     <div>
-      <FormControl sx={{ m: 1, width: 300 }}>
-        <InputLabel id="demo-multiple-chip-label">
-          Select all AI Feedback Problems
-        </InputLabel>
+      <FormControl
+        variant="outlined"
+        sx={{ minWidth: '300px', maxWidth: '100%' }}
+      >
+        <InputLabel id="multi-select-label">{title}</InputLabel>
         <Select
-          labelId="demo-multiple-chip-label"
+          readOnly={readOnly}
           id="demo-multiple-chip"
+          labelId="multi-select-label"
           multiple
-          value={personName}
+          value={selected || []}
           onChange={handleChange}
           input={<OutlinedInput id="select-multiple-chip" label="Chip" />}
           renderValue={(selected) => (
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-              {selected.map((value) => (
+              {(selected || []).map((value) => (
                 <Chip key={value} label={value} />
               ))}
             </Box>
           )}
           MenuProps={MenuProps}
         >
-          {SELECTION_OPTIONS.map((name) => (
+          {choices.map((name) => (
             <MenuItem
               key={name}
               value={name}
-              style={getStyles(name, personName, theme)}
+              style={getStyles(name, choices || [], theme)}
             >
               {name}
             </MenuItem>
@@ -145,4 +143,13 @@ export function MultipleSelectChip() {
       </FormControl>
     </div>
   );
+};
+
+function getStyles(name: string, choices: readonly string[], theme: Theme) {
+  return {
+    fontWeight:
+      (choices || []).indexOf(name) === -1
+        ? theme.typography.fontWeightRegular
+        : theme.typography.fontWeightMedium,
+  };
 }

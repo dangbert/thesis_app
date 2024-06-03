@@ -1,6 +1,17 @@
 import { Paper, Typography } from '@mui/material';
 import * as models from '../../models';
-import { LikertStars } from './FormHelpers';
+import { LikertStars, MultiSelect } from './FormHelpers';
+import { isUndefined } from '../../utils';
+
+const PROBLEM_CHOICES = [
+  'Accuracy/relevance',
+  'Feedback style/tone',
+  'Structure',
+  'Grammar',
+  'Too wordy',
+  'Too short',
+  'Other',
+];
 
 interface EvalControlsProps {
   evalData: models.EvalMetrics;
@@ -20,10 +31,28 @@ const EvalControls: React.FC<EvalControlsProps> = ({
     <Paper variant="outlined" style={{ padding: '14px', marginTop: '7px' }}>
       <Typography variant="h6">AI Feedback Evaluation</Typography>
       <LikertStars
+        title="Overall Quality"
         value={evalData.rating || undefined}
         readOnly={readOnly}
         setValue={(newRating) => {
           onChange({ ...evalData, rating: newRating || null });
+        }}
+      />
+
+      <br />
+      <MultiSelect
+        title={
+          readOnly ? 'AI Feedback Problems' : 'Select all AI Feedback Problems'
+        }
+        choices={PROBLEM_CHOICES}
+        readOnly={readOnly}
+        selected={
+          isUndefined(evalData.problems)
+            ? undefined
+            : (evalData.problems as string[])
+        }
+        setSelected={(newProblems) => {
+          onChange({ ...evalData, problems: newProblems || null });
         }}
       />
     </Paper>

@@ -39,9 +39,6 @@ const AttemptView: React.FC<AttemptViewProps> = ({
   aiFeedback,
 }) => {
   const readOnly = Boolean(!isTeacher || humanFeedback);
-  console.log('readOnly = ', readOnly);
-  console.log('humanFeedback = ', humanFeedback);
-  console.log('aiFeedback = ', aiFeedback);
   return (
     <Dialog
       open={open}
