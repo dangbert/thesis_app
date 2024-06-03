@@ -225,6 +225,7 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
 
   const [filterGroup, setFilterGroup] = useState<'all' | 'even' | 'odd'>('all');
   const [filterNeedsReview, setFilterNeedsReview] = useState(false);
+  const [filterTeachers, setFilterTeachers] = useState(true);
   const [order, setOrder] = React.useState<Order>('asc');
   const [orderBy, setOrderBy] = React.useState<keyof RowData>('name');
   const [page, setPage] = React.useState(0);
@@ -281,6 +282,10 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
       row.status === models.AssignmentAttemptStatus.AWAITING_TEACHER_FEEDBACK
     );
   };
+  const applyTeacherFilter = (row: RowData) => {
+    if (!filterTeachers) return true;
+    return row.role !== models.CourseRole.TEACHER;
+  };
 
   const handleRowSelect = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -301,7 +306,10 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
     let tmp = rows.slice().sort(getComparator(order, orderBy));
     if (rowsPerPage !== -1)
       tmp = tmp.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-    return tmp.filter(applyGroupFilter).filter(applyNeedsReviewFilter);
+    return tmp
+      .filter(applyGroupFilter)
+      .filter(applyNeedsReviewFilter)
+      .filter(applyTeacherFilter);
   }, [
     JSON.stringify(statusData),
     order,
@@ -310,6 +318,7 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
     rowsPerPage,
     filterGroup,
     filterNeedsReview,
+    filterTeachers,
   ]);
 
   const groupControls = (
@@ -454,6 +463,15 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
             />
           }
           label="Filter by review needed"
+        />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={filterTeachers}
+              onChange={(event) => setFilterTeachers(event?.target.checked)}
+            />
+          }
+          label="Hide teachers"
         />
         <FormControlLabel
           control={<Switch checked={dense} onChange={handleChangeDense} />}

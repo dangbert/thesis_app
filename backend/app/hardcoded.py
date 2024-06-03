@@ -25,6 +25,9 @@ class FeedbackData(BaseModel):
     approved: bool  # whether the feedback is approved by the teacher
     score: Optional[int] = None
     eval_metrics: Optional["EvalMetrics"] = None
+    review_secs: Optional[int] = (
+        None  # duration feedback form was open before submitting (in seconds)
+    )
 
 
 MAX_SCORE = 3  # reflection score max points

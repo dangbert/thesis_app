@@ -50,13 +50,14 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
   onCreate,
 }) => {
   const DEFAULT_FEEDBACK: FeedbackData = {
-    // default to provided feedback (e.g. if using AI feedback as starting point)
+    // default to priorFeedback (e.g. if using AI feedback as starting point)
     feedback: priorFeedback?.data.feedback || '',
     other_comments: '',
     approved: false,
     score: null,
     eval_metrics: null,
   };
+  const [startTime, setStartTime] = useState(Date.now() / 1000); // measuring duration
 
   const [feedbackData, setFeedbackData] = useState<FeedbackData>(
     priorFeedback?.data || DEFAULT_FEEDBACK
@@ -91,18 +92,23 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
     }
     setSubmitting(true);
     setError('');
+    const review_secs = Math.round((Date.now() / 1000 - startTime) * 100) / 100; // 2 decimal places
     const feedbackToCreate: FeedbackCreate = {
       attempt_id: attemptId,
-      data: feedbackData,
+      data: {
+        ...feedbackData,
+        eval_metrics: {
+          ...(feedbackData.eval_metrics ?? ({} as EvalMetrics)), // Use an empty object if eval_metrics is null
+          review_secs: review_secs,
+        },
+      },
     };
 
     const res = await courseApi.createFeedback(feedbackToCreate);
     if (res.error) {
       setError(res.error);
     } else {
-      // Handle success (refresh data, close modal, etc.)
-      console.log('Feedback successfully created:', res.data);
-      onCreate?.(res.data);
+      onCreate?.(res.data); // Handle success (refresh data, close modal, etc.)
     }
     setSubmitting(false);
   };

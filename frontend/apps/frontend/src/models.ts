@@ -24,6 +24,7 @@ export interface FeedbackData {
 export interface EvalMetrics {
   problems: string[] | null;
   rating: number | null;
+  review_secs: number | null;
 }
 
 /* must match backend/app/models/schemas.py */
