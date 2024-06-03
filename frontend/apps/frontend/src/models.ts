@@ -49,6 +49,7 @@ export interface CoursePublic extends CourseCreate, BaseFields {
   your_role: CourseRole | null;
   invite_role: CourseRole | null;
   your_group: number | null;
+  page_url: string;
 }
 
 export interface AssignmentCreate {
@@ -59,6 +60,7 @@ export interface AssignmentCreate {
 
 export interface AssignmentPublic extends AssignmentCreate, BaseFields {
   course_id: string;
+  page_url: string;
 }
 
 export interface AttemptCreate {

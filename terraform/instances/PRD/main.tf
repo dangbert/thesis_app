@@ -124,6 +124,7 @@ module "ec2" {
 # aws ec2 describe-instance-types --instance-types t4g.medium --query 'InstanceTypes[*].[InstanceType,ProcessorInfo.SupportedArchitectures]' --output table
 # and check architecture of the AMI:
 #   aws ec2 describe-images --image-ids ami-0776c814353b4814d --query 'Images[*].[ImageId,Architecture]' --output table --region eu-west-1
+# NOTE: t2.small would probably be enough based on load tests on t3.medium
 module "ec2_new" {
   source    = "../../modules/ec2"
   namespace = "${local.namespace}-new"
@@ -132,7 +133,7 @@ module "ec2_new" {
   # ubuntu 24.04 LTS, amd64, eu-west-1 (from https://cloud-images.ubuntu.com/locator/ec2/)
   ami_id        = "ami-0776c814353b4814d"
   server_user   = "ubuntu"
-  instance_type = "t3.medium"
+  instance_type = "t3.medium" # https://aws.amazon.com/ec2/pricing/on-demand/
   volume_size   = 45
   ingress_ports = [22, 443, 80]
   policies      = [local.common.ses.iam.send_arn]

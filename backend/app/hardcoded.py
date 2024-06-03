@@ -1,5 +1,10 @@
 from pydantic import BaseModel
 from typing import Optional
+from app.settings import get_settings
+import config
+
+settings = get_settings()
+logger = config.get_logger(__name__)
 
 
 # these schemas must match frontend/apps/frontend/models.ts
@@ -38,4 +43,9 @@ class EvalMetrics(BaseModel):
 
 def email_can_signup(email: str):
     """Gatekeeper for email addresses that can sign up."""
+    if not settings.is_production:
+        logger.warning(
+            f"allowing email '{email}' to sign up in non-production environment {settings.env}"
+        )
+        return True
     return email.endswith("@vu.nl") or email.endswith("@student.vu.nl")

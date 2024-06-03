@@ -65,11 +65,12 @@ class Course(Base):
             your_role=your_role,
             invite_role=invite_role,
             your_group=your_group,
+            page_url=self.page_url(),
         )
 
     def page_url(self) -> str:
         """URL to view this course in the frontend."""
-        return f"{settings.site_url}?course={self.course_id}"
+        return f"{settings.site_url}?course={self.id}"
 
 
 class CourseUserLink(Base):
@@ -124,6 +125,7 @@ class Assignment(Base):
             about=self.about,
             scorable=self.scorable,
             course_id=self.course_id,
+            page_url=self.page_url(),
             **super().to_public().model_dump(),
         )
 

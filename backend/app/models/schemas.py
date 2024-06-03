@@ -49,6 +49,7 @@ class CoursePublic(CourseCreate, DateFields):
     your_role: Optional[CourseRole] = None
     invite_role: Optional[CourseRole] = None
     your_group: Optional[int] = None
+    page_url: str
 
 
 class AssignmentCreate(BaseModel):
@@ -60,6 +61,7 @@ class AssignmentCreate(BaseModel):
 class AssignmentPublic(AssignmentCreate, DateFields):
     id: UUID
     course_id: UUID
+    page_url: str
 
 
 class AttemptCreate(BaseModel):
