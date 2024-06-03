@@ -64,6 +64,8 @@ def send_feedback_email(feedback: models.Feedback) -> bool:
     if fdata.score is not None:
         reflection_msg = f"<br /><b>reflection score</b>: {fdata.score}/{MAX_SCORE}\n{RELECTION_SCORE_EXPLANATION}"
 
+    call_to_action = f"To view the feedback alongside your original submission{' ' if fdata.approved else ' or resubmit your learning goal'} <a class='linkNormalSize' href='{assignment.page_url()}'>click here</a>."
+
     message = f"""
 {approval_msg}
 <br />
@@ -74,6 +76,8 @@ def send_feedback_email(feedback: models.Feedback) -> bool:
 {other_comments}
 
 {reflection_msg}
+
+{call_to_action}
     """.strip()
 
     template_data = {
@@ -85,10 +89,13 @@ def send_feedback_email(feedback: models.Feedback) -> bool:
         "support_email": settings.support_email,
     }
 
-    # TODO: try catch!
     logger.info(f"Sending feedback email to {attempt.user.email}")
+    from_name = (
+        "EzFeedback" if settings.is_production else f"EzFeedback ({settings.env})"
+    )
+    # TODO: try catch!
     ses_client.send_email(
-        FromEmailAddress=f"EzFeedback <{settings.email_from}>",
+        FromEmailAddress=f"{from_name} <{settings.email_from}>",
         Destination={"ToAddresses": [attempt.user.email]},
         ReplyToAddresses=reply_to_emails,
         Content={
@@ -99,4 +106,5 @@ def send_feedback_email(feedback: models.Feedback) -> bool:
         },
         ConfigurationSetName=SES_CONFIG_SET,
     )
+    logger.info(f"Email sent to {attempt.user.email}")
     return True
