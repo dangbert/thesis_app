@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-Downloads the alpaca cleaned dataset and reports some stats about it.
-https://huggingface.co/datasets/yahma/alpaca-cleaned?row=16
+Utilities for translating the alpaca-cleaned dataset, creating aplaca-cleaned-nl.
+https://huggingface.co/datasets/yahma/alpaca-cleaned
 https://github.com/gururise/AlpacaDataCleaned
+https://huggingface.co/datasets/dangbert/alpaca-cleaned-nl
 """
 
 import argparse
@@ -23,12 +24,15 @@ import config  # noqa: E402
 from config import TaskTimer  # noqa: E402
 
 
-DATASET_ID = "yahma/alpaca-cleaned"
+ORIG_DATASET_ID = "yahma/alpaca-cleaned"
 COL_NAMES = ["output", "input", "instruction"]  # columns to translate
 
 TRANSLATED_PATH = os.path.join(
     SCRIPT_DIR, "translated_dataset.jsonl"
 )  # where to write/read translated dataset
+# make relative path
+TRANSLATED_PATH = os.path.relpath(TRANSLATED_PATH, start=os.getcwd())
+
 TRANSLATED_DATASET_ID = "dangbert/alpaca-cleaned-nl"  # where to upload on hugging face
 
 logger = config.get_logger(__name__, level="INFO")
@@ -37,7 +41,7 @@ logger = config.get_logger(__name__, level="INFO")
 def main():
     # parser which shows default values in help
     parser = argparse.ArgumentParser(
-        description="Download the alpaca cleaned dataset and report some stats about it.",
+        description="Utils for downloading the original alpaca-cleaned dataset, translating sections of it, and re-uploading to huggingface.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
@@ -74,6 +78,19 @@ def main():
         type=str,
         metavar=("folder", "output_file"),
         help="Folder of jsonl files to merge into a single dataset (jsonl) file",
+    )
+    parser.add_argument(
+        "--describe",
+        metavar="filename",
+        type=str,
+        help="Describe a given .jsonl dataset (subset) by reporting some stats",
+    )
+    parser.add_argument(
+        "--download",
+        nargs=2,
+        metavar=("dataset_id", "filename"),
+        type=str,
+        help=f"Download alpaca-cleaned or alpaca-cleaned-nl to desired path, and describe it. E.g. `--download {ORIG_DATASET_ID} alpaca-cleaned.nl` OR `--download {TRANSLATED_DATASET_ID} {TRANSLATED_PATH}`",
     )
     parser.add_argument(
         "--upload",
@@ -125,13 +142,13 @@ def main():
         fname = args.upload
         assert os.path.isfile(fname)
         assert fname.lower().endswith(".jsonl") or fname.lower().endswith(".json")
-        tdataset, _ = load_local_dataset(fname)
+        dataset, _ = load_local_dataset(fname)
         logger.info(
             f"uploading translated dataset to hugging face hub '{TRANSLATED_DATASET_ID}'"
         )
         # https://huggingface.co/docs/datasets/upload_dataset
         with TaskTimer("push to hub"):
-            tdataset.push_to_hub(TRANSLATED_DATASET_ID)
+            dataset.push_to_hub(TRANSLATED_DATASET_ID)
         return
 
     if args.merge:
@@ -169,9 +186,33 @@ def main():
         )
         return
 
-    # download dataset to hugging face disk cache
-    dataset = get_dataset()
-    describe_dataset(dataset)
+    if args.download:
+        dataset_id, fname = args.download
+        assert not os.path.exists(fname), f"refusing to overwrite '{fname}'"
+        if dataset_id not in [ORIG_DATASET_ID, TRANSLATED_DATASET_ID]:
+            logger.warning(f"unknown dataset_id: '{dataset_id}', continuing anyways...")
+        assert fname.endswith(".json") or fname.endswith(".jsonl")
+        dataset = get_dataset(dataset_id)
+        Dataset.from_dict(dataset).to_json(fname)
+        logger.info(f"downloaded dataset '{dataset_id}' to '{fname}'")
+        print(
+            f"\nto view info about this dataset, you can always run ./{os.path.basename(__file__)} --describe '{fname}'"
+        )
+        args.describe = fname
+
+    if args.describe:
+        fname = args.describe
+        assert os.path.isfile(fname)
+        assert fname.lower().endswith(".jsonl") or fname.lower().endswith(".json")
+        print("\ndescribing dataset: ", fname)
+        dataset, _ = load_local_dataset(fname)
+        dataset = get_dataset(TRANSLATED_DATASET_ID)
+        describe_dataset(dataset)
+        return
+
+    print("no action specified, printing help...\n")
+    parser.print_help()
+    exit(1)
 
 
 def describe_dataset(dataset):
@@ -197,15 +238,16 @@ def describe_dataset(dataset):
         col_names = dataset[split].column_names
         for item in dataset[split]:
             for col_name in col_names:
-                chars += len(item[col_name])
+                if isinstance(item[col_name], str):
+                    chars += len(item[col_name])
     print(f"\ntotal chars in dataset: {chars:,}")
     print(f"\naverage chars per sample: {(chars / total_samples):.1f}")
 
 
-def get_dataset():
+def get_dataset(dataset_id: str):
     """Returns the full original dataset."""
-    with TaskTimer("load dataset"):
-        return load_dataset(DATASET_ID)
+    with TaskTimer(f"load dataset: {dataset_id}"):
+        return load_dataset(dataset_id)
 
 
 def get_shuffled_dataset():
