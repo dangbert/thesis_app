@@ -14,7 +14,7 @@ import glob
 from datasets import load_dataset, concatenate_datasets, Dataset, DatasetDict
 import numpy as np
 import deepl
-from typing import Union
+from typing import Union, Tuple
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 EXPERIMENTS_DIR = os.path.realpath(os.path.join(SCRIPT_DIR, "../.."))
@@ -193,7 +193,8 @@ def main():
             logger.warning(f"unknown dataset_id: '{dataset_id}', continuing anyways...")
         assert fname.endswith(".json") or fname.endswith(".jsonl")
         dataset = get_dataset(dataset_id)
-        Dataset.from_dict(dataset).to_json(fname)
+        Dataset.from_list(dataset["train"]).to_json(fname)
+        # Dataset.from_dict(dataset).to_json(fname)
         logger.info(f"downloaded dataset '{dataset_id}' to '{fname}'")
         print(
             f"\nto view info about this dataset, you can always run ./{os.path.basename(__file__)} --describe '{fname}'"
@@ -245,15 +246,17 @@ def describe_dataset(dataset):
 
 
 def get_dataset(dataset_id: str):
-    """Returns the full original dataset."""
+    """Returns the full original dataset (by default)."""
     with TaskTimer(f"load dataset: {dataset_id}"):
         return load_dataset(dataset_id)
 
 
 def get_shuffled_dataset():
-    """Shuffles the train split of the dataset and return it. Uses a constant seed so the returned dataset is always the same."""
-    dataset = get_dataset()
-    # calculate how many samples can be translated with a budget of 500_000 chars
+    """
+    Shuffles the train split of the original dataset and return its.
+    Uses a constant seed so the returned dataset is always the same.
+    """
+    dataset = get_dataset(ORIG_DATASET_ID)
     np.random.seed(42)
     indices = np.random.permutation(len(dataset["train"]))
     sdataset = dataset["train"].select(indices)
@@ -285,7 +288,7 @@ class DUMMYResult:
     detected_source_lang: str = "EN"
 
 
-def load_local_dataset(disk_path: str):
+def load_local_dataset(disk_path: str) -> Tuple:
     """Reload dataset from local cache of previous translations."""
     assert os.path.exists(disk_path)
     tdataset: DatasetDict = load_dataset("json", data_files=disk_path, split="train")
@@ -303,13 +306,14 @@ def translate_dataset(dataset, disk_path: str, max_samples: int):
     """
     assert disk_path.endswith(".jsonl") or disk_path.endswith(".json")
 
-    tdataset_dict: dict = {c: [] for c in COL_NAMES}  # translated dataset
-    extra_cols = ["orig_index", "detected_source_lang"]
-    for c in extra_cols:
-        tdataset_dict[c] = []
+    extra_cols = ["orig_index"]
+    tdataset_dict: dict = {c: [] for c in COL_NAMES + extra_cols}  # translated dataset
     if os.path.exists(disk_path):
+        # load existing translated dataset
         tdataset, tdataset_dict = load_local_dataset(disk_path)
-    assert tdataset_dict.keys() == set(COL_NAMES + extra_cols)
+    assert tdataset_dict.keys() == set(
+        COL_NAMES + extra_cols
+    ), f"unexpected columns in dataset: {tdataset_dict.keys()}"
 
     def flush_translated_dataset(tdataset_dict):
         # note: .to_json(disk_path, indent=2) makes it more readable but leads to problems reloading later :(
