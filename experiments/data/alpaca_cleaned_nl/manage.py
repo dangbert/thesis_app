@@ -311,6 +311,7 @@ def translate_dataset(dataset, disk_path: str, max_samples: int):
     if os.path.exists(disk_path):
         # load existing translated dataset
         tdataset, tdataset_dict = load_local_dataset(disk_path)
+        logger.info(f"existing translation dataset has {len(tdataset)} samples")
     assert tdataset_dict.keys() == set(
         COL_NAMES + extra_cols
     ), f"unexpected columns in dataset: {tdataset_dict.keys()}"
@@ -321,15 +322,17 @@ def translate_dataset(dataset, disk_path: str, max_samples: int):
 
     translator = deepl.Translator(config.get_settings().deepl_api_key)
 
-    # resume from where we left off (if any)
-    start_index = len(tdataset_dict[COL_NAMES[0]])
-    logger.info(f"starting translation from row {start_index} in dataset")
-    for i in range(start_index, len(dataset)):
-        if len(tdataset_dict[COL_NAMES[0]]) >= max_samples:
-            logger.info(f"reached max_samples={max_samples}, stopping")
-            break
-
+    # translated dataset until stop condition, considering previous run could may have some gaps in the rows translated
+    translate_count = 0  # num samples newly translated
+    i = 0
+    completed_indices = set(tdataset_dict["orig_index"])
+    while translate_count < max_samples and i < len(dataset):
         sample = dataset[i]
+        logger.debug(f"processing sample {i} (orig_index={sample['orig_index']})")
+        if sample["orig_index"] in completed_indices:
+            i += 1
+            continue
+
         # skip translating empty fields
         results = {c: sample[c] for c in COL_NAMES if sample[c].strip() == ""}
         batch = [sample[c] for c in COL_NAMES if c not in results]
@@ -342,6 +345,9 @@ def translate_dataset(dataset, disk_path: str, max_samples: int):
             logger.error(f"failed to translate batch, stopping early: {e}")
             break
 
+        translate_count += 1
+        completed_indices.add(sample["orig_index"])
+
         # populate results dict with translations (considering some columns may have been skipped)
         res_idx = 0
         for c in COL_NAMES:
@@ -350,15 +356,18 @@ def translate_dataset(dataset, disk_path: str, max_samples: int):
                 res_idx += 1
             tdataset_dict[c].append(results[c])
         tdataset_dict["orig_index"].append(sample["orig_index"])
-        source_langs = sorted(list(set(r.detected_source_lang for r in res)))
-        tdataset_dict["detected_source_lang"].append(",".join(source_langs))
+        # source_langs = sorted(list(set(r.detected_source_lang for r in res)))
+        # tdataset_dict["detected_source_lang"].append(",".join(source_langs))
 
-        if i % 10 == 0:
+        if translate_count % 10 == 0:
+            logger.info(f"translated {translate_count} samples so far")
             flush_translated_dataset(tdataset_dict)
             logger.debug(f"flushed dataset to '{disk_path}' (row {i})")
 
     flush_translated_dataset(tdataset_dict)
-    logger.info("final flush complete!")
+    logger.info(
+        f"final flush complete! (Translated {translate_count} new samples -> total of {len(tdataset_dict[COL_NAMES[0]])} samples translated now)"
+    )
 
 
 if __name__ == "__main__":

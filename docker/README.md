@@ -46,7 +46,7 @@ psql -U postgres
 drop database thesis;
 create database thesis;
 
-# now edit psql and run:
+# now exit psql and run:
 ls -al /backups
 # pick the .sql file you want to import and run:
 psql -U postgres -d thesis < /backups/example.sql
