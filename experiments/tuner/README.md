@@ -11,6 +11,8 @@ tune download meta-llama/Llama-2-7b-hf  --output-dir "$EXP_DIR/model"
 
 # start finetuning
 tune run lora_finetune_single_device --config ./llama2_7B_qlora_single_device.yaml
+# or using my custom code:
+tune run recipes/lora_finetune_single_device.py --config ./llama2_7B_qlora_single_device.yaml
 
 # generate output using finetuned model on a given prompt
 tune run ./recipes/generate.py --config ./generation.yaml CHKP_NUM=3 benchmark_fluency=false prompt="Vertel me een kort verhaal over de dag van een student die aan zijn scriptie werkt."
