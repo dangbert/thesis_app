@@ -484,9 +484,62 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
                         )
             self.epochs_run += 1
             self.save_checkpoint(epoch=curr_epoch)
+            # compute and log (average) validation loss
+            avg_val_loss = self.validate()
+            self._metric_logger.log_dict(
+                {
+                    "val_loss": avg_val_loss,
+                },
+                step=self.total_training_steps,
+            )
 
     def cleanup(self) -> None:
         self._metric_logger.close()
+
+    @torch.no_grad()
+    def validate(self) -> float:
+        """
+        Based on self.train, but computes performance on validation or test set.
+        Returns the average loss per (single) sample.
+        Some inspo here https://github.com/pytorch/torchtune/issues/1066#issuecomment-2153572781
+        Note: not making any considerations for side-effects on the profiler (if running).
+        """
+        total_samples = 0
+        total_loss = 0.0
+
+        total_batches = len(self._dataloader)
+        for idx, batch in enumerate(pbar := tqdm(self._dataloader)):
+            if (
+                self.max_steps_per_epoch is not None
+                and (idx // self._gradient_accumulation_steps)
+                == self.max_steps_per_epoch
+            ):
+                break
+
+            if self._profiler_enabled:
+                self._profiler.step()
+
+            input_ids, labels = batch
+            input_ids = input_ids.to(self._device)
+            labels = labels.to(self._device)
+
+            logits = self._model(input_ids)
+            # Shift so that tokens < n predict n
+            logits = logits[..., :-1, :].contiguous()
+            labels = labels[..., 1:].contiguous()
+            logits = logits.transpose(1, 2)
+            # Compute loss
+            loss = self._loss_fn(logits, labels)
+
+            total_loss += loss.item()
+            total_samples += input_ids.size(0)
+
+            if self.total_val_steps % self._log_every_n_steps == 0:
+                avg_loss = total_loss / total_samples
+                pbar.set_description(
+                    f"validation {idx+1}/{total_batches}| Avg Loss: {avg_loss:.5f}"
+                )
+        return total_loss / total_samples
 
 
 @config.parse
