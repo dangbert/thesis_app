@@ -4,6 +4,7 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+import os
 import sys
 
 from functools import partial
@@ -124,6 +125,10 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
 
         self._resume_from_checkpoint = cfg.resume_from_checkpoint
         self._gradient_accumulation_steps = cfg.gradient_accumulation_steps
+
+        # create EXP_DIR if doesn't exist
+        os.makedirs(cfg.EXP_DIR, exist_ok=True)
+        log.info(f"using EXP_DIR: '{cfg.EXP_DIR}'")
 
     def load_checkpoint(self, cfg_checkpointer: DictConfig) -> Dict[str, Any]:
         """
@@ -360,9 +365,7 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
             tokenizer=self._tokenizer,
         )
         if max_samples is not None:
-            ds._data = ds._data.select(
-                range(max_samples)
-            )
+            ds._data = ds._data.select(range(max_samples))
 
         # note: not shuffling data for validation set because aplaca-cleaned was shuffled before translating to create alpaca-cleaned-nl
         # but we could shuffle here with a hardcoded seed
@@ -390,7 +393,7 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
             ),
         )
 
-        log.info("Dataset and Sampler are initialized.")
+        log.info(f"Dataset and Sampler are initialized ({is_val=}).")
 
         return sampler, dataloader
 
@@ -436,6 +439,7 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
             k: v for k, v in self._model.state_dict().items() if adapter_key_filter(k)
         }
         ckpt_dict.update({utils.ADAPTER_KEY: adapter_state_dict})
+        log.info(f"saving checkpoint at epoch {epoch}")
         self._checkpointer.save_checkpoint(
             ckpt_dict,
             epoch=epoch,
@@ -517,13 +521,14 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
             self.epochs_run += 1
             self.save_checkpoint(epoch=curr_epoch)
             # compute and log (average) validation loss
-            avg_val_loss = self.validate()
-            self._metric_logger.log_dict(
-                {
-                    "val_loss": avg_val_loss,
-                },
-                step=self.total_training_steps,
-            )
+            if len(self._val_dataloader) > 0:
+                avg_val_loss = self.validate()
+                self._metric_logger.log_dict(
+                    {
+                        "val_loss": avg_val_loss,
+                    },
+                    step=self.total_training_steps,
+                )
 
     def cleanup(self) -> None:
         self._metric_logger.close()

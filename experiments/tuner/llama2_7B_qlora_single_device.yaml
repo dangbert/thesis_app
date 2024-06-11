@@ -16,8 +16,11 @@
 # This config works only for training on single device.
 
 # my custom vars (referenced throughout file)
-EXP_DIR: "./llama2_7B"
-MODEL_DIR: ${EXP_DIR}/model
+EXP_ROOT: "./llama2_7B"
+MODEL_DIR: ${EXP_ROOT}/model
+EXP_NAME: unnamed
+# TODO: this doesn't seem to use any EXP_NAME provided in the CLI:
+EXP_DIR: ${EXP_ROOT}/experiments/${EXP_NAME}
 # custom argument for dataset split ratio for creating validation set
 val_split: 0.1
 max_samples: null # set to ~20 to quickly test script end to end
@@ -39,12 +42,14 @@ checkpointer:
   _component_: torchtune.utils.FullModelHFCheckpointer
   checkpoint_dir: ${MODEL_DIR}
   checkpoint_files: [
+    # relative to checkpoint_dir
     pytorch_model-00001-of-00002.bin,
     pytorch_model-00002-of-00002.bin
   ]
   adapter_checkpoint: null
   recipe_checkpoint: null
-  output_dir: ${MODEL_DIR}
+  #output_dir: ${MODEL_DIR}
+  output_dir: ${EXP_DIR}
   model_type: LLAMA2
 resume_from_checkpoint: False
 
@@ -65,7 +70,7 @@ optimizer:
   lr: 3e-4
 lr_scheduler:
   _component_: torchtune.modules.get_cosine_schedule_with_warmup
-  num_warmup_steps: 100
+  num_warmup_steps: 150
 
 loss:
   _component_: torch.nn.CrossEntropyLoss
@@ -79,7 +84,7 @@ gradient_accumulation_steps: 8
 compile: False
 
 # Logging
-output_dir: ${EXP_DIR}/output
+output_dir: ${EXP_ROOT}/output
 # metric_logger:
 #   _component_: torchtune.utils.metric_logging.DiskLogger
 #   log_dir: ${output_dir}
