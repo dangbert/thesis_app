@@ -211,6 +211,21 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
             cfg_dataset=cfg.dataset,
             shuffle=cfg.shuffle,
             batch_size=cfg.batch_size,
+            val_split=cfg.val_split,
+            max_samples=cfg.max_samples,
+        )
+
+        # create validation set
+        _, self._val_dataloader = self._setup_data(
+            cfg_dataset=cfg.dataset,
+            shuffle=cfg.shuffle,
+            batch_size=cfg.batch_size,
+            val_split=cfg.val_split,
+            is_val=True,
+            max_samples=cfg.max_samples,
+        )
+        log.info(
+            f"train split = {len(self._dataloader):_} samples | val split = {len(self._val_dataloader):_} samples ({(cfg.val_split * 100):.2f}%)"
         )
 
         # Finally update the recipe state which can only be correctly set after all of the
@@ -330,16 +345,33 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
         cfg_dataset: DictConfig,
         shuffle: bool,
         batch_size: int,
+        val_split: float,  # split ratio
+        is_val: bool = False,  # whether to setup the validation set instead of training
+        max_samples: Optional[int] = None,
     ) -> Tuple[DistributedSampler, DataLoader]:
         """
         All data related setup happens here. Currently this recipe only supports
         Map-style Datasets which fit into memory and an option for random shuffling.
         Samplers, iterable datasets, and streaming datasets are not supported.
         """
+        assert 0.0 <= val_split < 1.0
         ds = config.instantiate(
             cfg_dataset,
             tokenizer=self._tokenizer,
         )
+        if max_samples is not None:
+            ds._data = ds._data.select(
+                range(max_samples)
+            )
+
+        # note: not shuffling data for validation set because aplaca-cleaned was shuffled before translating to create alpaca-cleaned-nl
+        # but we could shuffle here with a hardcoded seed
+        split_idx = int(len(ds._data) * 0.1)
+        if is_val:
+            ds._data = ds._data.select(range(split_idx))
+        else:
+            ds._data = ds._data.select(range(split_idx, len(ds._data)))
+
         sampler = DistributedSampler(
             ds,
             num_replicas=1,
@@ -506,9 +538,10 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
         """
         total_samples = 0
         total_loss = 0.0
+        total_val_steps = 0
 
-        total_batches = len(self._dataloader)
-        for idx, batch in enumerate(pbar := tqdm(self._dataloader)):
+        total_batches = len(self._val_dataloader)
+        for idx, batch in enumerate(pbar := tqdm(self._val_dataloader)):
             if (
                 self.max_steps_per_epoch is not None
                 and (idx // self._gradient_accumulation_steps)
@@ -534,7 +567,10 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
             total_loss += loss.item()
             total_samples += input_ids.size(0)
 
-            if self.total_val_steps % self._log_every_n_steps == 0:
+            if (idx + 1) % self._gradient_accumulation_steps == 0:
+                total_val_steps += 1
+
+            if total_val_steps % self._log_every_n_steps == 0:
                 avg_loss = total_loss / total_samples
                 pbar.set_description(
                     f"validation {idx+1}/{total_batches}| Avg Loss: {avg_loss:.5f}"

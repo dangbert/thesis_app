@@ -9,10 +9,11 @@ export EXP_DIR=./llama2_7B # should match same var in .yaml file below
 mkdir -p "$EXP_DIR/model" "$EXP_DIR/output"
 tune download meta-llama/Llama-2-7b-hf  --output-dir "$EXP_DIR/model"
 
-# start finetuning
-tune run lora_finetune_single_device --config ./llama2_7B_qlora_single_device.yaml
-# or using my custom code:
+# start finetuning using my custom code:
+# export WANDB_MODE=offline # optionally disable wandb logging
 tune run recipes/lora_finetune_single_device.py --config ./llama2_7B_qlora_single_device.yaml
+# original code:
+#tune run lora_finetune_single_device --config ./llama2_7B_qlora_single_device.yaml
 
 # generate output using finetuned model on a given prompt
 tune run ./recipes/generate.py --config ./generation.yaml CHKP_NUM=3 benchmark_fluency=false prompt="Vertel me een kort verhaal over de dag van een student die aan zijn scriptie werkt."
