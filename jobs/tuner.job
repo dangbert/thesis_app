@@ -1,0 +1,31 @@
+#!/bin/bash
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=5
+#SBATCH --gpus=1
+#SBATCH --job-name=sleep
+#SBATCH --ntasks=1
+#SBATCH --time=4:30:00
+#SBATCH --mem=64000M
+#SBATCH --output=logs/slurm_output__tuner_%A.out
+
+# run arbitrary command verbose
+function runv {
+  echo -e "\n\nrunning: $@"
+  time "$@"
+}
+
+cd ~/thesis_app
+. .venv/bin/activate
+# poetry install
+
+echo "ready to run"
+pushd experiments/tuner
+
+# now we can run arbitrary experiments
+#export WANDB_MODE=offline 
+# export EXP_NAME=full2
+# runv tune run recipes/lora_finetune_single_device.py --config ./llama2_7B_qlora_single_device.yaml gradient_accumulation_steps=16
+
+# export EXP_NAME=full3
+# runv tune run recipes/lora_finetune_single_device.py --config ./llama2_7B_qlora_single_device.yaml gradient_accumulation_steps=32

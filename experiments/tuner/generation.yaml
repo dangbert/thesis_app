@@ -6,8 +6,8 @@
 # my custom vars:
 EXP_ROOT: "./llama2_7B"
 MODEL_DIR: ${EXP_ROOT}/model
-EXP_NAME: "unnamed"
-EXP_DIR: "${EXP_ROOT}/experiments/${EXP_NAME}"
+EXP_NAME: "${oc.env:EXP_NAME,unnamed}"
+EXP_DIR: ${EXP_ROOT}/experiments/${EXP_NAME}
 # choose checkpoint num to differentiate between various checkpoints
 # e.g. checkpoint #3 is made up of: hf_model_0001_3.pt, hf_model_0002_3.pt (adapter_3.pt is also relevant but I think already used to create the other weight files)
 CHKP_NUM: 3

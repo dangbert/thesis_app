@@ -18,11 +18,12 @@
 # my custom vars (referenced throughout file)
 EXP_ROOT: "./llama2_7B"
 MODEL_DIR: ${EXP_ROOT}/model
-EXP_NAME: unnamed
-# TODO: this doesn't seem to use any EXP_NAME provided in the CLI:
+EXP_NAME: "${oc.env:EXP_NAME,unnamed}"
+# NOTE: using env var above instead because EXP_DIR doesn't seem to use any EXP_NAME provided in the CLI otherwise
 EXP_DIR: ${EXP_ROOT}/experiments/${EXP_NAME}
 # custom argument for dataset split ratio for creating validation set
 val_split: 0.1
+vals_per_epoch: 2 # number of times to compute validation loss per epoch
 max_samples: null # set to ~20 to quickly test script end to end
 
 # Model Arguments
@@ -70,7 +71,7 @@ optimizer:
   lr: 3e-4
 lr_scheduler:
   _component_: torchtune.modules.get_cosine_schedule_with_warmup
-  num_warmup_steps: 150
+  num_warmup_steps: 100
 
 loss:
   _component_: torch.nn.CrossEntropyLoss

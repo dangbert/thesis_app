@@ -129,6 +129,7 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
         # create EXP_DIR if doesn't exist
         os.makedirs(cfg.EXP_DIR, exist_ok=True)
         log.info(f"using EXP_DIR: '{cfg.EXP_DIR}'")
+        self.vals_per_epoch = cfg.vals_per_epoch
 
     def load_checkpoint(self, cfg_checkpointer: DictConfig) -> Dict[str, Any]:
         """
@@ -456,14 +457,33 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
                 "NOTE: torch.compile is enabled and model is compiled in first forward. Expect a relatively slow first iteration."
             )
 
+        # compute indices at which to compute validation loss (e.g. to compute twice an epoch if vals_per_epoch==2)
+        val_indices = set()
+        for n in range(self.vals_per_epoch):
+            val_indices.add(int(len(self._dataloader) / self.vals_per_epoch) * n)
+        val_indices.remove(0)  # we train at the end of each epoch anyways
+        log.info(f"{val_indices=}, {self.vals_per_epoch=}")
+
         # self.epochs_run should be non-zero when we're resuming from a checkpoint
         for curr_epoch in range(self.epochs_run, self.total_epochs):
             # Update the sampler to ensure data is correctly shuffled across epochs
             # in case shuffle is True
             self._sampler.set_epoch(curr_epoch)
 
+            # for clarity, log which training steps correspond to which epoch
+            self._metric_logger.log_dict(
+                {
+                    "epoch": curr_epoch,
+                },
+                step=self.total_training_steps,
+            )
+
             # Optionally profile the training loop
             with self._profiler:
+                # compute initial (average) validation loss
+                if self.vals_per_epoch >= 1:
+                    self.run_validation()
+
                 for idx, batch in enumerate(pbar := tqdm(self._dataloader)):
                     if (
                         self.max_steps_per_epoch is not None
@@ -518,20 +538,28 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
                         self._metric_logger.log_dict(
                             memory_stats, step=self.total_training_steps
                         )
+                    if (
+                        idx in val_indices and self.vals_per_epoch > 1
+                    ):  # run once at end of epoch anyways
+                        self.run_validation()
             self.epochs_run += 1
             self.save_checkpoint(epoch=curr_epoch)
-            # compute and log (average) validation loss
-            if len(self._val_dataloader) > 0:
-                avg_val_loss = self.validate()
-                self._metric_logger.log_dict(
-                    {
-                        "val_loss": avg_val_loss,
-                    },
-                    step=self.total_training_steps,
-                )
+            if self.vals_per_epoch >= 1:
+                self.run_validation()  # compute and log (average) validation loss
 
     def cleanup(self) -> None:
         self._metric_logger.close()
+
+    def run_validation(self) -> None:
+        """Thin wrapper around validate() which calls it and logs results."""
+        if len(self._val_dataloader) > 0:
+            avg_val_loss = self.validate()
+            self._metric_logger.log_dict(
+                {
+                    "val_loss": avg_val_loss,
+                },
+                step=self.total_training_steps,
+            )
 
     @torch.no_grad()
     def validate(self) -> float:
