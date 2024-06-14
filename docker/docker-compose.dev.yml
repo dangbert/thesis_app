@@ -26,6 +26,7 @@ services:
       # - LOG_LEVEL=DEBUG
     volumes:
       - ../backend/:/backend/
+    # command: "bash -c 'echo sleeping && sleep infinity'"
     command: ./jobRunner.py
 
   nginx:

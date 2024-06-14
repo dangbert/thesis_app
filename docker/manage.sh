@@ -6,6 +6,9 @@ SCRIPT_DIR="$(realpath "$(dirname "$0")")"
 VOLUMES_DIR="$SCRIPT_DIR/volumes"
 DB_NAME="thesis"
 
+# alias dc='docker compose'
+# alias dc='docker compose -f docker-compose.yml -f docker-compose.dev.yml'
+
 function main() {
     cd "$SCRIPT_DIR"
     RAN=0
@@ -24,7 +27,7 @@ function main() {
 
         d)
             db_dump
-            relaunch
+            #relaunch
             RAN=1
             ;;
         b)
@@ -62,10 +65,11 @@ function relaunch {
 }
 
 function db_dump {
-    docker compose down
-    docker compose up -d db
-    echo "sleeping 10sec for DB to startup"
-    sleep 10
+    # shouldn't be necessary to stop everything just to dump the DB
+    # docker compose down
+    # docker compose up -d db
+    # echo "sleeping 10sec for DB to startup"
+    # sleep 10
     fname="${DB_NAME}_$(date -u '+%F-%T').sql"
     fullFname="$VOLUMES_DIR/backups/$fname"
     docker compose exec -it db bash -c "pg_dump -h localhost -p 5432 -U postgres $DB_NAME > /backups/$fname"

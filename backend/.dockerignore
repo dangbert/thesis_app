@@ -5,3 +5,6 @@ Dockerfile
 .venv*
 **/__pycache__
 **/.*cache
+
+# files with data from the pilot study
+**/*pilot*
