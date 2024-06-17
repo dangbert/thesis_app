@@ -11,4 +11,4 @@ terraform.tfvars
 logs/
 
 # files with data from the pilot study
-pilot*
+*pilot*.*

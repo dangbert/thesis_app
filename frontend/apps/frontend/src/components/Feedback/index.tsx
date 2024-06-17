@@ -97,6 +97,7 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({
       attempt_id: attemptId,
       data: {
         ...feedbackData,
+        // TODO: review_secs should have been stored at the root level of 'data', not under eval_metrics
         eval_metrics: {
           ...(feedbackData.eval_metrics ?? ({} as EvalMetrics)), // Use an empty object if eval_metrics is null
           review_secs: review_secs,
