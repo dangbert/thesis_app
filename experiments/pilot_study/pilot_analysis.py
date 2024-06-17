@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Script for analyzing/plotting data from pilot.xlsx (see backend/pilot.py)"""
+"""Script for analyzing/plotting data from pilot.xlsx (see backend/dump_pilot.py)"""
 
 import argparse
 import os
@@ -25,7 +25,7 @@ FNAME = os.path.join(config.ROOT_DIR, "backend/pilot.xlsx")
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Utils for doing analysis on pilot.xlsx data (see backend/pilot.py)",
+        description="Utils for doing analysis on pilot.xlsx data (see backend/dump_pilot.py)",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
@@ -51,7 +51,7 @@ def main():
 
     if args.levenshtein:
         levenshtein(args.input)
-    if args.dump_for_translate:
+    elif args.dump_for_translate:
         dump_for_translate(args.input)
     else:
         parser.print_help()
@@ -66,10 +66,13 @@ def _get_dfs(fname: str):
 
 
 def levenshtein(fname: str, new_fname: str = "pilot_lev_dist_norm.xlsx"):
-    a1_df, a2_df = _get_dfs(fname)
+    # a1_df, a2_df = _get_dfs(fname)
+    excel_file = pd.ExcelFile(fname)
+    sheets = {sheet_name: excel_file.parse(sheet_name) for sheet_name in excel_file.sheet_names}
+    a1_df, a2_df = sheets["P1"], sheets["S1"]
 
     logger.info(
-        "computer normalized Levenshtein distance between ai_feedback and human_feedback."
+        "computing normalized Levenshtein distance between ai_feedback and human_feedback."
     )
     # add column lev_dist_norm to a1df from columns 'ai_feedback' and 'human_feedback'
     a1_df["lev_dist_norm"] = a1_df.apply(
@@ -79,8 +82,11 @@ def levenshtein(fname: str, new_fname: str = "pilot_lev_dist_norm.xlsx"):
     # TODO: consider regenerating AI feedback for S1 and comparing as a baseline
     # to see how much the AI feedback in P1 biased the final feedback
     with pd.ExcelWriter(new_fname) as writer:
-        a1_df.to_excel(writer, sheet_name="P1")
-        a2_df.to_excel(writer, sheet_name="S1")
+        sheets["P1"] = a1_df
+        sheets["S1"] = a2_df
+        # preserve other arbitrary sheets
+        for sheet_name, df in sheets.items():
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
     logger.info(f"wrote '{new_fname}'")
 
     plt.figure()
