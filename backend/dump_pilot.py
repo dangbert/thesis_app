@@ -155,15 +155,18 @@ def get_anon_df(session):
         if att.user.email in skip_emails:
             skipped["skip_email"] += 1
             continue
-        human_feedbacks, _ = _split_feedbacks(att)
+        human_feedbacks, ai_feedbacks = _split_feedbacks(att)
         if len(human_feedbacks) == 0:
             skipped["no_human_feedback"] += 1
             continue  # only interested in attempts a human reviewed
+        if len(ai_feedbacks) == 0:
+            skipped["no_ai_feedback"] += 1
+            continue  # e.g. student was in pilot_emails and AI feedback was not generated
         cur = attempt_to_dict(att)
         cur = {k: v for k, v in cur.items() if k in keep_cols}
         anon_data.append(cur)
 
-    random.Random(42).shuffle(anon_data)  # shuffly into arbitrary order
+    random.Random(42).shuffle(anon_data)  # shuffle into arbitrary order
     logger.info(
         f"attempt skip stats (note {len(attempts)} total attempts): {str(skipped)}"
     )
@@ -172,7 +175,7 @@ def get_anon_df(session):
 
 
 def _split_feedbacks(att: models.Attempt) -> Tuple[list, list]:
-    """Split feedbacks list into (human_feedbacks,  ai_feedbacks)."""
+    """Split feedbacks list into (human_feedbacks, ai_feedbacks)."""
     feedbacks = sorted(att.feedbacks, key=lambda x: x.created_at)
     human_feedbacks = [x for x in feedbacks if not x.is_ai]
     ai_feedbacks = [x for x in feedbacks if x.is_ai]

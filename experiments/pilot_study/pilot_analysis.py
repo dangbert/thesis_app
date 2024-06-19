@@ -52,7 +52,7 @@ def main():
     new_fname = "pilot_lev_dist_norm.xlsx"
     if args.levenshtein:
         levenshtein(args.input, new_fname)
-        plot_errors(new_fname) # could read either file here
+        plot_evals(new_fname) # could read either file here
     elif args.dump_for_translate:
         dump_for_translate(args.input)
     else:
@@ -131,34 +131,42 @@ ALL_PROBLEMS = {
   'Other',
 }
 
-def plot_errors(fname: str):
+def plot_evals(fname: str):
+    """Plot problem categorizations and Likert scale ratings."""
     df = pd.read_excel(fname, sheet_name="anon")
 
     counts = {error: 0 for error in ALL_PROBLEMS}
-    # get rows with review_problems
     df_filtered = df[df["review_problems"].notnull()]
     for i, row in df_filtered.iterrows():
         errors = row["review_problems"].split(";")
         for error in errors:
             counts[error] += 1
-    
     total_problems = sum(counts.values())
     logger.info(f"{len(df_filtered)}/{len(df)} attempts tagged with review_problems")
     logger.info(f"{total_problems} problems reported in total (across tagged attempts)")
-    
+
+    ratings = df["review_rating"].dropna()
+
     # sort keys by value largest to smallest
     counts = {k: v for k, v in sorted(counts.items(), key=lambda item: item[1], reverse=True)}
-    plt.figure()
-    plt.title("LLM Feedback Error Classifications")
-    plt.ylabel("Total Occurrences")
-    plt.bar(counts.keys(), counts.values())
-    plt.xticks(rotation=90)
+    
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))  # Double the width
+    # First plot: error classifications
+    ax1.set_title("LLM Feedback Problems Distribution")
+    ax1.set_ylabel("Frequency")
+    ax1.bar(counts.keys(), counts.values())
+    ax1.set_xticklabels(counts.keys(), rotation=90)
     # add extra padding below for labels
-    plt.subplots_adjust(
-        left=0.05, right=0.95, top=0.95, bottom=0.33
-    ) # https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.subplots_adjust.html
+    plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.2)
 
-    plot_path = "error_barplot.pdf"
+    # Second plot: bar plot of ratings
+    ax2.set_title("LLM Feedback Ratings Distribution")
+    ax2.set_ylabel("Frequency")
+    ax2.set_xlabel("Rating")
+    ax2.hist(ratings, bins=range(1, 7), align='left', rwidth=0.8) # up to 6 for better visibility
+    ax2.set_xticks(range(1, 6))
+
+    plot_path = "feedback_barplot.pdf"
     plt.savefig(plot_path)
     logger.info(f"wrote '{plot_path}'")
 
