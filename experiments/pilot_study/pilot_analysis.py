@@ -94,7 +94,11 @@ def levenshtein(fname: str, new_fname: str):
     plt.figure()
     plt.title("Edit Distance Between AI and Human Feedback")
     plt.ylabel("Normalized Levenshtein Distance")
-    plt.violinplot(a1_df["lev_dist_norm"], showmeans=False, showmedians=True)
+    #plt.violinplot(a1_df["lev_dist_norm"], showmeans=False, showmedians=True)
+    # bar plot 0.0 -> 1.0 x axis with bins of 0.1
+    # plt.hist(a1_df["lev_dist_norm"], bins=10, range=(0, 1), align='mid', rwidth=0.8)
+    plt.boxplot(a1_df["lev_dist_norm"])
+
     # plt.gca().axes.get_xaxis().set_visible(False)
     plt.gcf().set_size_inches(4, 6)
     plt.subplots_adjust(
@@ -120,7 +124,7 @@ def levenshtein(fname: str, new_fname: str):
     plt.savefig(plot_path)
     logger.info(f"wrote '{plot_path}'")
 
-# matches EvalControls.tsx
+# these match EvalControls.tsx
 ALL_PROBLEMS = {
   'Accuracy/relevance',
   'Feedback style/tone',
@@ -129,6 +133,13 @@ ALL_PROBLEMS = {
   'Too wordy',
   'Too short',
   'Other',
+}
+LIKERT_STARS = {
+  1: 'Very dissatisfied',
+  2: 'Dissatisfied',
+  3: 'Unsure',
+  4: 'Satisfied',
+  5: 'Very satisfied',
 }
 
 def plot_evals(fname: str):
@@ -146,25 +157,29 @@ def plot_evals(fname: str):
     logger.info(f"{total_problems} problems reported in total (across tagged attempts)")
 
     ratings = df["review_rating"].dropna()
+    logger.info(f"{len(ratings)} ratings reported in total")
 
     # sort keys by value largest to smallest
     counts = {k: v for k, v in sorted(counts.items(), key=lambda item: item[1], reverse=True)}
     
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))  # Double the width
     # First plot: error classifications
-    ax1.set_title("LLM Feedback Problems Distribution")
-    ax1.set_ylabel("Frequency")
+    title_fontsize = 16
+    axis_fontsize = 14
+    ax1.set_title("LLM Feedback Problems Distribution", fontsize=title_fontsize)
+    ax1.set_ylabel("Frequency", fontsize=axis_fontsize)
     ax1.bar(counts.keys(), counts.values())
-    ax1.set_xticklabels(counts.keys(), rotation=90)
+    ax1.set_xticklabels(counts.keys(), rotation=90, fontsize=axis_fontsize)
     # add extra padding below for labels
-    plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.2)
+    plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.27)
 
     # Second plot: bar plot of ratings
-    ax2.set_title("LLM Feedback Ratings Distribution")
-    ax2.set_ylabel("Frequency")
-    ax2.set_xlabel("Rating")
+    ax2.set_title("LLM Feedback Ratings Distribution", fontsize=title_fontsize)
+    ax2.set_ylabel("Frequency", fontsize=axis_fontsize)
+    # ax2.set_xlabel("Rating", fontsize=axis_fontsize)
     ax2.hist(ratings, bins=range(1, 7), align='left', rwidth=0.8) # up to 6 for better visibility
     ax2.set_xticks(range(1, 6))
+    ax2.set_xticklabels([f"{LIKERT_STARS[i]} - {i}" for i in range(1, 6)], rotation=90, fontsize=axis_fontsize)
 
     plot_path = "feedback_barplot.pdf"
     plt.savefig(plot_path)
@@ -177,9 +192,12 @@ def dump_for_translate(fname: str, out_path: str = "pilot_translate.docx"):
     document = docx.Document()
     for i, df in enumerate([a1_df, a2_df]):
         document.add_paragraph(f"##### assignment {i+1} #####")
+        columns = ["attempt_goal", "attempt_plan", "ai_feedback", "human_feedback"]
         for i, row in df.iterrows():
-            text = f"\n=== {row['attempt_id']} ==="
-            for key in ["attempt_goal", "attempt_plan", "ai_feedback"]:
+            # given no index in xlsx, it took attempt_id (i) as the index
+            row_id = row.get("attempt_id", i)
+            text = f"\n=== {row_id} ==="
+            for key in columns:
                 # val = row[key] if row[key] and isinstance(row[key], str) else "" # handle nans (float defaults)
                 val = row[key] if isinstance(row[key], str) else "nan"
                 text += f"\n\n## {key}:\n{val}"
