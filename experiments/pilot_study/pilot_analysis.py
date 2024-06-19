@@ -32,7 +32,7 @@ def main():
         "--levenshtein",
         "-l",
         action="store_true",
-        help="Compute levenshtein edit distances",
+        help="Compute levenshtein edit distances, and plot errors",
     )
     parser.add_argument(
         "--input",
@@ -49,8 +49,10 @@ def main():
     )
     args = parser.parse_args()
 
+    new_fname = "pilot_lev_dist_norm.xlsx"
     if args.levenshtein:
-        levenshtein(args.input)
+        levenshtein(args.input, new_fname)
+        plot_errors(new_fname) # could read either file here
     elif args.dump_for_translate:
         dump_for_translate(args.input)
     else:
@@ -65,7 +67,7 @@ def _get_dfs(fname: str):
     return a1_df, a2_df
 
 
-def levenshtein(fname: str, new_fname: str = "pilot_lev_dist_norm.xlsx"):
+def levenshtein(fname: str, new_fname: str):
     # a1_df, a2_df = _get_dfs(fname)
     excel_file = pd.ExcelFile(fname)
     sheets = {sheet_name: excel_file.parse(sheet_name) for sheet_name in excel_file.sheet_names}
@@ -117,6 +119,49 @@ def levenshtein(fname: str, new_fname: str = "pilot_lev_dist_norm.xlsx"):
     plot_path = "lev_dist_norm.pdf"
     plt.savefig(plot_path)
     logger.info(f"wrote '{plot_path}'")
+
+# matches EvalControls.tsx
+ALL_PROBLEMS = {
+  'Accuracy/relevance',
+  'Feedback style/tone',
+  'Structure',
+  'Grammar',
+  'Too wordy',
+  'Too short',
+  'Other',
+}
+
+def plot_errors(fname: str):
+    df = pd.read_excel(fname, sheet_name="anon")
+
+    counts = {error: 0 for error in ALL_PROBLEMS}
+    # get rows with review_problems
+    df_filtered = df[df["review_problems"].notnull()]
+    for i, row in df_filtered.iterrows():
+        errors = row["review_problems"].split(";")
+        for error in errors:
+            counts[error] += 1
+    
+    total_problems = sum(counts.values())
+    logger.info(f"{len(df_filtered)}/{len(df)} attempts tagged with review_problems")
+    logger.info(f"{total_problems} problems reported in total (across tagged attempts)")
+    
+    # sort keys by value largest to smallest
+    counts = {k: v for k, v in sorted(counts.items(), key=lambda item: item[1], reverse=True)}
+    plt.figure()
+    plt.title("LLM Feedback Error Classifications")
+    plt.ylabel("Total Occurrences")
+    plt.bar(counts.keys(), counts.values())
+    plt.xticks(rotation=90)
+    # add extra padding below for labels
+    plt.subplots_adjust(
+        left=0.05, right=0.95, top=0.95, bottom=0.33
+    ) # https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.subplots_adjust.html
+
+    plot_path = "error_barplot.pdf"
+    plt.savefig(plot_path)
+    logger.info(f"wrote '{plot_path}'")
+
 
 
 def dump_for_translate(fname: str, out_path: str = "pilot_translate.docx"):
