@@ -23,6 +23,7 @@ echo "ready to run"
 pushd experiments/tuner
 
 # now we can run arbitrary experiments
+#### fine-tuning:
 #export WANDB_MODE=offline 
 # export EXP_NAME=full2
 # runv tune run recipes/lora_finetune_single_device.py --config ./llama2_7B_qlora_single_device.yaml gradient_accumulation_steps=16
@@ -32,5 +33,15 @@ pushd experiments/tuner
 
 # export EXP_NAME=full4
 # runv tune run recipes/lora_finetune_single_device.py --config ./llama2_7B_qlora_single_device.yaml gradient_accumulation_steps=64
+
+#### post fine-tuning: evaluation/benchmarking:
+export JUDGE=gpt-4-0125-preview
+export EXP_NAME=full4
+
+echo "evaluating EXP_NAME=$EXP_NAME"
+declare -a checkpoints=("0" "1" "2" "3")
+for CHKP_NUM in "${checkpoints[@]}"; do
+  runv tune run ./recipes/generate.py --config ./generation.yaml CHKP_NUM=$CHKP_NUM benchmark_fluency=true benchmark_judge=$JUDGE
+done
 
 echo "all done!"

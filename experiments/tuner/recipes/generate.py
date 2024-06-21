@@ -182,32 +182,39 @@ def benchmark_fluency(cfg: DictConfig, max_samples: Optional[int] = None) -> flo
         x.to_csv(outpath)
         print(f"wrote '{outpath}'")
 
-    ### 1. get outputs from local model (instructed to write feedback in Dutch on example assignments)
-    QUESTION = "provide a paragraph of feedback in Dutch on a student's assignment."
-    local_template = AlpacaInstructTemplate()
-    recipe = InferenceRecipe(cfg=cfg)
-    recipe.setup(cfg=cfg)
-
-    # build a new df documenting this benchmark
-    df = df_goals.copy()[["goal_id"]]
-
-    def build_local_prompt(row: pd.Series) -> str:
-        """Prompt for local model."""
-        student_draft = f"{row['smart']}\n{row['plan']}"
-        return local_template.format({"instruction": QUESTION, "input": student_draft})
-
-    df["local_prompt"] = df_goals.apply(build_local_prompt, axis=1).to_list()
-
     if max_samples is not None:
         logger.info(
-            f"limiting to max_samples={max_samples} (original size = {len(df)})"
+            f"limiting to max_samples={max_samples} (original size = {len(df_goals)})"
         )
-        df = df[:max_samples]
-    logger.info(f"generating local outputs for {len(df)} prompts")
-    outputs, _ = recipe(df["local_prompt"], cfg=cfg, verbose=False)
-    outputs = [get_subresponse(output) for output in outputs]
-    df["local_output"] = outputs
-    flush_df(df)
+        df_goals = df_goals[:max_samples]
+
+    ### 1. get outputs from local model (instructed to write feedback in Dutch on example assignments)
+    QUESTION = "provide a paragraph of feedback in Dutch on a student's assignment."
+    if os.path.isfile(outpath):
+        df = pd.read_csv(outpath)
+        logger.info(f"resumed from '{outpath}'")
+    else:
+        local_template = AlpacaInstructTemplate()
+        recipe = InferenceRecipe(cfg=cfg)
+        recipe.setup(cfg=cfg)
+
+        # build a new df documenting this benchmark
+        df = df_goals.copy()[["goal_id"]]
+
+        def build_local_prompt(row: pd.Series) -> str:
+            """Prompt for local model."""
+            student_draft = f"{row['smart']}\n{row['plan']}"
+            return local_template.format(
+                {"instruction": QUESTION, "input": student_draft}
+            )
+
+        df["local_prompt"] = df_goals.apply(build_local_prompt, axis=1).to_list()
+
+        logger.info(f"generating local outputs for {len(df)} prompts")
+        outputs, _ = recipe(df["local_prompt"], cfg=cfg, verbose=False)
+        outputs = [get_subresponse(output) for output in outputs]
+        df["local_output"] = outputs
+        flush_df(df)
 
     ### 2. evaluate outputs using GPT model as a fluency judge
     # df_goals["fluency_prompts"] = df_goals.apply(build_fluency_prompt, axis=1).to_list()

@@ -22,12 +22,21 @@ model:
 
 checkpointer:
   _component_: torchtune.utils.FullModelHFCheckpointer
-  #checkpoint_dir: ${MODEL_DIR}
   checkpoint_dir: ${EXP_DIR}
   checkpoint_files:
     - hf_model_0001_${CHKP_NUM}.pt
     - hf_model_0002_${CHKP_NUM}.pt
-  output_dir: ${MODEL_DIR}
+  # note: adapaters aren't needed for reloading checkpoint for generation (just for resuming training)
+  #   key info here: https://pytorch.org/torchtune/stable/deep_dives/checkpointer.html#checkpointing-for-lora
+
+  # for reloading default/initial model, use these settings instead:
+  # checkpoint_dir: ${MODEL_DIR}
+  # checkpoint_files: [
+  #   # relative to checkpoint_dir
+  #   pytorch_model-00001-of-00002.bin,
+  #   pytorch_model-00002-of-00002.bin
+  # ]
+
   model_type: LLAMA2
 
 device: cuda
