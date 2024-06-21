@@ -18,7 +18,8 @@ from torchtune import config, utils
 from torchtune.data import AlpacaInstructTemplate
 
 import pandas as pd
-from jinja2 import Environment, FileSystemLoader
+
+import jinja2
 from openai.types.chat.chat_completion import ChatCompletion
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -28,7 +29,7 @@ from AbstractModel import AbstractModel, IPrompt  # noqa: E402
 from gpt import GPTModel  # noqa: E402
 import config as projconfig  # noqa: E402
 
-logger = utils.get_logger("DEBUG")
+logger = utils.get_logger("INFO")
 
 
 class InferenceRecipe(AbstractModel):
@@ -100,21 +101,26 @@ class InferenceRecipe(AbstractModel):
         self,
         prompts: List[IPrompt],
         cfg: DictConfig,
+        verbose: bool = True,
     ) -> Tuple[List[str], List[ChatCompletion]]:
-        raw_outputs = [self.generate(cfg, prompt) for prompt in prompts]
+        raw_outputs = [
+            self.generate(cfg, prompt, verbose=verbose) for prompt in prompts
+        ]
         return raw_outputs, None
 
     @torch.no_grad()
-    def generate(self, cfg: DictConfig, prompt: str):
+    def generate(self, cfg: DictConfig, prompt: str, verbose: bool = True):
         tokens = self._tokenizer.encode(prompt, add_bos=True, add_eos=False)
         prompt = torch.tensor(tokens, dtype=torch.int, device=self._device)
 
         custom_generate_next_token = None
 
+        logf = logger.info if verbose else logger.debug  # logger function
+
         # since quantized model uses torch.compile to get speedup, it needs a warm up / prefill run
         # to get the accurate performance measurement
         if self._quantization_mode is not None:
-            logger.info("Starting compilation to improve generation performance ...")
+            logf("Starting compilation to improve generation performance ...")
             custom_generate_next_token = torch.compile(
                 utils.generate_next_token, mode="max-autotune", fullgraph=True
             )
@@ -129,7 +135,7 @@ class InferenceRecipe(AbstractModel):
                 custom_generate_next_token=custom_generate_next_token,
             )
             t = time.perf_counter() - t0
-            logger.info(f"Warmup run for quantized model takes: {t:.02f} sec")
+            logf(f"Warmup run for quantized model takes: {t:.02f} sec")
 
         t0 = time.perf_counter()
         generated_tokens = utils.generate(
@@ -144,7 +150,7 @@ class InferenceRecipe(AbstractModel):
         t = time.perf_counter() - t0
 
         raw_output = self._tokenizer.decode(generated_tokens)
-        logger.info(raw_output)
+        logf(raw_output)
 
         model_size = sum(
             [
@@ -157,63 +163,103 @@ class InferenceRecipe(AbstractModel):
 
         tokens_generated = len(generated_tokens) - prompt.size(0)
         tokens_sec = tokens_generated / t
-        logger.info(
-            f"Time for inference: {t:.02f} sec total, {tokens_sec:.02f} tokens/sec"
-        )
-        logger.info(f"Bandwidth achieved: {model_size * tokens_sec / 1e9:.02f} GB/s")
-        logger.info(f"Memory used: {torch.cuda.max_memory_allocated() / 1e9:.02f} GB")
+        logf(f"Time for inference: {t:.02f} sec total, {tokens_sec:.02f} tokens/sec")
+        logf(f"Bandwidth achieved: {model_size * tokens_sec / 1e9:.02f} GB/s")
+        logf(f"Memory used: {torch.cuda.max_memory_allocated() / 1e9:.02f} GB")
         return raw_output
 
 
-def benchmark_fluency(cfg: DictConfig) -> float:
-    gpt = GPTModel(cfg.benchmark_judge)
-    fname = os.path.join(
-        projconfig.DATASETS_DIR, "synthetic_smart/v4/feedback_gpt-3.5-turbo-0125.csv"
+def benchmark_fluency(cfg: DictConfig, max_samples: Optional[int] = None) -> float:
+    fname_goals = os.path.join(
+        projconfig.DATASETS_DIR, "synthetic_smart/v4/smart_goals.csv"
     )
-    env = Environment(loader=FileSystemLoader(os.path.join(EXPERIMENTS_DIR, "prompts")))
-    fluency_template = env.get_template("fluency_score.jinja2")
-    df = pd.read_csv(fname)
+    outpath = os.path.join(
+        cfg.EXP_DIR, f"benchmark_chkp_{cfg.CHKP_NUM}_{cfg.benchmark_judge}.csv"
+    )
+    df_goals = pd.read_csv(fname_goals)
 
+    def flush_df(x: pd.DataFrame):
+        x.to_csv(outpath)
+        print(f"wrote '{outpath}'")
+
+    ### 1. get outputs from local model (instructed to write feedback in Dutch on example assignments)
+    QUESTION = "provide a paragraph of feedback in Dutch on a student's assignment."
+    local_template = AlpacaInstructTemplate()
     recipe = InferenceRecipe(cfg=cfg)
     recipe.setup(cfg=cfg)
-    prompts = [
-        recipe.alpaca_template.format({"instruction": prompt})
-        for prompt in df["prompt"].tolist()
-    ]
 
-    outputs, _ = recipe(prompts, cfg=cfg)
+    # build a new df documenting this benchmark
+    df = df_goals.copy()[["goal_id"]]
+
+    def build_local_prompt(row: pd.Series) -> str:
+        """Prompt for local model."""
+        student_draft = f"{row['smart']}\n{row['plan']}"
+        return local_template.format({"instruction": QUESTION, "input": student_draft})
+
+    df["local_prompt"] = df_goals.apply(build_local_prompt, axis=1).to_list()
+
+    if max_samples is not None:
+        logger.info(
+            f"limiting to max_samples={max_samples} (original size = {len(df)})"
+        )
+        df = df[:max_samples]
+    logger.info(f"generating local outputs for {len(df)} prompts")
+    outputs, _ = recipe(df["local_prompt"], cfg=cfg, verbose=False)
     outputs = [get_subresponse(output) for output in outputs]
-    df["output_llama2"] = outputs
-    outname = "tmp.csv"
-    df.to_csv(outname)
+    df["local_output"] = outputs
+    flush_df(df)
+
+    ### 2. evaluate outputs using GPT model as a fluency judge
+    # df_goals["fluency_prompts"] = df_goals.apply(build_fluency_prompt, axis=1).to_list()
+    env = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(os.path.join(EXPERIMENTS_DIR, "prompts"))
+    )
+    fluency_template = env.get_template("fluency_score_nl.jinja2")
 
     def build_fluency_prompt(row: pd.Series) -> str:
+        """Prompt for judge model to use."""
         return fluency_template.render(
             {
-                "question": "provide feedback in Dutch on a student's assignment.",
-                "answer": row["output_llama2"],
+                "question": QUESTION,
+                "answer": row["local_output"],
             }
         )
 
-    df["fluency_prompts"] = df.apply(build_fluency_prompt, axis=1).to_list()
-    df.to_csv(outname)
+    df["fluency_prompt"] = df.apply(build_fluency_prompt, axis=1).to_list()
+    flush_df(df)
 
-    outputs, meta = gpt(df["fluency_prompts"].tolist(), temperature=0.2)
+    gpt = GPTModel(cfg.benchmark_judge)
+    logger.info(f"computing {len(df)} model outputs")
+
+    gpt_outputs, meta = gpt(df["fluency_prompt"].tolist(), temperature=0.2)
     total_price = gpt.compute_price(meta)
-    print(f"total_price=${total_price:.4f}")
+    logger.info(f"total_price=${total_price:.4f}")
 
-    df["fluency_scores"] = [int(output) for output in outputs]
+    scores = []
+    for output in gpt_outputs:
+        try:
+            num = int(output)
+        except ValueError:
+            num = None
+        scores.append(num)
+
+    df["fluency_score"] = scores
+    flush_df(df)
+
+    # count nones
+    bad_count = len(df[df["fluency_score"].isna()])
+    if bad_count > 0:
+        logger.warning(f"non-integer fluency scores: {bad_count}")
+
     print(f"fluency scores (model={gpt.model_name}):")
-    print(df["fluency_scores"].describe())
-    df.to_csv(outname)
-    print(f"wrote '{outname}'")
-    return df["fluency_scores"].mean()
+    print(df["fluency_score"].describe())
+    return df["fluency_score"].mean()
 
 
 def get_subresponse(output: str) -> str:
     """
     Get the relevant part of a response where the prompt is also included.
-    Assumes the prompt used the AplacaInstructTemplate
+    Assumes the prompt used the AlpacaInstructTemplate
     """
     marker = "\n### Response:\n"
     idx = output.find(marker)

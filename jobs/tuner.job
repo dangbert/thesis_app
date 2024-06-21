@@ -5,7 +5,7 @@
 #SBATCH --gpus=1
 #SBATCH --job-name=sleep
 #SBATCH --ntasks=1
-#SBATCH --time=4:30:00
+#SBATCH --time=8:30:00
 #SBATCH --mem=64000M
 #SBATCH --output=logs/slurm_output__tuner_%A.out
 
@@ -29,3 +29,8 @@ pushd experiments/tuner
 
 # export EXP_NAME=full3
 # runv tune run recipes/lora_finetune_single_device.py --config ./llama2_7B_qlora_single_device.yaml gradient_accumulation_steps=32
+
+# export EXP_NAME=full4
+# runv tune run recipes/lora_finetune_single_device.py --config ./llama2_7B_qlora_single_device.yaml gradient_accumulation_steps=64
+
+echo "all done!"

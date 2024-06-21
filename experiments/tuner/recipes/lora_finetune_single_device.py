@@ -540,7 +540,7 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
                         )
                     if (
                         idx in val_indices and self.vals_per_epoch > 1
-                    ):  # run once at end of epoch anyways
+                    ):  # (runs once at end of epoch anyways)
                         self.run_validation()
             self.epochs_run += 1
             self.save_checkpoint(epoch=curr_epoch)
