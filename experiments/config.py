@@ -14,7 +14,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, os.pardir))
-DATASETS_DIR = os.path.join(SCRIPT_DIR, "datasets")
+DATASETS_DIR = os.path.join(SCRIPT_DIR, "data")
 ENV_PATH = os.path.join(ROOT_DIR, ".env")
 
 

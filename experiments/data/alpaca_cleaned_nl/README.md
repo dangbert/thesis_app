@@ -7,9 +7,13 @@ This folder contains the code used to translate a sample of the [aplaca-cleaned]
 ./manage.py -h # view full options/help
 
 # download original alpaca-cleaned dataset and report some stats about it
-./manage.py
+./manage.py --download yahma/alpaca-cleaned alpaca-cleaned.nl
 
-# translate a desired number of samples with DeepL API (resumes from previous run if applicable)
+# do the same for the latest published alpaca-cleaned-nl
+./manage.py --download dangbert/alpaca-cleaned-nl translated_dataset.jsonl
+
+# translate a desired number of samples with DeepL API
+# resumes from previous run if applicable (e.g. downloaded above)
 ./manage.py --translate --max-samples 500
 
 # afterwards you can upload the translated dataset to hugging face:

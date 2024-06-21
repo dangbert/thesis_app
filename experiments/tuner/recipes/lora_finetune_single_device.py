@@ -4,6 +4,7 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+import os
 import sys
 
 from functools import partial
@@ -125,6 +126,11 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
         self._resume_from_checkpoint = cfg.resume_from_checkpoint
         self._gradient_accumulation_steps = cfg.gradient_accumulation_steps
 
+        # create EXP_DIR if doesn't exist
+        os.makedirs(cfg.EXP_DIR, exist_ok=True)
+        log.info(f"using EXP_DIR: '{cfg.EXP_DIR}'")
+        self.vals_per_epoch = cfg.vals_per_epoch
+
     def load_checkpoint(self, cfg_checkpointer: DictConfig) -> Dict[str, Any]:
         """
         Extract the checkpoint state from file and validate. This includes the
@@ -211,6 +217,21 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
             cfg_dataset=cfg.dataset,
             shuffle=cfg.shuffle,
             batch_size=cfg.batch_size,
+            val_split=cfg.val_split,
+            max_samples=cfg.max_samples,
+        )
+
+        # create validation set
+        _, self._val_dataloader = self._setup_data(
+            cfg_dataset=cfg.dataset,
+            shuffle=cfg.shuffle,
+            batch_size=cfg.batch_size,
+            val_split=cfg.val_split,
+            is_val=True,
+            max_samples=cfg.max_samples,
+        )
+        log.info(
+            f"train split = {len(self._dataloader):_} samples | val split = {len(self._val_dataloader):_} samples ({(cfg.val_split * 100):.2f}%)"
         )
 
         # Finally update the recipe state which can only be correctly set after all of the
@@ -330,16 +351,31 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
         cfg_dataset: DictConfig,
         shuffle: bool,
         batch_size: int,
+        val_split: float,  # split ratio
+        is_val: bool = False,  # whether to setup the validation set instead of training
+        max_samples: Optional[int] = None,
     ) -> Tuple[DistributedSampler, DataLoader]:
         """
         All data related setup happens here. Currently this recipe only supports
         Map-style Datasets which fit into memory and an option for random shuffling.
         Samplers, iterable datasets, and streaming datasets are not supported.
         """
+        assert 0.0 <= val_split < 1.0
         ds = config.instantiate(
             cfg_dataset,
             tokenizer=self._tokenizer,
         )
+        if max_samples is not None:
+            ds._data = ds._data.select(range(max_samples))
+
+        # note: not shuffling data for validation set because aplaca-cleaned was shuffled before translating to create alpaca-cleaned-nl
+        # but we could shuffle here with a hardcoded seed
+        split_idx = int(len(ds._data) * 0.1)
+        if is_val:
+            ds._data = ds._data.select(range(split_idx))
+        else:
+            ds._data = ds._data.select(range(split_idx, len(ds._data)))
+
         sampler = DistributedSampler(
             ds,
             num_replicas=1,
@@ -358,7 +394,7 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
             ),
         )
 
-        log.info("Dataset and Sampler are initialized.")
+        log.info(f"Dataset and Sampler are initialized ({is_val=}).")
 
         return sampler, dataloader
 
@@ -404,6 +440,7 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
             k: v for k, v in self._model.state_dict().items() if adapter_key_filter(k)
         }
         ckpt_dict.update({utils.ADAPTER_KEY: adapter_state_dict})
+        log.info(f"saving checkpoint at epoch {epoch}")
         self._checkpointer.save_checkpoint(
             ckpt_dict,
             epoch=epoch,
@@ -420,14 +457,33 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
                 "NOTE: torch.compile is enabled and model is compiled in first forward. Expect a relatively slow first iteration."
             )
 
+        # compute indices at which to compute validation loss (e.g. to compute twice an epoch if vals_per_epoch==2)
+        val_indices = set()
+        for n in range(self.vals_per_epoch):
+            val_indices.add(int(len(self._dataloader) / self.vals_per_epoch) * n)
+        val_indices.remove(0)  # we train at the end of each epoch anyways
+        log.info(f"{val_indices=}, {self.vals_per_epoch=}")
+
         # self.epochs_run should be non-zero when we're resuming from a checkpoint
         for curr_epoch in range(self.epochs_run, self.total_epochs):
             # Update the sampler to ensure data is correctly shuffled across epochs
             # in case shuffle is True
             self._sampler.set_epoch(curr_epoch)
 
+            # for clarity, log which training steps correspond to which epoch
+            self._metric_logger.log_dict(
+                {
+                    "epoch": curr_epoch,
+                },
+                step=self.total_training_steps,
+            )
+
             # Optionally profile the training loop
             with self._profiler:
+                # compute initial (average) validation loss
+                if self.vals_per_epoch >= 1:
+                    self.run_validation()
+
                 for idx, batch in enumerate(pbar := tqdm(self._dataloader)):
                     if (
                         self.max_steps_per_epoch is not None
@@ -482,11 +538,77 @@ class LoRAFinetuneRecipeSingleDevice(FTRecipeInterface):
                         self._metric_logger.log_dict(
                             memory_stats, step=self.total_training_steps
                         )
+                    if (
+                        idx in val_indices and self.vals_per_epoch > 1
+                    ):  # run once at end of epoch anyways
+                        self.run_validation()
             self.epochs_run += 1
             self.save_checkpoint(epoch=curr_epoch)
+            if self.vals_per_epoch >= 1:
+                self.run_validation()  # compute and log (average) validation loss
 
     def cleanup(self) -> None:
         self._metric_logger.close()
+
+    def run_validation(self) -> None:
+        """Thin wrapper around validate() which calls it and logs results."""
+        if len(self._val_dataloader) > 0:
+            avg_val_loss = self.validate()
+            self._metric_logger.log_dict(
+                {
+                    "val_loss": avg_val_loss,
+                },
+                step=self.total_training_steps,
+            )
+
+    @torch.no_grad()
+    def validate(self) -> float:
+        """
+        Based on self.train, but computes performance on validation or test set.
+        Returns the average loss per (single) sample.
+        Some inspo here https://github.com/pytorch/torchtune/issues/1066#issuecomment-2153572781
+        Note: not making any considerations for side-effects on the profiler (if running).
+        """
+        total_samples = 0
+        total_loss = 0.0
+        total_val_steps = 0
+
+        total_batches = len(self._val_dataloader)
+        for idx, batch in enumerate(pbar := tqdm(self._val_dataloader)):
+            if (
+                self.max_steps_per_epoch is not None
+                and (idx // self._gradient_accumulation_steps)
+                == self.max_steps_per_epoch
+            ):
+                break
+
+            if self._profiler_enabled:
+                self._profiler.step()
+
+            input_ids, labels = batch
+            input_ids = input_ids.to(self._device)
+            labels = labels.to(self._device)
+
+            logits = self._model(input_ids)
+            # Shift so that tokens < n predict n
+            logits = logits[..., :-1, :].contiguous()
+            labels = labels[..., 1:].contiguous()
+            logits = logits.transpose(1, 2)
+            # Compute loss
+            loss = self._loss_fn(logits, labels)
+
+            total_loss += loss.item()
+            total_samples += input_ids.size(0)
+
+            if (idx + 1) % self._gradient_accumulation_steps == 0:
+                total_val_steps += 1
+
+            if total_val_steps % self._log_every_n_steps == 0:
+                avg_loss = total_loss / total_samples
+                pbar.set_description(
+                    f"validation {idx+1}/{total_batches}| Avg Loss: {avg_loss:.5f}"
+                )
+        return total_loss / total_samples
 
 
 @config.parse

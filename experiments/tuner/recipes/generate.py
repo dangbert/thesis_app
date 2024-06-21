@@ -22,7 +22,7 @@ from jinja2 import Environment, FileSystemLoader
 from openai.types.chat.chat_completion import ChatCompletion
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-EXPERIMENTS_DIR = os.path.realpath(os.path.join(SCRIPT_DIR, ".."))
+EXPERIMENTS_DIR = os.path.realpath(os.path.join(SCRIPT_DIR, "../.."))
 sys.path.append(EXPERIMENTS_DIR)
 from AbstractModel import AbstractModel, IPrompt  # noqa: E402
 from gpt import GPTModel  # noqa: E402

@@ -5,7 +5,7 @@
 #SBATCH --gpus=1
 #SBATCH --job-name=sleep
 #SBATCH --ntasks=1
-#SBATCH --time=10:00:00
+#SBATCH --time=14:00:00
 #SBATCH --mem=64000M
 #SBATCH --output=logs/slurm_output__sleep_%A.out
 
