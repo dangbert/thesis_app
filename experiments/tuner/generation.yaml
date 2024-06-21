@@ -37,6 +37,7 @@ checkpointer:
   #   pytorch_model-00002-of-00002.bin
   # ]
 
+  output_dir: ${EXP_DIR}
   model_type: LLAMA2
 
 device: cuda
