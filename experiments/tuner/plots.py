@@ -6,10 +6,16 @@ import sys
 import yaml
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 TUNER_EXP_DIR = os.path.join(SCRIPT_DIR, "llama2_7B/experiments/")
+EXPERIMENTS_DIR = os.path.realpath(os.path.join(SCRIPT_DIR, ".."))
+sys.path.append(EXPERIMENTS_DIR)
+import config as projconfig  # noqa: E402
+
+logger = projconfig.get_logger(__name__)
 
 
 def main():
@@ -18,21 +24,25 @@ def main():
     # )
     # args = parser.parse_args()
 
+    #### plot fluency baselines
+    plot_fluency_baselines()
+
+    #### plot fine-tuning fluency results
     results_path = os.path.join(TUNER_EXP_DIR, "results.yaml")
     with open(results_path, "r") as f:
         results = yaml.load(f, Loader=yaml.FullLoader)
 
-    exp_names = ["full1", "full2", "full3"]
+    exp_names = ["full1", "full2", "full3", "full4"]
     for name in exp_names:
         print(f"Experiment: {name}")
-        plot_exp(results, name)
+        plot_fluency_tuning(results, name)
     print()
 
 
-def plot_exp(
+def plot_fluency_tuning(
     results: dict, exp_name: str, judge: str = "gpt4", save_dir: str = TUNER_EXP_DIR
 ):
-    # create lineplot with epochs 0-4 on x-axis and "Avg. Fluency Score" on y-axis
+    """Plot fluency benchmark of LLama models across fine-tuning epochs."""
 
     epochs = results[exp_name][judge].keys()
     scores = results[exp_name][judge].values()
@@ -54,6 +64,40 @@ def plot_exp(
     plt.axhline(y=baseline_score, color="r", linestyle="--")
 
     fname = os.path.join(TUNER_EXP_DIR, f"{exp_name}_plot.pdf")
+    plt.savefig(fname)
+    print(f"wrote plot to {fname}")
+
+
+def plot_fluency_baselines():
+    """Boxplots of baseline Dutch fluency score distributions of LLMs of interest."""
+    datas = dict()
+    for nickname, fname in [
+        ("GPT-4", "fluency_gpt-4-0125-preview_judged_by_gpt-4-0125-preview.csv"),
+        ("GPT-3.5", "fluency_gpt-3.5-turbo-0125_judged_by_gpt-4-0125-preview.csv"),
+        ("Llama-2-7b-hf", "benchmark_chkp_-1_gpt-4-0125-preview.csv"),
+    ]:
+        if "GPT" in nickname:
+            fname = os.path.join(EXPERIMENTS_DIR, "data/synthetic_smart/v4/", fname)
+        else:
+            fname = os.path.join(TUNER_EXP_DIR, fname)
+        df = pd.read_csv(fname)
+        print(f"\n{os.path.basename(fname)}:")
+        print(df["fluency_score"].describe())
+        non5s = len(df[df["fluency_score"] != 5])
+        print(f"non-5 scores counts: {non5s}")
+        df = df.dropna(subset=["fluency_score"])
+        datas[nickname] = df["fluency_score"].to_list()
+
+    # make boxplots for each model, using nickname as label
+    plt.clf()
+    plt.boxplot(datas.values())
+    plt.xticks(range(1, len(datas) + 1), datas.keys())
+    plt.yticks(np.arange(0.0, 5.5, 1.0))  # Label every whole integer
+    plt.gca().yaxis.set_minor_locator(plt.MultipleLocator(0.5))
+    plt.gca().yaxis.set_minor_formatter(plt.NullFormatter())
+    plt.xlabel("Model")
+    plt.ylabel("Fluency Score (5 Point Scale)")
+    fname = os.path.join(TUNER_EXP_DIR, "fluency_baselines.pdf")
     plt.savefig(fname)
     print(f"wrote plot to {fname}")
 

@@ -31,6 +31,11 @@ from AbstractModel import AbstractModel, IPrompt  # noqa: E402
 from gpt import GPTModel  # noqa: E402
 import config as projconfig  # noqa: E402
 
+FLUENCY_QUESTION = "provide a paragraph of feedback in Dutch on a student's assignment."
+FNAME_GOALS = os.path.join(
+    projconfig.DATASETS_DIR, "synthetic_smart/v4/smart_goals.csv"
+)
+
 logger = utils.get_logger("INFO")
 
 
@@ -169,12 +174,6 @@ class InferenceRecipe(AbstractModel):
         logf(f"Bandwidth achieved: {model_size * tokens_sec / 1e9:.02f} GB/s")
         logf(f"Memory used: {torch.cuda.max_memory_allocated() / 1e9:.02f} GB")
         return raw_output
-
-
-FLUENCY_QUESTION = "provide a paragraph of feedback in Dutch on a student's assignment."
-FNAME_GOALS = os.path.join(
-    projconfig.DATASETS_DIR, "synthetic_smart/v4/smart_goals.csv"
-)
 
 
 def benchmark_fluency_local(
