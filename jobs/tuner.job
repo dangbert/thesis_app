@@ -40,27 +40,30 @@ pushd experiments/tuner
 # runv tune run recipes/lora_finetune_single_device.py --config ./llama2_7B_qlora_single_device.yaml gradient_accumulation_steps=64
 #######################
 #
-export EXP_NAME=lr4_8
-runv tune run recipes/lora_finetune_single_device.py --config ./llama2_7B_qlora_single_device.yaml epochs=3 gradient_accumulation_steps=8  lr=4e-4
-export EXP_NAME=lr5_8
-runv tune run recipes/lora_finetune_single_device.py --config ./llama2_7B_qlora_single_device.yaml epochs=3 gradient_accumulation_steps=8  lr=5e-4
+# export EXP_NAME=lr4_8
+# runv tune run recipes/lora_finetune_single_device.py --config ./llama2_7B_qlora_single_device.yaml epochs=3 gradient_accumulation_steps=8  lr=4e-4
+# export EXP_NAME=lr5_8
+# runv tune run recipes/lora_finetune_single_device.py --config ./llama2_7B_qlora_single_device.yaml epochs=3 gradient_accumulation_steps=8  lr=5e-4
 
-export EXP_NAME=lr4_16
-runv tune run recipes/lora_finetune_single_device.py --config ./llama2_7B_qlora_single_device.yaml epochs=3 gradient_accumulation_steps=16 lr=4e-4
-export EXP_NAME=lr5_16
-runv tune run recipes/lora_finetune_single_device.py --config ./llama2_7B_qlora_single_device.yaml epochs=3 gradient_accumulation_steps=16 lr=5e-4
+# export EXP_NAME=lr4_16
+# runv tune run recipes/lora_finetune_single_device.py --config ./llama2_7B_qlora_single_device.yaml epochs=3 gradient_accumulation_steps=16 lr=4e-4
+# export EXP_NAME=lr5_16
+# runv tune run recipes/lora_finetune_single_device.py --config ./llama2_7B_qlora_single_device.yaml epochs=3 gradient_accumulation_steps=16 lr=5e-4
 #######################
 
 #### post fine-tuning (evaluation/benchmarking):
 echo "experiments done, skipping post processing"
 exit 0
 export JUDGE=gpt-4-0125-preview
-# export EXP_NAME=full3
 
-echo "evaluating EXP_NAME=$EXP_NAME"
-declare -a checkpoints=("0" "1" "2" "3")
-for CHKP_NUM in "${checkpoints[@]}"; do
-  runv tune run ./recipes/generate.py --config ./generation.yaml CHKP_NUM=$CHKP_NUM benchmark_fluency=true benchmark_judge=$JUDGE
+declare -a exps=("lr4_8" "lr5_8" "lr4_16" "lr5_16")
+for exp in "${exps[@]}"; do
+  export EXP_NAME="$exp"
+  echo "evaluating EXP_NAME=$EXP_NAME"
+  declare -a checkpoints=("0" "1" "2" "3")
+  for CHKP_NUM in "${checkpoints[@]}"; do
+    runv tune run ./recipes/generate.py --config ./generation.yaml CHKP_NUM=$CHKP_NUM benchmark_fluency=true benchmark_judge=$JUDGE
+  done
 done
 
 echo "all done!"
