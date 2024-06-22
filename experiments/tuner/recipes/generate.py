@@ -1,3 +1,5 @@
+"""Adapated generation script (from tourchtune) which supports benchmarking model checkpoints on fluency."""
+
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 #
@@ -169,54 +171,82 @@ class InferenceRecipe(AbstractModel):
         return raw_output
 
 
-def benchmark_fluency(cfg: DictConfig, max_samples: Optional[int] = None) -> float:
-    fname_goals = os.path.join(
-        projconfig.DATASETS_DIR, "synthetic_smart/v4/smart_goals.csv"
-    )
+FLUENCY_QUESTION = "provide a paragraph of feedback in Dutch on a student's assignment."
+FNAME_GOALS = os.path.join(
+    projconfig.DATASETS_DIR, "synthetic_smart/v4/smart_goals.csv"
+)
+
+
+def benchmark_fluency_local(
+    cfg: DictConfig, max_samples: Optional[int] = None
+) -> float:
+    """Benchmark the Dutch fluency of a local LLama model's checkpoints."""
+    df_goals = _get_goals_df(FNAME_GOALS, max_samples=max_samples)
     outpath = os.path.join(
         cfg.EXP_DIR, f"benchmark_chkp_{cfg.CHKP_NUM}_{cfg.benchmark_judge}.csv"
     )
-    df_goals = pd.read_csv(fname_goals)
-
-    def flush_df(x: pd.DataFrame):
-        x.to_csv(outpath)
-        print(f"wrote '{outpath}'")
-
-    if max_samples is not None:
-        logger.info(
-            f"limiting to max_samples={max_samples} (original size = {len(df_goals)})"
-        )
-        df_goals = df_goals[:max_samples]
 
     ### 1. get outputs from local model (instructed to write feedback in Dutch on example assignments)
-    QUESTION = "provide a paragraph of feedback in Dutch on a student's assignment."
     if os.path.isfile(outpath):
-        df = pd.read_csv(outpath)
         logger.info(f"resumed from '{outpath}'")
+        return _measure_fluency(outpath, cfg.cfg.benchmark_judge)
+
     else:
-        local_template = AlpacaInstructTemplate()
         recipe = InferenceRecipe(cfg=cfg)
         recipe.setup(cfg=cfg)
 
-        # build a new df documenting this benchmark
-        df = df_goals.copy()[["goal_id"]]
-
-        def build_local_prompt(row: pd.Series) -> str:
-            """Prompt for local model."""
-            student_draft = f"{row['smart']}\n{row['plan']}"
-            return local_template.format(
-                {"instruction": QUESTION, "input": student_draft}
-            )
-
-        df["local_prompt"] = df_goals.apply(build_local_prompt, axis=1).to_list()
-
+        df = df_goals.copy()[["goal_id"]]  # build new df documenting this benchmark
+        # NOTE: local_prompt could be renamed 'speaker_prompt'
+        df["local_prompt"] = df_goals.apply(_build_speaker_prompt, axis=1).to_list()
         logger.info(f"generating local outputs for {len(df)} prompts")
         outputs, _ = recipe(df["local_prompt"], cfg=cfg, verbose=False)
         outputs = [get_subresponse(output) for output in outputs]
         df["local_output"] = outputs
-        flush_df(df)
+        _flush_df(df, outpath)
+        return _measure_fluency(outpath, cfg.cfg.benchmark_judge)
 
+
+def benchmark_fluency_openai(
+    candidate_model: str, judge_model: str, max_samples: Optional[int] = None
+) -> float:
+    """
+    Benchmark the Dutch abilities of a candidate OpenAI model (e.g. "gpt-3.5-turbo-0125") using a given judge model (e.g. "gpt-4-0125-preview")
+    (This function is independent of LLama, using just the OpenAI API).
+    """
+
+    logger.info(f"benchmarking fluency of '{candidate_model}' using '{judge_model}'")
+    df_goals = _get_goals_df(FNAME_GOALS, max_samples=max_samples)
+    outpath = os.path.join(
+        os.path.dirname(FNAME_GOALS),
+        f"fluency_{candidate_model}_judged_by_{judge_model}.csv",
+    )
+    if os.path.isfile(outpath):
+        logger.info(f"resumed from '{outpath}'")
+        return _measure_fluency(outpath, judge_model)
+
+    # generate outputs with candidate_model
+    df = df_goals.copy()[["goal_id"]]
+    df["speaker_prompt"] = df_goals.apply(_build_speaker_prompt, axis=1).to_list()
+    logger.info(f"generating {candidate_model} outputs for {len(df)} prompts")
+
+    gpt = GPTModel(candidate_model)
+    gpt_outputs, meta = gpt(df["speaker_prompt"].tolist(), temperature=0.2)
+    logger.info(f"price=${gpt.compute_price(meta):.4f}")
+
+    df["speaker_output"] = gpt_outputs
+    _flush_df(df, outpath)
+    return _measure_fluency(outpath, judge_model)
+
+
+def _measure_fluency(fname: str, judge_model: str) -> float:
+    """
+    Given a csv of model outputs, benchmark them using the given GPT judge model (e.g. 'gpt-4-0125-preview').
+    Edits the csv in place to add a 'fluency_score' columns
+    """
     ### 2. evaluate outputs using GPT model as a fluency judge
+    df = pd.read_csv(fname)
+    speaker_key = "local_output" if "local_output" in df.columns else "speaker_output"
+
     # df_goals["fluency_prompts"] = df_goals.apply(build_fluency_prompt, axis=1).to_list()
     env = jinja2.Environment(
         loader=jinja2.FileSystemLoader(os.path.join(EXPERIMENTS_DIR, "prompts"))
@@ -227,20 +257,19 @@ def benchmark_fluency(cfg: DictConfig, max_samples: Optional[int] = None) -> flo
         """Prompt for judge model to use."""
         return fluency_template.render(
             {
-                "question": QUESTION,
-                "answer": row["local_output"],
+                "question": FLUENCY_QUESTION,
+                "answer": row[speaker_key],
             }
         )
 
     df["fluency_prompt"] = df.apply(build_fluency_prompt, axis=1).to_list()
-    flush_df(df)
+    _flush_df(df, fname)
 
-    gpt = GPTModel(cfg.benchmark_judge)
+    gpt = GPTModel(judge_model)
     logger.info(f"computing {len(df)} model outputs")
 
     gpt_outputs, meta = gpt(df["fluency_prompt"].tolist(), temperature=0.2)
-    total_price = gpt.compute_price(meta)
-    logger.info(f"total_price=${total_price:.4f}")
+    logger.info(f"price=${gpt.compute_price(meta):.4f}")
 
     scores = []
     for output in gpt_outputs:
@@ -251,7 +280,7 @@ def benchmark_fluency(cfg: DictConfig, max_samples: Optional[int] = None) -> flo
         scores.append(num)
 
     df["fluency_score"] = scores
-    flush_df(df)
+    _flush_df(df, fname)
 
     # count nones
     bad_count = len(df[df["fluency_score"].isna()])
@@ -263,10 +292,35 @@ def benchmark_fluency(cfg: DictConfig, max_samples: Optional[int] = None) -> flo
     return df["fluency_score"].mean()
 
 
+def _build_speaker_prompt(row: pd.Series) -> str:
+    """Prompt for a model to speak Dutch (for later fluency evaluation)."""
+    local_template = AlpacaInstructTemplate()
+    student_draft = f"{row['smart']}\n{row['plan']}"
+    return local_template.format(
+        {"instruction": FLUENCY_QUESTION, "input": student_draft}
+    )
+
+
+def _flush_df(x: pd.DataFrame, outpath: str):
+    x.to_csv(outpath)
+    print(f"wrote '{outpath}'")
+
+
+def _get_goals_df(fname: str, max_samples: Optional[int] = None) -> pd.DataFrame:
+    df_goals = pd.read_csv(FNAME_GOALS)
+    if max_samples is not None:
+        logger.info(
+            f"limiting to max_samples={max_samples} (original size = {len(df_goals)})"
+        )
+        df_goals = df_goals[:max_samples]
+    return df_goals
+
+
 def get_subresponse(output: str) -> str:
     """
     Get the relevant part of a response where the prompt is also included.
-    Assumes the prompt used the AlpacaInstructTemplate
+    Assumes the prompt used the AlpacaInstructTemplate.
+    Useful for extracting just the response from the local LLama model.
     """
     marker = "\n### Response:\n"
     idx = output.find(marker)
@@ -277,10 +331,23 @@ def get_subresponse(output: str) -> str:
 
 @config.parse
 def main(cfg: DictConfig) -> None:
+    #### benchmark GPT model fluencies
+    #   uncomment this section and run with:
+    #   tune run ./recipes/generate.py --config ./generation.yaml # (generation.yaml doesn't influence the output in this case)
+    #   TODO: move this to ../../benchmark.py?
+    """
+    judge_model = "gpt-4-0125-preview"
+    for candidate_model in ["gpt-3.5-turbo-0125", "gpt-4-0125-preview"]:
+        benchmark_fluency_openai(candidate_model, judge_model)  # , max_samples=5)
+    exit(0)
+    """
+
+    #### benchmark Dutch fluency of local LLama model checkpoint
     if cfg.benchmark_fluency:
-        benchmark_fluency(cfg)
+        benchmark_fluency_local(cfg)
         return
 
+    #### otherwise generate output for a given prompt
     t = AlpacaInstructTemplate()
     # reformat prompt to align with training format
     cfg.prompt = t.format({"instruction": cfg.prompt})
