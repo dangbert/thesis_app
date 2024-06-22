@@ -8,7 +8,7 @@ node_modules/
 .terraform/
 terraform.tfvars
 *.pem
-logs/
+logs
 *.log
 
 # files with data from the pilot study

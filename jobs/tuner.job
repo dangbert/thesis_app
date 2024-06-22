@@ -3,7 +3,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=5
 #SBATCH --gpus=1
-#SBATCH --job-name=sleep
+#SBATCH --job-name=tuner
 #SBATCH --ntasks=1
 #SBATCH --time=8:30:00
 #SBATCH --mem=64000M
@@ -34,7 +34,7 @@ pushd experiments/tuner
 # export EXP_NAME=full4
 # runv tune run recipes/lora_finetune_single_device.py --config ./llama2_7B_qlora_single_device.yaml gradient_accumulation_steps=64
 
-#### post fine-tuning: evaluation/benchmarking:
+#### post fine-tuning (evaluation/benchmarking):
 export JUDGE=gpt-4-0125-preview
 export EXP_NAME=full4
 
