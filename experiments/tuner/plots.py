@@ -5,6 +5,7 @@ import argparse
 import sys
 import yaml
 import matplotlib.pyplot as plt
+import numpy as np
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -38,11 +39,16 @@ def plot_exp(
     baseline_score = results["default"]["gpt4"][-1]
 
     plt.clf()
+    plt.title(f"Experiment {exp_name} Fluency Across Epochs")
     plt.plot(epochs, scores)
     plt.xlabel("Epoch")
-    plt.ylabel("Avg. Fluency Score")
-    plt.title(f"Experiment {exp_name} across epochs")
+    plt.ylabel("Avg. Fluency Score (5 Point Scale)")
     plt.xticks(range(0, max(epochs) + 1))
+    plt.xlim(0, max(epochs))
+    plt.yticks(np.arange(0.0, 5.5, 1.0))  # Label every whole integer
+    # unlabeled ticks every 0.5
+    plt.gca().yaxis.set_minor_locator(plt.MultipleLocator(0.5))
+    plt.gca().yaxis.set_minor_formatter(plt.NullFormatter())
 
     # add red baseline
     plt.axhline(y=baseline_score, color="r", linestyle="--")
