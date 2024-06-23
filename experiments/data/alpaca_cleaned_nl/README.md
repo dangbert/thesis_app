@@ -7,13 +7,13 @@ This folder contains the code used to translate a sample of the [aplaca-cleaned]
 ./manage.py -h # view full options/help
 
 # download original alpaca-cleaned dataset and report some stats about it
-./manage.py --download yahma/alpaca-cleaned alpaca-cleaned.nl
+./manage.py --download yahma/alpaca-cleaned alpaca-cleaned.jsonl
 
 # do the same for the latest published alpaca-cleaned-nl
 ./manage.py --download dangbert/alpaca-cleaned-nl translated_dataset.jsonl
 
 # translate a desired number of samples with DeepL API
-# resumes from previous run if applicable (e.g. downloaded above)
+#   resumes from previous run(s) if translated_dataset.jsonl exists (e.g. downloaded above)
 ./manage.py --translate --max-samples 500
 
 # afterwards you can upload the translated dataset to hugging face:
@@ -22,7 +22,7 @@ huggingface-cli login # enter a token with write acesss to the dataset https://h
 ````
 
 ### Docx Translations
-You can also serialize a portion of the alpaca-cleaned dataset to a word file which you can then translate with DeepL by uploading the document. I found that only about 50 samples could be translated at a time without an error, and sometimes there was still an error and so I just skipped over that sample batch and dumped/translated the next 50.  But in theory you're supposed to be able to translate up to 1 Million characters at a time if you have a DeepL pro plan...
+You can also serialize a portion of the alpaca-cleaned dataset to a word file which you can then translate with DeepL by uploading the document. I found that only about 50 samples could be translated at a time without an (unexplained) server error, and sometimes there was still an error and so I just skipped over that sample batch and dumped/translated the next 50.  But in theory you're supposed to be able to translate up to 1 Million characters at a time if you have a DeepL pro plan...
 * [info/limits here](https://www.deepl.com/en/features/document-translation/word), [API limit](https://developers.deepl.com/docs/resources/usage-limits#maximum-upload-limits-per-document-format)
 * [page to upload docx for translation](https://www.deepl.com/translator/files).
 
