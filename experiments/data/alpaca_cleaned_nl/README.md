@@ -3,6 +3,8 @@
 This folder contains the code used to translate a sample of the [aplaca-cleaned](https://huggingface.co/datasets/yahma/alpaca-cleaned) dataset to Dutch, inspired by [this article](https://towardsdatascience.com/creating-a-dutch-question-answering-machine-learning-model-3b666a115be3).
 
 
+For full environment setup details see [../../README.md](../../README.md).
+
 ````bash
 ./manage.py -h # view full options/help
 
