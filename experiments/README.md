@@ -22,6 +22,11 @@ poetry install
 
 # if your computer has a GPU and you want to run GPU-dependendent experiments:
 poetry install -E gpu
+
+# copy template config file for secrets and project config
+#   (see experiments/config.py for more info)
+cp .env.sample .env
+# ^now edit the .env file as needed (e.g. add your OpenAI API key)
 ````
 
 <details>
@@ -29,7 +34,7 @@ poetry install -E gpu
 Note for the commands below, if you're not running on a [slurm server](https://slurm.schedmd.com/overview.html) then use `bash` in place of `sbatch`
 
 
-Disclaimer: the conda environment is now (somewhat) deprecated in favor of poetry...
+Disclaimer: the conda environment is now deprecated in favor of poetry (as shown above)
 
 ````bash
 cd .. # enter root of repo

@@ -40,6 +40,7 @@ pushd experiments/tuner
 # runv tune run recipes/lora_finetune_single_device.py --config ./llama2_7B_qlora_single_device.yaml gradient_accumulation_steps=64
 #######################
 #
+# TODO: these experiments were run wrong, should have been optimizer.lr=4e-4 and 5e-4 :(
 # export EXP_NAME=lr4_8
 # runv tune run recipes/lora_finetune_single_device.py --config ./llama2_7B_qlora_single_device.yaml epochs=3 gradient_accumulation_steps=8  lr=4e-4
 # export EXP_NAME=lr5_8

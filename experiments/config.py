@@ -12,10 +12,11 @@ import torch
 from contextlib import contextmanager
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, os.pardir))
-DATASETS_DIR = os.path.join(SCRIPT_DIR, "data")
-ENV_PATH = os.path.join(ROOT_DIR, ".env")
+EXPERIMENTS_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.abspath(os.path.join(EXPERIMENTS_DIR, os.pardir))
+DATASETS_DIR = os.path.join(EXPERIMENTS_DIR, "data")
+# .env file for loading experiments secrets and config (see Settings class below)
+ENV_PATH = os.path.join(EXPERIMENTS_DIR, ".env")
 
 
 def get_logger(name: str, level: Optional[str] = None):
@@ -66,6 +67,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict()
     deepl_api_key: str
     openai_api_key: str
+    wandb_entity: str
+    wandb_project: str  # e.g. "huggingface"
 
 
 def get_settings(dotenv_path: Optional[str] = ENV_PATH) -> Settings:
