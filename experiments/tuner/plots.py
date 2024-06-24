@@ -52,9 +52,14 @@ def main():
         )
         print(f"Experiment: {name}")
     plot_tuner(results, full_exps, group_name="full")
+    print("\nlr experiments:")
 
-    # gather results from second set of experiments (learning rates)
-    lr_exps = ["lr4_8", "lr4_16", "lr5_8", "lr5_16"]
+    # gather results learning rate experiments:
+    def build_nickname(c: dict):
+        lr = round(c["optimizer"]["lr"] * 10**4)
+        return f"lr{lr}_grad{c['gradient_accumulation_steps']}"
+
+    lr_exps = ["lr4_8b", "lr4_16b", "lr5_8b", "lr5_16b"]
     for name in lr_exps:
         results[name] = {
             "gpt4": dict(),
@@ -65,11 +70,16 @@ def main():
             ),
         }
         # gather fluency scores from benchmarked checkpoints
-        for epoch in range(0, 3):
+        for epoch in range(0, 10):
             fname = os.path.join(
                 TUNER_EXP_DIR, name, f"benchmark_chkp_{epoch}_gpt-4-0125-preview.csv"
             )
+            if not os.path.exists(fname):
+                break
             df = pd.read_csv(fname)
+            if "fluency_score" not in df.columns:
+                logger.warning(f"no fluency_score column in {fname}")
+                break
             results[name]["gpt4"][epoch] = df["fluency_score"].mean().item()
     plot_tuner(results, lr_exps, group_name="lr")
     print()
@@ -237,10 +247,12 @@ def get_wandb_stats(run_name: str, build_nickname=Callable) -> dict:
         # throw out rows where "epochs_complete" > 4 (to match other runs)
         val_loss = val_loss[val_loss["epochs_complete"] <= 4.1]
 
+    nickname = build_nickname(run.config)
+    logger.info(f"run '{run_name}' -> nickname: {nickname}")
     return {
         "url": run.url,
         "val_loss": val_loss,
-        "nickname": build_nickname(run.config),
+        "nickname": nickname,
     }
 
 

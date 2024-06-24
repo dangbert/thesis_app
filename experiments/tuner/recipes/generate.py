@@ -188,7 +188,7 @@ def benchmark_fluency_local(
     ### 1. get outputs from local model (instructed to write feedback in Dutch on example assignments)
     if os.path.isfile(outpath):
         logger.info(f"resumed from '{outpath}'")
-        return _measure_fluency(outpath, cfg.cfg.benchmark_judge)
+        return _measure_fluency(outpath, cfg.benchmark_judge)
 
     else:
         recipe = InferenceRecipe(cfg=cfg)
@@ -202,7 +202,7 @@ def benchmark_fluency_local(
         outputs = [get_subresponse(output) for output in outputs]
         df["local_output"] = outputs
         _flush_df(df, outpath)
-        return _measure_fluency(outpath, cfg.cfg.benchmark_judge)
+        return _measure_fluency(outpath, cfg.benchmark_judge)
 
 
 def benchmark_fluency_openai(
