@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import wandb
-from typing import Optional
+from typing import Optional, Callable
 import math
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -38,8 +38,18 @@ def main():
 
     # NOTE: full4 was originally silvery-brook-8 but didn't save checkpoints so reran as fine-bird-9
     full_exps = ["full1", "full2", "full3", "full4"]
+
+    def build_nickname(c: dict):
+        return f"grad{c['gradient_accumulation_steps']}"
+        # lr = round(c["optimizer"]["lr"] * 10**4)
+        # return f"lr{lr}_grad{c['gradient_accumulation_steps']}"
+
     for name in full_exps:
-        results[name]["wandb"] = get_wandb_stats(name)
+        results[name]["wandb"] = get_wandb_stats(
+            name,
+            build_nickname=build_nickname,
+            # build_nickname=lambda c: f"grad{c['gradient_accumulation_steps']}"
+        )
         print(f"Experiment: {name}")
     plot_tuner(results, full_exps, group_name="full")
 
@@ -48,7 +58,11 @@ def main():
     for name in lr_exps:
         results[name] = {
             "gpt4": dict(),
-            "wandb": get_wandb_stats(name),
+            "wandb": get_wandb_stats(
+                name,
+                build_nickname=build_nickname,
+                # build_nickname=lambda c: f"lr{int(c['lr']*10**4)}_grad{c['gradient_accumulation_steps']}",
+            ),
         }
         # gather fluency scores from benchmarked checkpoints
         for epoch in range(0, 3):
@@ -90,10 +104,11 @@ def plot_tuner(
         epochs.insert(0, 0)
         scores.insert(0, baseline_fluency)
 
-        ax1.plot(epochs, scores, label=exp_name)
+        nickname = results[exp_name]["wandb"]["nickname"]
+        ax1.plot(epochs, scores, label=nickname)
 
         val_loss = results[exp_name]["wandb"]["val_loss"]
-        ax2.plot(val_loss["epochs_complete"], val_loss["val_loss"], label=exp_name)
+        ax2.plot(val_loss["epochs_complete"], val_loss["val_loss"], label=nickname)
         max_val_loss = max(max_val_loss, val_loss["val_loss"].max().item())
     num_epochs = max(epochs) - 1
 
@@ -119,6 +134,24 @@ def plot_tuner(
     ax2.set_title("Validation Loss Across Fine-Tuning", fontsize=title_fontsize)
     max_val_loss = math.ceil(max_val_loss)
     ax2.set_ylim(0, max_val_loss)
+
+    # add single legend for entire plot, explaining label colors vs exp_name
+    handles, labels = [], []
+    for ax in [ax1, ax2]:
+        for handle, label in zip(*ax.get_legend_handles_labels()):
+            if label not in labels:
+                handles.append(handle)
+                labels.append(label)
+    fig.legend(
+        handles,
+        labels,
+        loc="center right",
+        ncol=1,
+        fontsize=axis_fontsize,
+        title="Runs",
+        title_fontsize=title_fontsize,
+    )
+    fig.subplots_adjust(right=0.88)
 
     if group_name is None:
         group_name = "_".join(exp_names)
@@ -171,7 +204,7 @@ def plot_fluency_baselines():
     print(f"wrote plot to {fname}")
 
 
-def get_wandb_stats(run_name: str) -> dict:
+def get_wandb_stats(run_name: str, build_nickname=Callable) -> dict:
     # auto prompts for wandb login if needed
     api = wandb.Api()
     # get run where config.EXP_NAME == run_name
@@ -207,6 +240,7 @@ def get_wandb_stats(run_name: str) -> dict:
     return {
         "url": run.url,
         "val_loss": val_loss,
+        "nickname": build_nickname(run.config),
     }
 
 
