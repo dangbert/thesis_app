@@ -1,11 +1,12 @@
 ## Experiments (Models, Scripts, Datasets)
 
 See also:
+* [./tuner](./tuner) for experiments on fine-tuning Llama2
+
+* [./data/alpaca_cleaned_nl](./data/alpaca_cleaned_nl) for the (machine translated) Dutch instruction fine-tuning dataset, [alpaca-cleaned-nl](https://huggingface.co/datasets/dangbert/alpaca-cleaned-nl)
+
 * [Microsoft promptflow repo for this project](https://github.com/madiepev/aistudio-feedback-generation)
 
-* [alpaca-cleaned-nl](https://huggingface.co/datasets/dangbert/alpaca-cleaned-nl) dataset created with this repo.
-
-* for experiments on finetuning see [./tuner](./tuner)
 
 ### setup
 Install dependencies:
@@ -57,19 +58,20 @@ sbatch jobs/launch_jupyter.job
 
 ### usage
 
+
 ````bash
 # generate synthetic smart goals (into desired directory)
 mkdir -p ../datasets/synthetic_smart/example
-./synthetic_smart.py -o ../datasets/synthetic_smart/example/ --sample-size 50 -m "gpt-4-0125-preview"
+./synthetic_smart.py -o ./data/synthetic_smart/example/ --sample-size 50 -m "gpt-4-0125-preview"
 
 # generate feedback on smart goals (and make plots)
-./feedback.py -i ../datasets/synthetic_smart/example/ -m "gpt-4-0125-preview"
+./feedback.py -i ./data/synthetic_smart/example/ -m "gpt-4-0125-preview"
 # do the same with gpt3
-./feedback.py -i ../datasets/synthetic_smart/example/ -m "gpt-3.5-turbo-0125"
+./feedback.py -i ./data/synthetic_smart/example/ -m "gpt-3.5-turbo-0125"
 
 # compare feedback judgements
-# see benchmark.ipynb which is more complete!
-python3 benchmark.py -ig /Users/dan/Downloads/COURSES/thesis/repos/thesis_app/datasets/synthetic_smart/v3/smart_goals.csv -i3 /Users/dan/Downloads/COURSES/thesis/repos/thesis_app/datasets/synthetic_smart/v3/feedback_gpt-3.5-turbo-0125__judged_gpt-4-0125-preview.csv -i4 /Users/dan/Downloads/COURSES/thesis/repos/thesis_app/datasets/synthetic_smart/v3/feedback_gpt-4-0125-preview__judged_gpt-4-0125-preview.csv
+# see also benchmark.ipynb which is more complete!
+./benchmark.py -if data/synthetic_smart/v3/smart_goals.csv -i3 data/synthetic_smart/v3/feedback_gpt-3.5-turbo-0125__judged_gpt-4-0125-preview.csv -i4 data/synthetic_smart/v3/feedback_gpt-4-0125-preview__judged_gpt-4-0125-preview.csv
 ````
 
 For the other experiments with running models locally, you may first need to run `huggingface-cli login` and [enter a token from your hugging face account](https://huggingface.co/settings/tokens).

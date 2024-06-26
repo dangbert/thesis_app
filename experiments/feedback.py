@@ -19,7 +19,7 @@ logger = config.get_logger(__name__)
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Provide feedback on dataset of SMART goals and plans.",
+        description="Generate feedback on dataset of SMART goals and plans.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
@@ -56,23 +56,24 @@ def main():
     goals_df = pd.read_csv(fname)
 
     base_path = args.input_dir + f"feedback_{args.model}"
-    feedback_path = base_path + ".csv"
+    feedback_path = os.path.join(args.input_dir, "feedback.xlsx")
     base_dot_path = args.input_dir + f".feedback_{args.model}"
+
     bkp_path = base_dot_path + ".output.json.bkp"
-    if not os.path.isfile(feedback_path):
+    feedback_df = config.safe_read_sheet(feedback_path, args.model)
+
+    if feedback_df is not None:
+        print("reloaded existing feedback!")
+    else:
         config.args_to_dict(args, fname=base_dot_path + ".config.json")
         feedback_df = get_feedback(
             goals_df, args, bkp_path=bkp_path, validate=legacy_feedback_format
         )
-        feedback_df.to_csv(feedback_path, index=False)
-        print(f"\nwrote '{feedback_path}'")
+        assert config.safe_append_sheet(feedback_df, feedback_path, args.model)
 
         if legacy_feedback_format:
             feedback_df = extend_outputs(feedback_df)
-            feedback_df.to_csv(feedback_path, index=False)
-    else:
-        print("reloading existing feedback!")
-        feedback_df = pd.read_csv(feedback_path)
+            assert config.safe_append_sheet(feedback_df, feedback_path, args.model)
 
     if not legacy_feedback_format:
         logger.info("skipping feedback score plots")

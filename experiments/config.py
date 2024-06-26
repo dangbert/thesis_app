@@ -11,6 +11,8 @@ from haikunator import Haikunator
 import torch
 from contextlib import contextmanager
 from pydantic_settings import BaseSettings, SettingsConfigDict
+import pandas as pd
+from typing import Union
 
 EXPERIMENTS_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(EXPERIMENTS_DIR, os.pardir))
@@ -157,3 +159,67 @@ def TaskTimer(task_name: str, verbose: bool = True):
             dur_str = f"{(dur/60):.2f} min"
         if verbose:
             print(f"'{task_name}' complete in {dur_str}!", flush=True)
+
+
+def safe_append_sheet(
+    df: pd.DataFrame, sheet_name: str, fname: str, prompt_overwrite: bool = False
+) -> bool:
+    """
+    Helper function to add a sheet to a (possibly existing) Excel file.
+    Returns true on success, false otherwise.
+    """
+    assert fname.endswith(".xlsx")
+
+    if not os.path.exists(fname):  # write new file
+        with pd.ExcelWriter(fname) as writer:
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
+        return True
+
+    # append to existing file
+    # read existing sheets
+    excel_file = pd.ExcelFile(fname)
+    sheets = {
+        sheet_name: excel_file.parse(sheet_name)
+        for sheet_name in excel_file.sheet_names
+    }
+
+    if sheet_name in sheets and prompt_overwrite:
+        if not prompt_yes_no(f"overwrite sheet '{sheet_name}' in '{fname}'?"):
+            return False
+
+    sheets[sheet_name] = df
+    with pd.ExcelWriter(fname) as writer:
+        for sheet_name, df in sheets.items():
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
+    logger.info(f"wrote '{fname}'")
+    return True
+
+
+def safe_read_sheet(
+    fname: str, sheet_name: Optional[str] = None
+) -> Union[pd.DataFrame, None]:
+    try:
+        if fname.endswith(".csv"):
+            assert sheet_name is None
+            return pd.read_csv(fname)
+
+        assert fname.endswith(".xlsx")
+        assert sheet_name is not None
+        return pd.read_excel(fname, sheet_name)
+
+    except FileNotFoundError:
+        return None
+    except ValueError as e:
+        if str(e).startswith("Worksheet named") and str(e).endswith("not found"):
+            return None
+        raise e
+
+
+def prompt_yes_no(question: str) -> bool:
+    """
+    returns the response to a y/n question prompt (reprompts until user provides a valid response)
+    """
+    val = ""
+    while val not in ["y", "yes", "n", "no"]:
+        val = input(f"{question} (y/n) > ").strip().lower()
+    return val in ["y", "yes"]

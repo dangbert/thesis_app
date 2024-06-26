@@ -99,6 +99,8 @@ def levenshtein(fname: str, new_fname: str):
     # plt.hist(a1_df["lev_dist_norm"], bins=10, range=(0, 1), align='mid', rwidth=0.8)
     plt.boxplot(a1_df["lev_dist_norm"])
 
+    print(a1_df["lev_dist_norm"].describe())
+
     # plt.gca().axes.get_xaxis().set_visible(False)
     plt.gcf().set_size_inches(4, 6)
     plt.subplots_adjust(
