@@ -13,15 +13,11 @@ import pandas as pd
 import prompts as promptlib
 import config
 import gpt
+import matplotlib.pyplot as plt
 
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 logger = config.get_logger(__name__)
-
-MODEL_NICKNAMES = {
-    "gpt-4-0125-preview": "GPT-4",
-    "gpt-3.5-turbo-0125": "GPT-3.5",
-}
 
 judgement_template = """
 Please act as an impartial judge and evaluate the quality of the response provided by an assistant to the user question displayed below.
@@ -117,15 +113,6 @@ def main():
     feedback_path = os.path.join(args.input_dir, "feedback.xlsx")
     benchmark_path = os.path.join(args.input_dir, f"benchmark_with_{args.model}.xlsx")
 
-    def get_all_dfs(fname):
-        if not os.path.exists(fname):
-            return dict()
-        excel_file = pd.ExcelFile(fname)
-        return {
-            sheet_name: excel_file.parse(sheet_name)
-            for sheet_name in excel_file.sheet_names
-        }
-
     ### read xlsx files with arbitrary sheet names
     feedback_dfs = get_all_dfs(feedback_path)
     benchmark_dfs = get_all_dfs(benchmark_path)  # won't exist on first run
@@ -191,7 +178,7 @@ def main():
             judge,
             judge_df["prompt"].to_list(),
         )
-        logger.info(f"total price: ${total_price:.2f} for {total_calls} API calls")
+        logger.info(f"price: ${total_price:.4f} for {total_calls} API calls")
         judge_df["response"] = outputs
         post_process_df(judge_df)
         config.safe_append_sheet(
@@ -203,81 +190,62 @@ def main():
         f"all feedbacks have been judged by {args.model}. See '{benchmark_path}'"
     )
 
-    exit(0)
-    # TODO: refactor plots into separate function
-    # now plot the results
-    breakpoint()
-    # get ScoreModel class
-    feedback_df = pd.read_csv(args.input_feedback)
-    OTHER_ATTRIBUTES = {
-        "safety": promptlib.FEEDBACK_PRINCIPLES,
-    }
+    benchmark_dfs = get_all_dfs(benchmark_path)
+    plot_benchmark(benchmark_dfs, ScoreModel, args.input_dir)
 
-    def parse_df(judge_fname: str): ...
 
-    judges = {
-        "judge3": parse_df(args.input3),
-        "judge4": parse_df(args.input4),
-    }
-
-    max_len = min(len(judges["judge3"]), len(judges["judge4"]))
-    attrs = ["utility", "safety"]
+def plot_benchmark(judges: dict, ScoreModel, dir: str):
+    metric_names = ScoreModel.__fields__.keys()
     data = {}
-    for judge, objs in judges.items():
-        for atrr in attrs:
-            data[judge + "_" + atrr] = [getattr(obj, atrr) for obj in objs][:max_len]
+    for judge_name, df in judges.items():
+        judge_name = config.MODEL_NICKNAMES.get(judge_name, judge_name)
 
-    import matplotlib.pyplot as plt
+        for m in metric_names:
+            # TODO: describe
+            vals = df[m].tolist()
+            # drop NaNs
+            vals = [v for v in vals if v is not None]
+            data[judge_name][m] = vals
 
     # describe stats
     df = pd.DataFrame(data)
     print("stats:")
     print(df.describe())
 
-    # Create boxplot
-    plt.boxplot([data["judge3_utility"], data["judge4_utility"]])
-    plt.xticks([1, 2], ["GPT3", "GPT4"])
-    plt.yticks(range(0, 11), [f"{x:.1f}" for x in range(0, 11)])
-    plt.xlabel("Feedback Source")
-    plt.ylabel("Utility Judgement")
-    plt.title("Utility Judgement (GPT3 vs GPT4 feedback)")
+    meanprops = dict(
+        marker="o",
+        markerfacecolor="red",
+        markeredgecolor="red",
+        linestyle="--",
+        color="red",
+        linewidth=2,
+    )
+    for m in metric_names:
+        # Create boxplot
+        plt.boxplot(
+            [data[judge_name][m] for judge_name in judges.keys()],
+            labels=data.keys(),
+            showmeans=True,
+            meanprops=meanprops,
+        )
+        plt.xticks(range(len(judges)), data.keys())
+        plt.yticks(range(1, 11), [f"{x:.1f}" for x in range(1, 11)])
+        plt.xlabel("Judge")
+        plt.ylabel(f"{m.capitalize()} Judgement")
+        plt.title(f"{m.capitalize()} Benchmark")
+        fname = os.path.join(dir, f"{m}_benchmark.pdf")
+        plt.savefig(fname)
+        logger.info(f"wrote '{fname}'")
 
-    # Display the plot
-    plt.savefig("utility_judgement.pdf")
-    plt.show()
-    # save to pdf
 
-    # plt.clf()
-    plt.boxplot([data["judge3_safety"], data["judge4_safety"]])
-    plt.xticks([1, 2], ["GPT3", "GPT4"])
-    plt.yticks(range(0, 11), [f"{x:.1f}" for x in range(0, 11)])
-    plt.xlabel("Feedback Source")
-    plt.ylabel("Safety Judgement")
-    plt.title("Safety Judgement (GPT3 vs GPT4 feedback)")
-
-    # Display the plot
-    plt.savefig("safety_judgement.pdf")
-    plt.show()
-    # save to pdf
-
-    """
-    # gpt4_utility_win_rate = data["judge4_utility"].count(10) / len(data["judge4_utility"])
-    df["gpt4_utility_win"] = df["judge4_utility"] >= df["judge3_utility"]
-    df["gpt4_safety_win"] = df["judge4_safety"] >= df["judge3_safety"]
-    # print win rates
-    print("gpt4 utility wins:")
-    print(df["gpt4_utility_win"].value_counts())
-    print("gpt4 safety wins:")
-    print(df["gpt4_safety_win"].value_counts())
-
-    df["gpt3_utility_win"] = df["judge3_utility"] >= df["judge4_utility"]
-    df["gpt3_safety_win"] = df["judge3_safety"] >= df["judge4_safety"]
-    # print win rates
-    print("gpt3 utility wins:")
-    print(df["gpt3_utility_win"].value_counts())
-    print("gpt3 safety wins:")
-    print(df["gpt3_safety_win"].value_counts())
-    """
+def get_all_dfs(fname: str):
+    if not os.path.exists(fname):
+        return dict()
+    excel_file = pd.ExcelFile(fname)
+    return {
+        sheet_name: excel_file.parse(sheet_name)
+        for sheet_name in excel_file.sheet_names
+    }
 
 
 if __name__ == "__main__":

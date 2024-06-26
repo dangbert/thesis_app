@@ -69,11 +69,11 @@ def main():
         feedback_df = get_feedback(
             goals_df, args, bkp_path=bkp_path, validate=legacy_feedback_format
         )
-        assert config.safe_append_sheet(feedback_df, feedback_path, args.model)
+        assert config.safe_append_sheet(feedback_df, args.model, feedback_path)
 
         if legacy_feedback_format:
             feedback_df = extend_outputs(feedback_df)
-            assert config.safe_append_sheet(feedback_df, feedback_path, args.model)
+            assert config.safe_append_sheet(feedback_df, args.model, feedback_path)
 
     if not legacy_feedback_format:
         logger.info("skipping feedback score plots")

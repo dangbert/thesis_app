@@ -21,6 +21,12 @@ DATASETS_DIR = os.path.join(EXPERIMENTS_DIR, "data")
 ENV_PATH = os.path.join(EXPERIMENTS_DIR, ".env")
 
 
+MODEL_NICKNAMES = {
+    "gpt-4-0125-preview": "GPT-4",
+    "gpt-3.5-turbo-0125": "GPT-3.5",
+}
+
+
 def get_logger(name: str, level: Optional[str] = None):
     # Configure the formatter
     formatter = logging.Formatter(
