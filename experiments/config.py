@@ -162,7 +162,11 @@ def TaskTimer(task_name: str, verbose: bool = True):
 
 
 def safe_append_sheet(
-    df: pd.DataFrame, sheet_name: str, fname: str, prompt_overwrite: bool = False
+    df: pd.DataFrame,
+    sheet_name: str,
+    fname: str,
+    prompt_overwrite: bool = False,
+    verbose: bool = True,
 ) -> bool:
     """
     Helper function to add a sheet to a (possibly existing) Excel file.
@@ -191,13 +195,15 @@ def safe_append_sheet(
     with pd.ExcelWriter(fname) as writer:
         for sheet_name, df in sheets.items():
             df.to_excel(writer, sheet_name=sheet_name, index=False)
-    logger.info(f"wrote '{fname}'")
+    if verbose:
+        logger.info(f"wrote '{fname}'")
     return True
 
 
 def safe_read_sheet(
     fname: str, sheet_name: Optional[str] = None
 ) -> Union[pd.DataFrame, None]:
+    """Helper to read a single sheet from an Excel file, returning None if sheet not found."""
     try:
         if fname.endswith(".csv"):
             assert sheet_name is None

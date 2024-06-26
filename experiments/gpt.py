@@ -142,3 +142,7 @@ def auto_reprompt(
 
     total_price += new_price
     return outputs, total_price, total_calls
+
+
+def noop_validator(text: str):
+    return True

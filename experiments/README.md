@@ -59,19 +59,22 @@ sbatch jobs/launch_jupyter.job
 ### usage
 
 
+Note: you can replace the "v4" path in the example commands below with a path to a folder containing your own smart_goals.csv
+
 ````bash
 # generate synthetic smart goals (into desired directory)
-mkdir -p ../datasets/synthetic_smart/example
-./synthetic_smart.py -o ./data/synthetic_smart/example/ --sample-size 50 -m "gpt-4-0125-preview"
+mkdir -p ../datasets/synthetic_smart/v4
+./synthetic_smart.py -o ./data/synthetic_smart/v4/ --sample-size 50 -m gpt-4-0125-preview
 
-# generate feedback on smart goals (and make plots)
-./feedback.py -i ./data/synthetic_smart/example/ -m "gpt-4-0125-preview"
-# do the same with gpt3
-./feedback.py -i ./data/synthetic_smart/example/ -m "gpt-3.5-turbo-0125"
+# generate feedback on smart goals (creates/modifies feedback.xlsx in input folder each time you call)
+#   you can replace 'example' with 'v4' below
+./feedback.py -i ./data/synthetic_smart/v4/ -m gpt-4-0125-preview
+#   do the same with gpt3
+./feedback.py -i ./data/synthetic_smart/v4/ -m gpt-3.5-turbo-0125
 
-# compare feedback judgements
-# see also benchmark.ipynb which is more complete!
-./benchmark.py -if data/synthetic_smart/v3/smart_goals.csv -i3 data/synthetic_smart/v3/feedback_gpt-3.5-turbo-0125__judged_gpt-4-0125-preview.csv -i4 data/synthetic_smart/v3/feedback_gpt-4-0125-preview__judged_gpt-4-0125-preview.csv
+# now benchmnark generated feedback.xlsx, comparing models:
+#   (see also benchmark.ipynb)
+./benchmark.py -i data/synthetic_smart/v4/ -m gpt-4-0125-preview
 ````
 
 For the other experiments with running models locally, you may first need to run `huggingface-cli login` and [enter a token from your hugging face account](https://huggingface.co/settings/tokens).
