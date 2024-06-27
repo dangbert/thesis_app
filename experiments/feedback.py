@@ -132,7 +132,10 @@ def get_feedback(
         return True
 
     model = gpt.GPTModel(args.model)
-    logger.info(f"validator enabled: {validate}")
+    logger.debug(f"validator enabled: {validate}")
+    logger.info(
+        f"prompting {len(data['prompt'])} feedback prompts for model '{args.model}'"
+    )
     outputs, total_price, total_calls = gpt.auto_reprompt(
         validator if validate else noop_validator,
         args.max_retries,

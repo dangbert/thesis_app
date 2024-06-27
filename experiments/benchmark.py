@@ -190,28 +190,30 @@ def main():
         f"all feedbacks have been judged by {args.model}. See '{benchmark_path}'"
     )
 
+    ### plot benchmark results
     benchmark_dfs = get_all_dfs(benchmark_path)
     plot_benchmark(benchmark_dfs, ScoreModel, args.input_dir)
 
 
+# note that these plots are similar in style to
 def plot_benchmark(judges: dict, ScoreModel, dir: str):
     metric_names = ScoreModel.__fields__.keys()
     data = {}
     for judge_name, df in judges.items():
         judge_name = config.MODEL_NICKNAMES.get(judge_name, judge_name)
 
+        data[judge_name] = {}
         for m in metric_names:
-            # TODO: describe
             vals = df[m].tolist()
-            # drop NaNs
+            print(f"\n{judge_name} {m}:")
+            print(df[m].describe())
+            # drop NaNs if any
             vals = [v for v in vals if v is not None]
             data[judge_name][m] = vals
 
-    # describe stats
-    df = pd.DataFrame(data)
-    print("stats:")
-    print(df.describe())
-
+    fig, axes = plt.subplots(1, 2, figsize=(12, 6))  # 1 row, 2 columns
+    title_fontsize = 16
+    axis_fontsize = 14
     meanprops = dict(
         marker="o",
         markerfacecolor="red",
@@ -220,22 +222,30 @@ def plot_benchmark(judges: dict, ScoreModel, dir: str):
         color="red",
         linewidth=2,
     )
-    for m in metric_names:
-        # Create boxplot
-        plt.boxplot(
-            [data[judge_name][m] for judge_name in judges.keys()],
+
+    for idx, m in enumerate(metric_names):
+        ax = axes[idx]
+        scores = [data[judge_name][m] for judge_name in data.keys()]
+        ax.boxplot(
+            scores,
             labels=data.keys(),
             showmeans=True,
             meanprops=meanprops,
         )
-        plt.xticks(range(len(judges)), data.keys())
-        plt.yticks(range(1, 11), [f"{x:.1f}" for x in range(1, 11)])
-        plt.xlabel("Judge")
-        plt.ylabel(f"{m.capitalize()} Judgement")
-        plt.title(f"{m.capitalize()} Benchmark")
-        fname = os.path.join(dir, f"{m}_benchmark.pdf")
-        plt.savefig(fname)
-        logger.info(f"wrote '{fname}'")
+        ax.set_title(f"{m.capitalize()} Benchmark", fontsize=title_fontsize)
+        ax.set_xticks(range(1, len(data.keys()) + 1))
+        ax.set_xlabel("Feedback LLM", fontsize=axis_fontsize)
+        ax.set_xticklabels(data.keys(), fontsize=axis_fontsize)
+        ax.set_yticks(range(1, 11), [f"{x:.1f}" for x in range(1, 11)])
+        ax.set_ylabel(
+            f"{m.capitalize()} Score (10-Point Scale)", fontsize=axis_fontsize
+        )
+
+    plt.tight_layout()
+    plt.subplots_adjust(wspace=0.4)  # more space between plots
+    fname = os.path.join(dir, "benchmark_combined.pdf")
+    plt.savefig(fname)
+    logger.info(f"wrote '{fname}'")
 
 
 def get_all_dfs(fname: str):
