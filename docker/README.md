@@ -20,16 +20,42 @@ Follow the instructions/comments in your new .env to correctly edit the file.  T
 # build and launch dev site
 alias dcd='docker compose -f docker-compose.yml -f docker-compose.dev.yml'
 dcd build && dcd up -d
+dcd logs -f # view site logs
+
+# you can also get a shell into the container of one the service's for example:
+dcd exec -it backend bash
+# then you can run unit tests with:
+pytest -v
 ````
 
 Now you can visit the site running on http://localhost:2222
 
 
 ## Run Production Server
+ssh into your production server (if created with terraform see `terraform output` for ssh details) and run the following:
 
 ````bash
+# ensure dependencies are installed and an ssh key is created
+#   NOTE: this script is copied to the server by terraform but is also available at ../terraform/modules/ec2/setup.sh
+bash ~/setup.sh
+
+cat ~/.ssh/id_ed25519.pub
+# add the authentication key printed above to your GitHub account at https://github.com/settings/ssh/new
+
+# create SSL keys for https and clone the site from github:
+bash ~/setup.sh -i
+
+# launch production site:
+cd ~/thesis_app/docker
+cp .env.sample .env
+# now edit edit the .env file according to the directions inside
+
+# now you can launch the production site as desired with:
 docker compose build && docker compose up -d
+docker compose logs -f # view site logs
 ````
+
+See below for instructions on creating (and restoring from) backups of the site.
 
 ## Manage Server
 

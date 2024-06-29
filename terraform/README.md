@@ -1,7 +1,7 @@
 # Infrastucture Management
 > This folder defines/documents the cloud infrastructure needs for deploying the ezfeedback site.
 
-In summary the site is deployed on a single AWS EC2 instance (manually deployed with docker compose).  Auth0 is used as a service for user management and proving the Google social login flow.  AWS SES is used as an email sending provider (e.g. allowing students to receive email alerts when their assignment feedback is ready).
+In summary the site is deployed on a single AWS EC2 instance (manually deployed with docker compose).  Auth0 is used as a service for user management and providing the Google social login flow.  AWS SES is used as an email sending provider (e.g. allowing students to receive email alerts when their assignment feedback is ready).
 
 Note: before committing in this folder run `terraform fmt -recursive`
 
