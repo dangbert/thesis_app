@@ -23,19 +23,29 @@ settings = projconfig.get_settings()
 
 
 def main():
-    # parser = argparse.ArgumentParser(
-    #     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    # )
-    # args = parser.parse_args()
+    results = dict()  # will collect results from our experiment runs
+    logger.info("### gathering fluency baselines:")
+    baselines = dict()
+    for nickname, fname in [
+        ("GPT-4", "fluency_gpt-4-0125-preview_judged_by_gpt-4-0125-preview.csv"),
+        ("GPT-3.5", "fluency_gpt-3.5-turbo-0125_judged_by_gpt-4-0125-preview.csv"),
+        ("Llama-2-7b", "benchmark_chkp_-1_gpt-4-0125-preview.csv"),
+        # plot best Llama-2-7B-nl as well!
+        ("Llama-2-7b-nl", "full1/benchmark_chkp_0_gpt-4-0125-preview.csv"),
+    ]:
+        if "GPT" in nickname:
+            fname = os.path.join(EXPERIMENTS_DIR, "data/synthetic_smart/v4/", fname)
+        else:
+            fname = os.path.join(TUNER_EXP_DIR, fname)
+        df = pd.read_csv(fname)
+        print(f"\n{fname}:")
+        df = _process_fluency_df(df)
+        if nickname == "Llama-2-7b":  # store baseline for later
+            results["default"] = {"gpt4": {-1: df["fluency_score"].mean().item()}}
+        baselines[nickname] = df["fluency_score"].to_list()
+    plot_fluency_baselines(baselines)
 
-    #### plot fluency baselines
-    plot_fluency_baselines()
-
-    #### plot fine-tuning fluency results
-    results_path = os.path.join(TUNER_EXP_DIR, "results.yaml")
-    with open(results_path, "r") as f:
-        results = yaml.load(f, Loader=yaml.FullLoader)
-
+    logger.info("### 'full' experiments:")
     # NOTE: full4 was originally silvery-brook-8 but didn't save checkpoints so reran as fine-bird-9
     full_exps = ["full1", "full2", "full3", "full4"]
 
@@ -45,46 +55,42 @@ def main():
         # return f"lr{lr}_grad{c['gradient_accumulation_steps']}"
 
     for name in full_exps:
-        results[name]["wandb"] = get_wandb_stats(
-            name,
-            build_nickname=build_nickname,
-            # build_nickname=lambda c: f"grad{c['gradient_accumulation_steps']}"
-        )
-        print(f"Experiment: {name}")
-    plot_tuner(results, full_exps, group_name="full")
-    print("\nlr experiments:")
+        results[name] = {
+            "gpt4": get_fluency_scores(name),
+            "wandb": get_wandb_stats(
+                name,
+                build_nickname=build_nickname,
+                # build_nickname=lambda c: f"grad{c['gradient_accumulation_steps']}"
+            ),
+        }
+    plot_tuner(results, full_exps, group_name="full", wspace=0.4)
 
-    # gather results learning rate experiments:
+    logger.info("### 'lr' experiments:")
+
     def build_nickname(c: dict):
         lr = round(c["optimizer"]["lr"] * 10**4)
         return f"lr{lr}_grad{c['gradient_accumulation_steps']}"
 
-    lr_exps = ["lr4_8b", "lr4_16b", "lr5_8b", "lr5_16b"]
-    for name in lr_exps:
-        results[name] = {
-            "gpt4": dict(),
-            "wandb": get_wandb_stats(
-                name,
-                build_nickname=build_nickname,
-                # build_nickname=lambda c: f"lr{int(c['lr']*10**4)}_grad{c['gradient_accumulation_steps']}",
-            ),
-        }
-        # gather fluency scores from benchmarked checkpoints
-        for epoch in range(0, 10):
-            fname = os.path.join(
-                TUNER_EXP_DIR, name, f"benchmark_chkp_{epoch}_gpt-4-0125-preview.csv"
-            )
-            if not os.path.exists(fname):
-                break
-            df = pd.read_csv(fname)
-            if "fluency_score" not in df.columns:
-                logger.warning(f"no fluency_score column in {fname}")
-                break
-            results[name]["gpt4"][epoch] = df["fluency_score"].mean().item()
-    plot_tuner(results, lr_exps, group_name="lr")
+    for letter in "bc":
+        lr_exps = ["lr4_8", "lr4_16", "lr5_8", "lr5_16"]
+        lr_exps = [f"{exp}{letter}" for exp in lr_exps]
+        for name in lr_exps:
+            results[name] = {
+                "gpt4": get_fluency_scores(name),
+                "wandb": get_wandb_stats(
+                    name,
+                    build_nickname=build_nickname,
+                    # build_nickname=lambda c: f"lr{int(c['lr']*10**4)}_grad{c['gradient_accumulation_steps']}",
+                ),
+            }
+        plot_tuner(results, lr_exps, group_name=f"lr{letter}")
     print()
 
+    # dump to yaml
     outpath = os.path.join(TUNER_EXP_DIR, "all_results.yaml")
+    for key in results.keys():
+        if "wandb" in results[key]:
+            results[key].pop("wandb")  # pop for cleaner yaml
     with open(outpath, "w") as f:
         yaml.dump(results, f)
     print(f"wrote results to '{outpath}'")
@@ -96,6 +102,7 @@ def plot_tuner(
     judge: str = "gpt4",
     save_dir: str = TUNER_EXP_DIR,
     group_name: Optional[str] = None,
+    wspace: float = 0.45,
 ):
     """Plot fluency and validation loss across a group of fine-tuning experiments."""
 
@@ -140,7 +147,7 @@ def plot_tuner(
     # ax1.yaxis.set_minor_formatter(plt.NullFormatter())
 
     set_common(ax2)
-    ax2.set_ylabel("Validation Loss", fontsize=axis_fontsize)
+    ax2.set_ylabel("Avg. Validation Loss", fontsize=axis_fontsize)
     ax2.set_title("Validation Loss Across Fine-Tuning", fontsize=title_fontsize)
     max_val_loss = math.ceil(max_val_loss)
     ax2.set_ylim(0, max_val_loss)
@@ -155,13 +162,16 @@ def plot_tuner(
     fig.legend(
         handles,
         labels,
-        loc="center right",
+        loc="center",
         ncol=1,
         fontsize=axis_fontsize,
         title="Runs",
         title_fontsize=title_fontsize,
     )
-    fig.subplots_adjust(right=0.88)
+    # fig.subplots_adjust(right=0.88)
+    # add padding between plots
+    plt.tight_layout()
+    plt.subplots_adjust(wspace=wspace)  # more space between plots
 
     if group_name is None:
         group_name = "_".join(exp_names)
@@ -170,28 +180,8 @@ def plot_tuner(
     print(f"wrote tuning plot to {fname}")
 
 
-def plot_fluency_baselines():
+def plot_fluency_baselines(datas: dict):
     """Boxplots of baseline Dutch fluency score distributions of LLMs of interest."""
-    datas = dict()
-    for nickname, fname in [
-        ("GPT-4", "fluency_gpt-4-0125-preview_judged_by_gpt-4-0125-preview.csv"),
-        ("GPT-3.5", "fluency_gpt-3.5-turbo-0125_judged_by_gpt-4-0125-preview.csv"),
-        ("Llama-2-7b", "benchmark_chkp_-1_gpt-4-0125-preview.csv"),
-        # plot best Llama-2-7B-nl as well!
-        ("Llama-2-7b-nl", "full1/benchmark_chkp_0_gpt-4-0125-preview.csv"),
-    ]:
-        if "GPT" in nickname:
-            fname = os.path.join(EXPERIMENTS_DIR, "data/synthetic_smart/v4/", fname)
-        else:
-            fname = os.path.join(TUNER_EXP_DIR, fname)
-        df = pd.read_csv(fname)
-        print(f"\n{os.path.basename(fname)}:")
-        print(df["fluency_score"].describe())
-        non5s = len(df[df["fluency_score"] != 5])
-        print(f"non-5 scores counts: {non5s}")
-        df = df.dropna(subset=["fluency_score"])
-        datas[nickname] = df["fluency_score"].to_list()
-
     # make boxplots for each model, using nickname as label
     plt.clf()
     meanprops = dict(
@@ -212,6 +202,41 @@ def plot_fluency_baselines():
     fname = os.path.join(TUNER_EXP_DIR, "fluency_baselines.pdf")
     plt.savefig(fname)
     print(f"wrote plot to {fname}")
+
+
+def get_fluency_scores(exp_name: str, model_name: str = "gpt-4-0125-preview") -> dict:
+    """
+    Gather fluency scores from benchmarked checkpoints for a given run.
+    E.g. run "full1" -> {0: 3.5, 1: 3.2, 2: 3.3, ...}
+    """
+    print(f"\ngathering fluency scores for '{exp_name}'")
+    scores = dict()
+    for epoch in range(0, 10):
+        fname = os.path.join(
+            TUNER_EXP_DIR, exp_name, f"benchmark_chkp_{epoch}_{model_name}.csv"
+        )
+        # support potentially missing benchmark results for some epochs
+        if not os.path.exists(fname):
+            continue
+        df = pd.read_csv(fname)
+        if "fluency_score" not in df.columns:
+            logger.warning(f"no fluency_score column in {fname}")
+            continue
+        print(f"\n{fname}:")
+        df = _process_fluency_df(df)
+        scores[epoch] = df["fluency_score"].mean().item()
+    return scores
+
+
+def _process_fluency_df(df: pd.DataFrame):
+    orig_len = len(df)
+    df = df.dropna(subset=["fluency_score"])
+    non5s = len(df[df["fluency_score"] != 5])
+    print(
+        f"NaN count: {orig_len - len(df)} (dropped rows), non-5 scores counts: {non5s}"
+    )
+    print(df["fluency_score"].describe())
+    return df
 
 
 def get_wandb_stats(run_name: str, build_nickname=Callable) -> dict:
@@ -237,7 +262,7 @@ def get_wandb_stats(run_name: str, build_nickname=Callable) -> dict:
     val_loss = run.history(keys=["val_loss"])
 
     num_epochs = run.config["epochs"]  # e.g. 4
-    print(f"exp_name={run_name}, num_epochs={num_epochs}")
+    logger.info(f"exp_name={run_name}, num_epochs={num_epochs}")
     total_training_steps = val_loss["_step"][len(val_loss) - 1].item()  # e.g. 8282
     steps_per_epoch = (
         total_training_steps / num_epochs
