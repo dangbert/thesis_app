@@ -1,7 +1,8 @@
 ## Experiments (Models, Scripts, Datasets)
 
 See also:
-* [./tuner](./tuner) for experiments on fine-tuning Llama2
+* [./tuner](./tuner) for experiments on fine-tuning Llama2.
+  * [./jobs/tuner.job](./jobs/tuner.job) documents how fine-tuning experiments and fluency benchmarks were ran (see commented out code).
 
 * [./data/alpaca_cleaned_nl](./data/alpaca_cleaned_nl) for the (machine translated) Dutch instruction fine-tuning dataset, [alpaca-cleaned-nl](https://huggingface.co/datasets/dangbert/alpaca-cleaned-nl)
 
@@ -35,11 +36,9 @@ cp .env.sample .env
 Note for the commands below, if you're not running on a [slurm server](https://slurm.schedmd.com/overview.html) then use `bash` in place of `sbatch`
 
 
-Disclaimer: the conda environment is now deprecated in favor of poetry (as shown above)
+Disclaimer: the conda environment is now deprecated in favor of poetry (as shown above).  The finetuning job, tuner.job, uses this approach.
 
 ````bash
-cd .. # enter root of repo
-
 # create conda environment
 # (if already existing, the environment is updated to be consistent with ./environment.yml)
 sbatch jobs/install_env.yml

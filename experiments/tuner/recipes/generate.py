@@ -244,6 +244,10 @@ def _measure_fluency(fname: str, judge_model: str) -> float:
     """
     ### 2. evaluate outputs using GPT model as a fluency judge
     df = pd.read_csv(fname)
+    if "fluency_score" in df.columns:
+        logger.info(f"skipping rerun of existing benchmark: '{fname}'")
+        return -1
+
     speaker_key = "local_output" if "local_output" in df.columns else "speaker_output"
 
     # df_goals["fluency_prompts"] = df_goals.apply(build_fluency_prompt, axis=1).to_list()
