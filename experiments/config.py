@@ -178,7 +178,7 @@ def safe_append_sheet(
     Helper function to add a sheet to a (possibly existing) Excel file.
     Returns true on success, false otherwise.
     """
-    assert fname.endswith(".xlsx")
+    assert fname.endswith(".xlsx"), f"not a valid Excel file: '{fname}'"
 
     if not os.path.exists(fname):  # write new file
         with pd.ExcelWriter(fname) as writer:

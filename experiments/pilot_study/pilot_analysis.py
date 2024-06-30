@@ -76,51 +76,50 @@ def levenshtein(fname: str, new_fname: str):
     logger.info(
         "computing normalized Levenshtein distance between ai_feedback and human_feedback."
     )
-    # add column lev_dist_norm to a1df from columns 'ai_feedback' and 'human_feedback'
-    a1_df["lev_dist_norm"] = a1_df.apply(
-        lambda x: lev.ratio(x["ai_feedback"], x["human_feedback"]), axis=1
-    )
+
+    def get_lev(row: pd.Series) -> Union[float, None]:
+        if not isinstance(row["ai_feedback"], str) or not isinstance(row["human_feedback"], str):
+            return None
+        return lev.ratio(row["ai_feedback"], row["human_feedback"])
+
+    # add column lev_dist_norm from columns 'ai_feedback' and 'human_feedback'
+    a1_df["lev_dist_norm"] = a1_df.apply(get_lev, axis=1)
+    a2_df["lev_dist_norm"] = a2_df.apply(get_lev, axis=1)
 
     # TODO: consider regenerating AI feedback for S1 and comparing as a baseline
     # to see how much the AI feedback in P1 biased the final feedback
-    with pd.ExcelWriter(new_fname) as writer:
-        sheets["P1"] = a1_df
-        sheets["S1"] = a2_df
-        # preserve other arbitrary sheets
-        for sheet_name, df in sheets.items():
-            df.to_excel(writer, sheet_name=sheet_name, index=False)
+    config.safe_append_sheet(a1_df, "P1", new_fname)
+    config.safe_append_sheet(a2_df, "S1", new_fname)
     logger.info(f"wrote '{new_fname}'")
 
+    # merge dataframes, keeping rows with lev_dist_norm defined
+    lev_df = pd.concat([a1_df, a2_df], ignore_index=True)
+    lev_df = lev_df.dropna(subset=["lev_dist_norm"])
     plt.figure()
-    plt.title("Edit Distance Between AI and Human Feedback")
+    ax1 = plt.gca()
+    plt.title("Edit Distance Between AI and Human Feedback", pad=15)
     plt.ylabel("Normalized Levenshtein Distance")
-    #plt.violinplot(a1_df["lev_dist_norm"], showmeans=False, showmedians=True)
-    # bar plot 0.0 -> 1.0 x axis with bins of 0.1
-    # plt.hist(a1_df["lev_dist_norm"], bins=10, range=(0, 1), align='mid', rwidth=0.8)
-    plt.boxplot(a1_df["lev_dist_norm"])
+    plt.boxplot(lev_df["lev_dist_norm"], showmeans=True, meanprops=config.MEANPROPS)
 
-    print(a1_df["lev_dist_norm"].describe())
-
-    # plt.gca().axes.get_xaxis().set_visible(False)
-    plt.gcf().set_size_inches(4, 6)
-    plt.subplots_adjust(
-        left=0.2, right=0.8, top=0.8, bottom=0.2
-    )  # add horizontal padding
+    # Adjust figure size and padding
+    plt.gcf().set_size_inches(4, 4)
+    # add more padding on the right for labels
+    plt.subplots_adjust(left=0.28, right=0.72, top=0.90, bottom=0.05)
     plt.ylim(0, 1)
-    # plt.scatter([0 for _ in a1_df['lev_dist_norm']], a1_df['lev_dist_norm'], color='red', s=10)
 
-    # x axis label as "A1"
-    plt.text(
-        0.5,
-        -0.1,
-        "Assignment 1",
-        ha="center",
-        va="center",
-        transform=plt.gca().transAxes,
-    )
-    # show ticks but hide numbers
-    plt.gca().axes.get_xaxis().set_visible(True)
-    plt.gca().axes.get_xaxis().set_ticks([])
+    # Hide x-axis
+    ax1.axes.get_xaxis().set_visible(False)
+
+    # Create a secondary y-axis
+    ax2 = ax1.twinx()
+    ax2.set_ylim(ax1.get_ylim())  # Ensure the secondary y-axis aligns with the primary y-axis
+
+    # Add labels at y=0 and y=1 on the secondary y-axis
+    ax2.text(1.05, 0, "max changes", transform=ax2.get_yaxis_transform(), ha='left', va='center')
+    ax2.text(1.05, 1, "no changes", transform=ax2.get_yaxis_transform(), ha='left', va='center')
+
+    # Make sure secondary y-axis does not have any tick marks or labels
+    ax2.tick_params(axis='y', which='both', left=False, right=False, labelright=False)
 
     plot_path = "lev_dist_norm.pdf"
     plt.savefig(plot_path)
