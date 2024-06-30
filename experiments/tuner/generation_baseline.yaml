@@ -1,0 +1,50 @@
+# Config for running the InferenceRecipe in generate.py to generate output from an LLM
+#
+# To launch, run the following command from root torchtune directory:
+#    tune run generate --config generation
+
+# my custom vars:
+EXP_ROOT: "./llama2_7B_chat"
+MODEL_DIR: ${EXP_ROOT}/model
+EXP_NAME: "${oc.env:EXP_NAME,unnamed}"
+EXP_DIR: ${EXP_ROOT}/experiments/${EXP_NAME}
+CHKP_NUM: -1 # indicate this is a default
+
+# when enabled, benchmarks the model's fluency rather than returning the response from a single output
+benchmark_fluency: true
+benchmark_judge: gpt-3.5-turbo-0125
+
+# Model arguments
+model:
+  _component_: torchtune.models.llama2.llama2_7b
+
+checkpointer:
+  _component_: torchtune.utils.FullModelHFCheckpointer
+  # for reloading default/initial model, use these settings instead:
+  checkpoint_dir: ${MODEL_DIR}
+  checkpoint_files: [
+    # relative to checkpoint_dir
+    pytorch_model-00001-of-00002.bin,
+    pytorch_model-00002-of-00002.bin
+  ]
+
+  output_dir: ${EXP_DIR}
+  model_type: LLAMA2
+
+device: cuda
+dtype: bf16
+
+seed: 1234
+
+# Tokenizer arguments
+tokenizer:
+  _component_: torchtune.models.llama2.llama2_tokenizer
+  path: ${MODEL_DIR}/tokenizer.model
+
+# Generation arguments; defaults taken from gpt-fast
+prompt: "Hello, my name is"
+max_new_tokens: 300
+temperature: 0.6 # 0.8 and 0.6 are popular values to try
+top_k: 300
+
+quantizer: null

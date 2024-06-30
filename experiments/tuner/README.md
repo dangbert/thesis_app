@@ -39,6 +39,22 @@ huggingface-cli upload dangbert/Llama-2-7b-nl . --commit-message "add full1, che
 huggingface-cli login
 ````
 
+
+[Llama-2-7b-chat](https://huggingface.co/meta-llama/Llama-2-7b-chat-hf) download/benchmarking:
+
+````bash
+EXP_DIR=./llama2_7B_chat
+mkdir -p "$EXP_DIR/model" "$EXP_DIR/experiments"
+huggingface-cli login # make sure you use a read token
+tune download meta-llama/Llama-2-7b-chat-hf  --output-dir "$EXP_DIR/model"
+
+tune run recipes/generate.py --config ./generation_baseline.yaml prompt="What is llama?" benchmark_fluency=true
+
+# benchmark default fluency of Llama-2-7b-chat-hf:
+tune run ./recipes/generate.py --config ./generation_baseline.yaml EXP_ROOT=./llama2_7B_chat benchmark_fluency=true benchmark_judge=gpt-4-0125-preview
+````
+
+
 ### initial setup steps for reproducibility:
 ````bash
 # note that the .yaml file was initially made from a modified version of a default recipe:
