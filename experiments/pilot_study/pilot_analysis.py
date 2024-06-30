@@ -135,6 +135,8 @@ ALL_PROBLEMS = {
   'Too short',
   'Other',
 }
+# better name for plot
+PROBLEM_NICKNAMES = { 'Feedback style/tone': 'Style/tone' }
 LIKERT_STARS = {
   1: 'Very dissatisfied',
   2: 'Dissatisfied',
@@ -147,11 +149,12 @@ def plot_evals(fname: str):
     """Plot problem categorizations and Likert scale ratings."""
     df = pd.read_excel(fname, sheet_name="anon")
 
-    counts = {error: 0 for error in ALL_PROBLEMS}
+    counts = {PROBLEM_NICKNAMES.get(error, error): 0 for error in ALL_PROBLEMS}
     df_filtered = df[df["review_problems"].notnull()]
     for i, row in df_filtered.iterrows():
         errors = row["review_problems"].split(";")
         for error in errors:
+            error = PROBLEM_NICKNAMES.get(error, error)
             counts[error] += 1
     total_problems = sum(counts.values())
     logger.info(f"{len(df_filtered)}/{len(df)} attempts tagged with review_problems")
@@ -183,6 +186,8 @@ def plot_evals(fname: str):
     ax2.set_xticklabels([f"{LIKERT_STARS[i]} - {i}" for i in range(1, 6)], rotation=90, fontsize=axis_fontsize)
 
     plot_path = "feedback_barplot.pdf"
+    fig.tight_layout()
+    plt.subplots_adjust(wspace=0.1)  # more space between plots
     plt.savefig(plot_path)
     logger.info(f"wrote '{plot_path}'")
 

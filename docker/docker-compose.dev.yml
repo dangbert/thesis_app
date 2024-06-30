@@ -12,6 +12,8 @@ services:
     environment:
       - ENV=DEV
       - SERVER_NAME=http://localhost:2222
+    # env_file:
+    #   .env.prod_copy
     ports:
       - 127.0.0.1:8000:8000
     # command: "bash -c 'echo sleeping && sleep infinity'"
@@ -24,6 +26,8 @@ services:
     environment:
       - ENV=DEV
       # - LOG_LEVEL=DEBUG
+    # env_file:
+    #   .env.prod_copy
     volumes:
       - ../backend/:/backend/
     # command: "bash -c 'echo sleeping && sleep infinity'"

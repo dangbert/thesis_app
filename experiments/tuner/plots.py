@@ -14,6 +14,7 @@ import math
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 TUNER_EXP_DIR = os.path.join(SCRIPT_DIR, "llama2_7B/experiments/")
+TUNER_EXP_CHAT_DIR = os.path.join(SCRIPT_DIR, "llama2_7B_chat/experiments/")
 EXPERIMENTS_DIR = os.path.realpath(os.path.join(SCRIPT_DIR, ".."))
 sys.path.append(EXPERIMENTS_DIR)
 import config as projconfig  # noqa: E402
@@ -29,13 +30,20 @@ def main():
     for nickname, fname in [
         ("GPT-4", "fluency_gpt-4-0125-preview_judged_by_gpt-4-0125-preview.csv"),
         ("GPT-3.5", "fluency_gpt-3.5-turbo-0125_judged_by_gpt-4-0125-preview.csv"),
+        (
+            "Llama-2-7b-chat",
+            os.path.join(
+                TUNER_EXP_CHAT_DIR, "unnamed/benchmark_chkp_-1_gpt-4-0125-preview.csv"
+            ),
+        ),
         ("Llama-2-7b", "benchmark_chkp_-1_gpt-4-0125-preview.csv"),
-        # plot best Llama-2-7B-nl as well!
-        ("Llama-2-7b-nl", "full1/benchmark_chkp_0_gpt-4-0125-preview.csv"),
+        # plot best Llama-2-7B-nl as well:
+        # ("Llama-2-7b-nl", "full1/benchmark_chkp_0_gpt-4-0125-preview.csv"),
+        ("Llama-2-7b-nl", "lr5_8c/benchmark_chkp_2_gpt-4-0125-preview.csv"),
     ]:
         if "GPT" in nickname:
             fname = os.path.join(EXPERIMENTS_DIR, "data/synthetic_smart/v4/", fname)
-        else:
+        elif not os.path.isabs(fname):
             fname = os.path.join(TUNER_EXP_DIR, fname)
         df = pd.read_csv(fname)
         print(f"\n{fname}:")
@@ -50,9 +58,9 @@ def main():
     full_exps = ["full1", "full2", "full3", "full4"]
 
     def build_nickname(c: dict):
-        return f"grad{c['gradient_accumulation_steps']}"
-        # lr = round(c["optimizer"]["lr"] * 10**4)
-        # return f"lr{lr}_grad{c['gradient_accumulation_steps']}"
+        # return f"grad{c['gradient_accumulation_steps']}"
+        lr = round(c["optimizer"]["lr"] * 10**4)
+        return f"lr{lr}_grad{c['gradient_accumulation_steps']}"
 
     for name in full_exps:
         results[name] = {
@@ -67,10 +75,7 @@ def main():
 
     logger.info("### 'lr' experiments:")
 
-    def build_nickname(c: dict):
-        lr = round(c["optimizer"]["lr"] * 10**4)
-        return f"lr{lr}_grad{c['gradient_accumulation_steps']}"
-
+    # b were learning rate experiments of 4 epochs each, c was a rerun with 7 epochs each
     for letter in "bc":
         lr_exps = ["lr4_8", "lr4_16", "lr5_8", "lr5_16"]
         lr_exps = [f"{exp}{letter}" for exp in lr_exps]
@@ -168,8 +173,6 @@ def plot_tuner(
         title="Runs",
         title_fontsize=title_fontsize,
     )
-    # fig.subplots_adjust(right=0.88)
-    # add padding between plots
     plt.tight_layout()
     plt.subplots_adjust(wspace=wspace)  # more space between plots
 
@@ -180,18 +183,21 @@ def plot_tuner(
     print(f"wrote tuning plot to {fname}")
 
 
-def plot_fluency_baselines(datas: dict):
+def plot_fluency_baselines(baselines: dict):
     """Boxplots of baseline Dutch fluency score distributions of LLMs of interest."""
     # make boxplots for each model, using nickname as label
     plt.clf()
-    plt.boxplot(datas.values(), showmeans=True, meanprops=projconfig.MEANPROPS)
-    plt.xticks(range(1, len(datas) + 1), datas.keys())
+    plt.title("LLM Fluency Baselines")
+    plt.boxplot(baselines.values(), showmeans=True, meanprops=projconfig.MEANPROPS)
+    plt.xticks(range(1, len(baselines) + 1), baselines.keys())
     plt.yticks(np.arange(1.0, 5.5, 1.0))  # Label every whole integer
     plt.gca().yaxis.set_minor_locator(plt.MultipleLocator(0.5))
     plt.gca().yaxis.set_minor_formatter(plt.NullFormatter())
     plt.xlabel("Model")
     plt.ylabel("Fluency Score (5-Point Scale)")
     fname = os.path.join(TUNER_EXP_DIR, "fluency_baselines.pdf")
+    plt.tight_layout()
+    # plt.subplots_adjust(left=0.0, right=1.0)  # more space between plots
     plt.savefig(fname)
     print(f"wrote plot to {fname}")
 
