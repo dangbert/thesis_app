@@ -4,7 +4,7 @@
 #    tune run generate --config generation
 
 # my custom vars:
-EXP_ROOT: "./llama2_7B_chat"
+EXP_ROOT: "${oc.env:EXP_ROOT,llama2_7B_chat}"
 MODEL_DIR: ${EXP_ROOT}/model
 EXP_NAME: "${oc.env:EXP_NAME,unnamed}"
 EXP_DIR: ${EXP_ROOT}/experiments/${EXP_NAME}

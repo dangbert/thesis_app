@@ -40,7 +40,7 @@ huggingface-cli login
 ````
 
 
-[Llama-2-7b-chat](https://huggingface.co/meta-llama/Llama-2-7b-chat-hf) download/benchmarking:
+**[Llama-2-7b-chat](https://huggingface.co/meta-llama/Llama-2-7b-chat-hf) download/benchmarking:**
 
 ````bash
 EXP_DIR=./llama2_7B_chat
@@ -48,11 +48,27 @@ mkdir -p "$EXP_DIR/model" "$EXP_DIR/experiments"
 huggingface-cli login # make sure you use a read token
 tune download meta-llama/Llama-2-7b-chat-hf  --output-dir "$EXP_DIR/model"
 
-tune run recipes/generate.py --config ./generation_baseline.yaml prompt="What is llama?" benchmark_fluency=true
+# test generating a single prompt:
+EXP_ROOT=$EXP_DIR tune run recipes/generate.py --config ./generation_baseline.yaml prompt="What is llama?" benchmark_fluency=false
 
 # benchmark default fluency of Llama-2-7b-chat-hf:
-tune run ./recipes/generate.py --config ./generation_baseline.yaml EXP_ROOT=./llama2_7B_chat benchmark_fluency=true benchmark_judge=gpt-4-0125-preview
+tune run ./recipes/generate.py --config ./generation_baseline.yaml EXP_ROOT=$EXP_DIR benchmark_fluency=true benchmark_judge=gpt-4-0125-preview
 ````
+
+
+<details>
+<summary>Show incomplete Llama3 steps</summary>
+Not covered by this project is **[Llama-3-8b-Instruct](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct)**, but it can be downloaded with:
+
+````bash
+EXP_DIR=./llama3_8B_instruct
+mkdir -p "$EXP_DIR/model" "$EXP_DIR/experiments"
+huggingface-cli login # make sure you use a read token
+tune download meta-llama/Meta-Llama-3-8B  --output-dir "$EXP_DIR/model"
+````
+
+The above is not fully tested...
+</details>
 
 
 ### initial setup steps for reproducibility:
