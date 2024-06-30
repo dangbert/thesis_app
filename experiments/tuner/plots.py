@@ -184,15 +184,7 @@ def plot_fluency_baselines(datas: dict):
     """Boxplots of baseline Dutch fluency score distributions of LLMs of interest."""
     # make boxplots for each model, using nickname as label
     plt.clf()
-    meanprops = dict(
-        marker="o",
-        markerfacecolor="red",
-        markeredgecolor="red",
-        linestyle="--",
-        color="red",
-        linewidth=2,
-    )
-    plt.boxplot(datas.values(), showmeans=True, meanprops=meanprops)
+    plt.boxplot(datas.values(), showmeans=True, meanprops=projconfig.MEANPROPS)
     plt.xticks(range(1, len(datas) + 1), datas.keys())
     plt.yticks(np.arange(1.0, 5.5, 1.0))  # Label every whole integer
     plt.gca().yaxis.set_minor_locator(plt.MultipleLocator(0.5))

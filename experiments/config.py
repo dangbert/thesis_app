@@ -235,3 +235,14 @@ def prompt_yes_no(question: str) -> bool:
     while val not in ["y", "yes", "n", "no"]:
         val = input(f"{question} (y/n) > ").strip().lower()
     return val in ["y", "yes"]
+
+
+# props for showing mean on boxplot
+MEANPROPS = dict(
+    marker="o",
+    markerfacecolor="red",
+    markeredgecolor="red",
+    linestyle="--",
+    color="red",
+    linewidth=2,
+)

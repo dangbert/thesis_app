@@ -32,6 +32,7 @@ def main():
 
     PILOT_EMAILS_PATH = "pilot_emails.txt"
     ALLOWED_EMAILS = _read_emails(PILOT_EMAILS_PATH)
+    print(f"allowed emails: {len(ALLOWED_EMAILS)}")
 
     with database.SessionFactory() as session:
         users = (
@@ -134,13 +135,14 @@ def get_anon_df(session):
 
     # optional list of test student account emails to skip
     SKIP_EMAILS_PATH = "pilot_skip_emails.txt"
-    skip_emails = []
+    skip_emails = {}
     if not os.path.isfile(SKIP_EMAILS_PATH):
         logger.warning(
             f"file '{SKIP_EMAILS_PATH}' not found, continuing without skip list"
         )
     else:
         skip_emails = _read_emails(SKIP_EMAILS_PATH)
+    print(f"skip emails: {len(skip_emails)}")
 
     anon_data = []
     keep_cols = {"review_rating", "review_problems"}
@@ -182,14 +184,14 @@ def _split_feedbacks(att: models.Attempt) -> Tuple[list, list]:
     return human_feedbacks, ai_feedbacks
 
 
-def _read_emails(fname: str):
+def _read_emails(fname: str) -> set[str]:
     with open(fname, "r") as f:
         emails = [line.strip() for line in f.readlines()]
-        emails = [x for x in emails if not x.startswith("#")]
+        emails = [x for x in emails if not x.startswith("#") and len(x) > 0]
         for email in emails:
             # sanity check (throws exception if invalid)
             EmailStr._validate(email)  # type: ignore
-    return emails
+    return set(emails)
 
 
 if __name__ == "__main__":

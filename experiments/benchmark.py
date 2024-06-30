@@ -214,14 +214,6 @@ def plot_benchmark(judges: dict, ScoreModel, dir: str):
     fig, axes = plt.subplots(1, 2, figsize=(12, 6))  # 1 row, 2 columns
     title_fontsize = 16
     axis_fontsize = 14
-    meanprops = dict(
-        marker="o",
-        markerfacecolor="red",
-        markeredgecolor="red",
-        linestyle="--",
-        color="red",
-        linewidth=2,
-    )
 
     for idx, m in enumerate(metric_names):
         ax = axes[idx]
@@ -230,7 +222,7 @@ def plot_benchmark(judges: dict, ScoreModel, dir: str):
             scores,
             labels=data.keys(),
             showmeans=True,
-            meanprops=meanprops,
+            meanprops=config.MEANPROPS,
         )
         ax.set_title(f"{m.capitalize()} Benchmark", fontsize=title_fontsize)
         ax.set_xticks(range(1, len(data.keys()) + 1))
