@@ -115,7 +115,7 @@ def levenshtein(fname: str, new_fname: str):
     ax2.set_ylim(ax1.get_ylim())  # Ensure the secondary y-axis aligns with the primary y-axis
 
     # Add labels at y=0 and y=1 on the secondary y-axis
-    ax2.text(1.05, 0, "max changes", transform=ax2.get_yaxis_transform(), ha='left', va='center')
+    ax2.text(1.05, 0, "no similarity", transform=ax2.get_yaxis_transform(), ha='left', va='center')
     ax2.text(1.05, 1, "no changes", transform=ax2.get_yaxis_transform(), ha='left', va='center')
 
     # Make sure secondary y-axis does not have any tick marks or labels
