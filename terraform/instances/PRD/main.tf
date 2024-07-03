@@ -70,7 +70,7 @@ variable "auth0_provider" {
 }
 
 variable "google_oauth" {
-  description = "Your google oauth credentials, see installation steps here https://marketplace.auth0.com/integrations/google-social-connectio"
+  description = "Your google oauth credentials, see installation steps here https://marketplace.auth0.com/integrations/google-social-connection"
   sensitive   = true
   type = object({
     client_id     = string
@@ -104,6 +104,11 @@ module "ssh_key" {
   count     = var.create_ec2 ? 1 : 0
 }
 
+# NOTE: to check the architecture of the instance type:
+# aws ec2 describe-instance-types --instance-types t4g.medium --query 'InstanceTypes[*].[InstanceType,ProcessorInfo.SupportedArchitectures]' --output table
+# and check architecture of the AMI:
+#   aws ec2 describe-images --image-ids ami-0776c814353b4814d --query 'Images[*].[ImageId,Architecture]' --output table --region eu-west-1
+# NOTE: t2.small would probably be enough based on load tests on t3.medium
 module "ec2" {
   source    = "../../modules/ec2"
   namespace = local.namespace
@@ -119,26 +124,6 @@ module "ec2" {
   count         = var.create_ec2 ? 1 : 0
 }
 
-
-# NOTE: to check the architecture of the instance type:
-# aws ec2 describe-instance-types --instance-types t4g.medium --query 'InstanceTypes[*].[InstanceType,ProcessorInfo.SupportedArchitectures]' --output table
-# and check architecture of the AMI:
-#   aws ec2 describe-images --image-ids ami-0776c814353b4814d --query 'Images[*].[ImageId,Architecture]' --output table --region eu-west-1
-# NOTE: t2.small would probably be enough based on load tests on t3.medium
-module "ec2_new" {
-  source    = "../../modules/ec2"
-  namespace = "${local.namespace}-new"
-  key_name  = module.ssh_key[0].key_name
-
-  # ubuntu 24.04 LTS, amd64, eu-west-1 (from https://cloud-images.ubuntu.com/locator/ec2/)
-  ami_id        = "ami-0776c814353b4814d"
-  server_user   = "ubuntu"
-  instance_type = "t3.medium" # https://aws.amazon.com/ec2/pricing/on-demand/
-  volume_size   = 45
-  ingress_ports = [22, 443, 80]
-  policies      = [local.common.ses.iam.send_arn]
-  count         = var.create_ec2 ? 1 : 0
-}
 
 # attaching SES policy directly to EC2 doesn't seem to help the Docker service
 # so explicitly creating credentials as env vars
@@ -170,20 +155,6 @@ output "ec2" {
       stop   = "aws ec2 stop-instances --instance-ids ${module.ec2[0].instance_id} --region ${local.aws.region} --profile ${local.aws.profile}"
       start  = "aws ec2 start-instances --instance-ids ${module.ec2[0].instance_id} --region ${local.aws.region} --profile ${local.aws.profile}"
       status = "aws ec2 describe-instance-status --instance-ids ${module.ec2[0].instance_id} --region ${local.aws.region} --profile ${local.aws.profile}"
-    }
-  }
-}
-
-output "ec2_new" {
-  value = !var.create_ec2 ? {} : {
-    ssh_cmds = {
-      ssh = "ssh -i ${module.ssh_key[0].key_name}.pem ${module.ec2_new[0].server_user}@${module.ec2_new[0].public_ip}"
-      scp = "scp -i ${module.ssh_key[0].key_name}.pem file.txt ${module.ec2_new[0].server_user}@${module.ec2_new[0].public_ip}:"
-    }
-    aws_cmds = {
-      stop   = "aws ec2 stop-instances --instance-ids ${module.ec2_new[0].instance_id} --region ${local.aws.region} --profile ${local.aws.profile}"
-      start  = "aws ec2 start-instances --instance-ids ${module.ec2_new[0].instance_id} --region ${local.aws.region} --profile ${local.aws.profile}"
-      status = "aws ec2 describe-instance-status --instance-ids ${module.ec2_new[0].instance_id} --region ${local.aws.region} --profile ${local.aws.profile}"
     }
   }
 }

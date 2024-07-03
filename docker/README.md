@@ -40,10 +40,15 @@ ssh into your production server (if created with terraform see `terraform output
 bash ~/setup.sh
 
 cat ~/.ssh/id_ed25519.pub
-# add the authentication key printed above to your GitHub account at https://github.com/settings/ssh/new
+````
 
+Add the authentication key printed above to your GitHub account [here](https://github.com/settings/ssh/new).  Then create an "A" record on your domains DNS settings pointing to your produdction server's IP before continuing:
+
+````bash
 # create SSL keys for https and clone the site from github:
 bash ~/setup.sh -i
+# if you have a problem generating your SSL keys, you can directly rerun with:
+sudo certbot certonly
 
 # launch production site:
 cd ~/thesis_app/docker
@@ -67,6 +72,8 @@ See below for instructions on creating (and restoring from) backups of the site.
 ./manage.sh -b
 
 #### restore database from backup
+docker compose up -d db
+docker compose exec -it db bash
 psql -U postgres
 # now inside psql delete database if it exists, and create a new empty one:
 drop database thesis;
