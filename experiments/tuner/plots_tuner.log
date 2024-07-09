@@ -1,0 +1,789 @@
+[2024-07-09 16:16:38,779] INFO [__main__:28] ### gathering fluency baselines:
+[2024-07-09 16:16:39,070] INFO [__main__:56] ### 'full' experiments:
+[2024-07-09 16:16:39,622] INFO [__main__:263] exp_name=full1, num_epochs=6
+[2024-07-09 16:16:39,624] INFO [__main__:274] run 'full1' -> nickname: lr3_grad8
+[2024-07-09 16:16:40,050] INFO [__main__:263] exp_name=full2, num_epochs=4
+[2024-07-09 16:16:40,052] INFO [__main__:274] run 'full2' -> nickname: lr3_grad16
+[2024-07-09 16:16:40,502] INFO [__main__:263] exp_name=full3, num_epochs=4
+[2024-07-09 16:16:40,503] INFO [__main__:274] run 'full3' -> nickname: lr3_grad32
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/data/synthetic_smart/v4/fluency_gpt-4-0125-preview_judged_by_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 1
+count    50.000000
+mean      4.980000
+std       0.141421
+min       4.000000
+25%       5.000000
+50%       5.000000
+75%       5.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/data/synthetic_smart/v4/fluency_gpt-3.5-turbo-0125_judged_by_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 2
+count    50.000000
+mean      4.960000
+std       0.197949
+min       4.000000
+25%       5.000000
+50%       5.000000
+75%       5.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B_chat/experiments/unnamed/benchmark_chkp_-1_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 39
+count    50.000000
+mean      3.600000
+std       1.106567
+min       1.000000
+25%       3.000000
+50%       4.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/benchmark_chkp_-1_gpt-4-0125-preview.csv:
+NaN count: 1 (dropped rows), non-5 scores counts: 41
+count    49.000000
+mean      2.306122
+std       1.570617
+min       1.000000
+25%       1.000000
+50%       1.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr5_8c/benchmark_chkp_2_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 40
+count    50.000000
+mean      3.700000
+std       1.073807
+min       1.000000
+25%       3.000000
+50%       4.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+wrote plot to /Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/fluency_baselines.pdf
+
+gathering fluency scores for 'full1'
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/full1/benchmark_chkp_0_gpt-4-0125-preview.csv:
+NaN count: 1 (dropped rows), non-5 scores counts: 37
+count    49.000000
+mean      3.612245
+std       1.151382
+min       1.000000
+25%       3.000000
+50%       4.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/full1/benchmark_chkp_1_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 44
+count    50.000000
+mean      3.300000
+std       0.994885
+min       1.000000
+25%       3.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/full1/benchmark_chkp_2_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 39
+count    50.000000
+mean      3.200000
+std       1.442786
+min       1.000000
+25%       2.000000
+50%       3.500000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/full1/benchmark_chkp_3_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 48
+count    50.000000
+mean      2.680000
+std       1.284762
+min       1.000000
+25%       1.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+gathering fluency scores for 'full2'
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/full2/benchmark_chkp_0_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 44
+count    50.000000
+mean      3.340000
+std       1.002242
+min       1.000000
+25%       3.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/full2/benchmark_chkp_1_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 46
+count    50.00000
+mean      2.84000
+std       1.28349
+min       1.00000
+25%       2.00000
+50%       3.00000
+75%       4.00000
+max       5.00000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/full2/benchmark_chkp_2_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 47
+count    50.000000
+mean      2.460000
+std       1.373362
+min       1.000000
+25%       1.000000
+50%       2.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/full2/benchmark_chkp_3_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 49
+count    50.000000
+mean      2.200000
+std       1.277753
+min       1.000000
+25%       1.000000
+50%       2.000000
+75%       3.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+gathering fluency scores for 'full3'
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/full3/benchmark_chkp_0_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 39
+count    50.000000
+mean      3.420000
+std       1.213697
+min       1.000000
+25%       3.000000
+50%       3.500000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/full3/benchmark_chkp_1_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 45
+count    50.000000
+mean      3.020000
+std       1.301334
+min       1.000000
+25%       2.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/full3/benchmark_chkp_2_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 44
+count    50.000000
+mean      2.780000
+std       1.389318
+min       1.000000
+25%       1.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/full3/benchmark_chkp_3_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 43
+count    50.000000
+mean      2.300000
+std       1.606746
+min       1.000000
+25%       1.000000
+50%       1.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+gathering fluency scores for 'full4'
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/full4/benchmark_chkp_0_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 43
+count    50.000000
+mean      3.480000
+std       1.034901
+min       1.000000
+25%       3.000000
+50%       4.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/full4/benchmark_chkp_1_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 47
+count    50.000000
+mean      3.320000
+std       0.935469
+min       1.000000
+25%       3.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/full4/benchmark_chkp_2_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 44
+count    50.000000
+mean      3.320000
+std       1.132813
+min       1.000000
+25%       3.000000
+50%       3.500000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/full4/benchmark_chkp_3_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 45
+[2024-07-09 16:16:40,852] INFO [__main__:263] exp_name=full4, num_epochs=4
+[2024-07-09 16:16:40,854] INFO [__main__:274] run 'full4' -> nickname: lr3_grad64
+[2024-07-09 16:16:40,992] INFO [__main__:76] ### 'lr' experiments:
+[2024-07-09 16:16:41,382] INFO [__main__:263] exp_name=lr4_8b, num_epochs=3
+[2024-07-09 16:16:41,382] INFO [__main__:274] run 'lr4_8b' -> nickname: lr4_grad8
+[2024-07-09 16:16:41,739] INFO [__main__:263] exp_name=lr4_16b, num_epochs=3
+[2024-07-09 16:16:41,740] INFO [__main__:274] run 'lr4_16b' -> nickname: lr4_grad16
+[2024-07-09 16:16:42,122] INFO [__main__:263] exp_name=lr5_8b, num_epochs=3
+[2024-07-09 16:16:42,123] INFO [__main__:274] run 'lr5_8b' -> nickname: lr5_grad8
+[2024-07-09 16:16:42,483] INFO [__main__:263] exp_name=lr5_16b, num_epochs=3
+[2024-07-09 16:16:42,486] INFO [__main__:274] run 'lr5_16b' -> nickname: lr5_grad16
+[2024-07-09 16:16:42,984] INFO [__main__:263] exp_name=lr4_8c, num_epochs=7
+[2024-07-09 16:16:42,984] INFO [__main__:274] run 'lr4_8c' -> nickname: lr4_grad8
+count    50.000000
+mean      2.980000
+std       1.362621
+min       1.000000
+25%       2.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+wrote tuning plot to /Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/tuning_full.pdf
+
+gathering fluency scores for 'lr4_8b'
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr4_8b/benchmark_chkp_0_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 50
+count    50.000000
+mean      2.060000
+std       1.132272
+min       1.000000
+25%       1.000000
+50%       2.000000
+75%       3.000000
+max       4.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr4_8b/benchmark_chkp_1_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 47
+count    50.000000
+mean      2.960000
+std       1.244744
+min       1.000000
+25%       2.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr4_8b/benchmark_chkp_2_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 41
+count    50.000000
+mean      3.020000
+std       1.362621
+min       1.000000
+25%       2.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+gathering fluency scores for 'lr4_16b'
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr4_16b/benchmark_chkp_0_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 45
+count    50.000000
+mean      3.240000
+std       1.134973
+min       1.000000
+25%       3.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr4_16b/benchmark_chkp_1_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 43
+count    50.00000
+mean      2.84000
+std       1.34559
+min       1.00000
+25%       2.00000
+50%       3.00000
+75%       4.00000
+max       5.00000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr4_16b/benchmark_chkp_2_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 41
+count    50.000000
+mean      3.000000
+std       1.484615
+min       1.000000
+25%       1.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+gathering fluency scores for 'lr5_8b'
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr5_8b/benchmark_chkp_0_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 45
+count    50.000000
+mean      2.660000
+std       1.394011
+min       1.000000
+25%       1.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr5_8b/benchmark_chkp_1_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 46
+count    50.000000
+mean      2.640000
+std       1.381511
+min       1.000000
+25%       1.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr5_8b/benchmark_chkp_2_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 46
+count    50.000000
+mean      2.840000
+std       1.218229
+min       1.000000
+25%       2.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+gathering fluency scores for 'lr5_16b'
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr5_16b/benchmark_chkp_0_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 46
+count    50.000000
+mean      3.080000
+std       1.209486
+min       1.000000
+25%       2.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr5_16b/benchmark_chkp_1_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 46
+count    50.000000
+mean      2.800000
+std       1.324803
+min       1.000000
+25%       2.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr5_16b/benchmark_chkp_2_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 37
+count    50.000000
+mean      3.260000
+std       1.382249
+min       1.000000
+25%       2.250000
+50%       3.000000
+75%       4.750000
+max       5.000000
+Name: fluency_score, dtype: float64
+wrote tuning plot to /Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/tuning_lrb.pdf
+
+gathering fluency scores for 'lr4_8c'
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr4_8c/benchmark_chkp_0_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 47
+count    50.000000
+mean      2.400000
+std       1.340119
+min       1.000000
+25%       1.000000
+50%       2.000000
+75%       3.750000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr4_8c/benchmark_chkp_1_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 49
+count    50.000000
+mean      2.620000
+std       1.243596
+min       1.000000
+25%       1.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr4_8c/benchmark_chkp_2_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 40
+count    50.000000
+mean      3.500000
+std       1.265718
+min       1.000000
+25%       3.000000
+50%       4.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr4_8c/benchmark_chkp_3_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 42
+count    50.000000
+mean      3.400000
+std       1.142857
+min       1.000000
+25%       3.000000
+50%       4.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr4_8c/benchmark_chkp_4_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 43
+count    50.000000
+mean      3.320000
+std       1.185628
+min       1.000000
+25%       3.000000
+50%       3.500000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr4_8c/benchmark_chkp_5_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 46
+count    50.000000
+mean      3.000000
+std       1.142857
+min       1.000000
+25%       2.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr4_8c/benchmark_chkp_6_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 43
+count    50.000000
+mean      3.340000
+std       1.171254
+min       1.000000
+25%       3.000000
+50%       4.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+gathering fluency scores for 'lr4_16c'
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr4_16c/benchmark_chkp_0_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 47
+[2024-07-09 16:16:43,397] INFO [__main__:263] exp_name=lr4_16c, num_epochs=7
+[2024-07-09 16:16:43,397] INFO [__main__:274] run 'lr4_16c' -> nickname: lr4_grad16
+[2024-07-09 16:16:43,851] INFO [__main__:263] exp_name=lr5_8c, num_epochs=7
+[2024-07-09 16:16:43,852] INFO [__main__:274] run 'lr5_8c' -> nickname: lr5_grad8
+[2024-07-09 16:16:44,311] INFO [__main__:263] exp_name=lr5_16c, num_epochs=7
+[2024-07-09 16:16:44,313] INFO [__main__:274] run 'lr5_16c' -> nickname: lr5_grad16
+count    50.000000
+mean      3.140000
+std       1.049976
+min       1.000000
+25%       2.250000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr4_16c/benchmark_chkp_1_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 46
+count    50.00000
+mean      2.84000
+std       1.28349
+min       1.00000
+25%       2.00000
+50%       3.00000
+75%       4.00000
+max       5.00000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr4_16c/benchmark_chkp_2_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 44
+count    50.00000
+mean      3.26000
+std       1.19198
+min       1.00000
+25%       3.00000
+50%       3.50000
+75%       4.00000
+max       5.00000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr4_16c/benchmark_chkp_3_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 47
+count    50.000000
+mean      3.100000
+std       1.092647
+min       1.000000
+25%       2.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr4_16c/benchmark_chkp_4_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 47
+count    50.000000
+mean      3.060000
+std       1.018402
+min       1.000000
+25%       2.250000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr4_16c/benchmark_chkp_5_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 48
+count    50.000000
+mean      3.080000
+std       0.986439
+min       1.000000
+25%       3.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr4_16c/benchmark_chkp_6_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 48
+count    50.0000
+mean      2.8400
+std       1.0947
+min       1.0000
+25%       2.0000
+50%       3.0000
+75%       4.0000
+max       5.0000
+Name: fluency_score, dtype: float64
+
+gathering fluency scores for 'lr5_8c'
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr5_8c/benchmark_chkp_0_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 50
+count    50.000000
+mean      1.860000
+std       1.069236
+min       1.000000
+25%       1.000000
+50%       1.000000
+75%       3.000000
+max       4.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr5_8c/benchmark_chkp_1_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 44
+count    50.000000
+mean      2.680000
+std       1.434843
+min       1.000000
+25%       1.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr5_8c/benchmark_chkp_2_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 40
+count    50.000000
+mean      3.700000
+std       1.073807
+min       1.000000
+25%       3.000000
+50%       4.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr5_8c/benchmark_chkp_3_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 48
+count    50.000000
+mean      2.860000
+std       1.069236
+min       1.000000
+25%       2.000000
+50%       3.000000
+75%       3.750000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr5_8c/benchmark_chkp_4_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 47
+count    50.000000
+mean      2.900000
+std       1.092647
+min       1.000000
+25%       2.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr5_8c/benchmark_chkp_5_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 47
+count    50.000000
+mean      2.920000
+std       1.065986
+min       1.000000
+25%       2.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr5_8c/benchmark_chkp_6_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 46
+count    50.000000
+mean      2.760000
+std       1.221575
+min       1.000000
+25%       2.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+gathering fluency scores for 'lr5_16c'
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr5_16c/benchmark_chkp_0_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 48
+count    50.000000
+mean      2.900000
+std       1.233048
+min       1.000000
+25%       2.000000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr5_16c/benchmark_chkp_1_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 48
+count    50.000000
+mean      2.600000
+std       1.293626
+min       1.000000
+25%       1.000000
+50%       2.500000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr5_16c/benchmark_chkp_2_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 46
+count    50.000000
+mean      3.220000
+std       1.266362
+min       1.000000
+25%       2.250000
+50%       4.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr5_16c/benchmark_chkp_3_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 48
+count    50.000000
+mean      2.680000
+std       1.252589
+min       1.000000
+25%       1.250000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr5_16c/benchmark_chkp_4_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 45
+count    50.000000
+mean      3.060000
+std       1.132272
+min       1.000000
+25%       2.250000
+50%       3.000000
+75%       4.000000
+max       5.000000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr5_16c/benchmark_chkp_5_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 49
+count    50.0000
+mean      2.5400
+std       1.0919
+min       1.0000
+25%       2.0000
+50%       3.0000
+75%       3.0000
+max       5.0000
+Name: fluency_score, dtype: float64
+
+/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/lr5_16c/benchmark_chkp_6_gpt-4-0125-preview.csv:
+NaN count: 0 (dropped rows), non-5 scores counts: 50
+count    50.000000
+mean      2.680000
+std       0.935469
+min       1.000000
+25%       2.000000
+50%       3.000000
+75%       3.000000
+max       4.000000
+Name: fluency_score, dtype: float64
+wrote tuning plot to /Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/tuning_lrc.pdf
+
+wrote results to '/Users/dan/Downloads/COURSES/thesis/repos/thesis_app/experiments/tuner/llama2_7B/experiments/all_results.yaml'

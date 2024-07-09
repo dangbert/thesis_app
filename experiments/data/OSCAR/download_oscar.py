@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""
+This script demonstrates how to load the Dutch portion of the OSCAR dataset from HuggingFace.
+This was exploratory and ultimately not used in the final project.
+"""
 
 import os
 import argparse

@@ -72,7 +72,6 @@ mkdir -p ../datasets/synthetic_smart/v4
 ./feedback.py -i ./data/synthetic_smart/v4/ -m gpt-3.5-turbo-0125
 
 # now benchmark generated feedback.xlsx, comparing models:
-#   (see also benchmark.ipynb)
 ./benchmark.py -i data/synthetic_smart/v4/ -m gpt-4-0125-preview
 ````
 

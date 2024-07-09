@@ -1,0 +1,8 @@
+[2024-06-30 03:01:24,538] INFO [__main__:126] constructing anonymous data df
+[2024-06-30 03:01:24,600] WARNING [__main__:83] 2 human feedbacks found for attempt 719c51af-0396-4512-a859-ee09ba1fd449
+[2024-06-30 03:01:24,728] INFO [__main__:172] attempt skip stats (note 174 total attempts): defaultdict(<class 'int'>, {'skip_email': 16, 'teacher_attempt': 18, 'no_ai_feedback': 9, 'no_human_feedback': 2})
+[2024-06-30 03:01:24,729] INFO [__main__:175] collected anonymous data with 129 attempts
+allowed emails: 20
+found len(users)=20
+skip emails: 5
+wrote 'pilot.xlsx'
