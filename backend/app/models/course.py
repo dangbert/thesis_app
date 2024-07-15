@@ -20,7 +20,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PUUID
 from uuid import UUID
 import os
-from typing import Optional, Any
+from typing import Optional, Any, Tuple
 import secrets
 
 settings = get_settings()
@@ -182,12 +182,7 @@ class Attempt(Base):
         Note: this is most relevant when called on the student's latest attempt.
         (Otherwise AWAITING_RESUBMISSION might be misleading)
         """
-        teacher_feedbacks = sorted(
-            [f for f in self.feedbacks if not f.is_ai], key=lambda x: x.created_at
-        )
-        ai_feedbacks = sorted(
-            [f for f in self.feedbacks if f.is_ai], key=lambda x: x.created_at
-        )
+        teacher_feedbacks, ai_feedbacks = self.split_feedbacks()
 
         if teacher_feedbacks:
             feedback = teacher_feedbacks[-1]
@@ -201,6 +196,13 @@ class Attempt(Base):
             return AssignmentAttemptStatus.AWAITING_TEACHER_FEEDBACK
         else:
             return AssignmentAttemptStatus.AWAITING_AI_FEEDBACK
+
+    def split_feedbacks(self) -> Tuple[list, list]:
+        """Split feedbacks list into (human_feedbacks, ai_feedbacks)."""
+        feedbacks = sorted(self.feedbacks, key=lambda x: x.created_at)
+        human_feedbacks = [x for x in feedbacks if not x.is_ai]
+        ai_feedbacks = [x for x in feedbacks if x.is_ai]
+        return human_feedbacks, ai_feedbacks
 
 
 class File(Base):

@@ -95,6 +95,7 @@ export interface AssignmentStudentStatus {
   attempt_count: number;
   last_attempt_date: string | null;
   status: AssignmentAttemptStatus;
+  score: number | null;
 }
 
 export interface FilePublic extends BaseFields {

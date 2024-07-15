@@ -85,6 +85,7 @@ interface RowData {
   status: string;
   role: string;
   last_attempt_date: string;
+  score: number | null;
 }
 
 interface HeadCell {
@@ -126,6 +127,12 @@ const headCells: readonly HeadCell[] = [
     label: 'Assignment Status',
   },
   {
+    id: 'score',
+    numeric: true,
+    disablePadding: false,
+    label: 'Grade',
+  },
+  {
     id: 'submissions',
     numeric: true,
     disablePadding: false,
@@ -147,6 +154,7 @@ interface EnhancedTableProps {
   order: Order;
   orderBy: string;
   rowCount: number;
+  scorable: boolean;
 }
 
 // https://mui.com/material-ui/react-table/#sorting-amp-selecting
@@ -157,11 +165,14 @@ function EnhancedTableHead(props: EnhancedTableProps) {
       onRequestSort(event, property);
     };
 
+  const showHeadCells = headCells.filter(
+    (headCell) => headCell.id !== 'score' || props.scorable
+  );
   return (
     <TableHead>
       <TableRow>
         <TableCell></TableCell>
-        {headCells.map((headCell) => (
+        {showHeadCells.map((headCell) => (
           <TableCell
             key={headCell.id}
             align={'left'}
@@ -238,6 +249,7 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
     email: s.student.email,
     role: s.role,
     group: (utils.isUndefined(s.group_num) ? -1 : s.group_num) as number,
+    score: (utils.isUndefined(s.score) ? 0 : s.score) as number,
     submissions: s.attempt_count,
     last_attempt_date: s.last_attempt_date
       ? utils.friendlyDate(s.last_attempt_date)
@@ -385,6 +397,7 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
             orderBy={orderBy}
             onRequestSort={handleRequestSort}
             rowCount={rows.length}
+            scorable={asData.scorable}
           />
           <TableBody>
             {visibleRows.map((row, index) => {
@@ -424,6 +437,9 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({
                   <TableCell align="left">{row.role}</TableCell>
                   <TableCell align="left">{row.group}</TableCell>
                   <TableCell align="left">{row.status}</TableCell>
+                  {asData.scorable && (
+                    <TableCell align="left">{row.score}</TableCell>
+                  )}
                   <TableCell align="left">{row.submissions}</TableCell>
                   <TableCell align="left">{row.last_attempt_date}</TableCell>
                 </TableRow>

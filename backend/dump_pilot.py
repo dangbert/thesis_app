@@ -77,7 +77,7 @@ def main():
 
 ## for each assignment:
 def attempt_to_dict(att: models.Attempt):
-    human_feedbacks, ai_feedbacks = _split_feedbacks(att)
+    human_feedbacks, ai_feedbacks = att.split_feedbacks()
 
     if len(human_feedbacks) > 1:
         logger.warning(
@@ -157,7 +157,7 @@ def get_anon_df(session):
         if att.user.email in skip_emails:
             skipped["skip_email"] += 1
             continue
-        human_feedbacks, ai_feedbacks = _split_feedbacks(att)
+        human_feedbacks, ai_feedbacks = att.split_feedbacks()
         if len(human_feedbacks) == 0:
             skipped["no_human_feedback"] += 1
             continue  # only interested in attempts a human reviewed
@@ -174,14 +174,6 @@ def get_anon_df(session):
     )
     logger.info(f"collected anonymous data with {len(anon_data)} attempts")
     return pd.DataFrame(anon_data)
-
-
-def _split_feedbacks(att: models.Attempt) -> Tuple[list, list]:
-    """Split feedbacks list into (human_feedbacks, ai_feedbacks)."""
-    feedbacks = sorted(att.feedbacks, key=lambda x: x.created_at)
-    human_feedbacks = [x for x in feedbacks if not x.is_ai]
-    ai_feedbacks = [x for x in feedbacks if x.is_ai]
-    return human_feedbacks, ai_feedbacks
 
 
 def _read_emails(fname: str) -> set[str]:

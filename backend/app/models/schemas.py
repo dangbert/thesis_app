@@ -99,6 +99,7 @@ class AssignmentStudentStatus(BaseModel):
     attempt_count: int = 0
     last_attempt_date: Optional[datetime] = None
     status: AssignmentAttemptStatus = AssignmentAttemptStatus.NOT_STARTED
+    score: Optional[int] = None  # from FeedbackData.score if available
 
 
 class FilePublic(DateFields):

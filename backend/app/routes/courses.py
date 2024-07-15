@@ -221,7 +221,7 @@ async def get_assignment_status(
     final_status = []
     for user in users:
         # TODO: handle other statuses
-        last_attempt = user_last_attempt_map.get(user.id, None)
+        last_attempt: Attempt | None = user_last_attempt_map.get(user.id, None)
         user_link = user_link_map.get(user.id)
         if not user_link:
             # user link will always exist, but providing default for mypy
@@ -232,12 +232,22 @@ async def get_assignment_status(
                 group_num=None,
             )
 
+        # get score of latest teacher feedback (if any)
+        score = None
+        if last_attempt:
+            teacher_feedbacks, _ = last_attempt.split_feedbacks()
+            if teacher_feedbacks:
+                latest_feedback = teacher_feedbacks[-1]
+                fd = FeedbackData(**latest_feedback.data)
+                score = fd.score
+
         cur = AssignmentStudentStatus(
             student=user.to_public(),
             role=user_link.role,
             group_num=user_link.group_num,
             attempt_count=user_attempt_count_map.get(user.id, 0),
             last_attempt_date=last_attempt.created_at if last_attempt else None,
+            score=score,
         )
         if not last_attempt:
             cur.status = AssignmentAttemptStatus.NOT_STARTED
