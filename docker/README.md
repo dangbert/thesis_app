@@ -42,7 +42,7 @@ bash ~/setup.sh
 cat ~/.ssh/id_ed25519.pub
 ````
 
-Add the authentication key printed above to your GitHub account [here](https://github.com/settings/ssh/new).  Then create an "A" record on your domains DNS settings pointing to your produdction server's IP before continuing:
+Add the authentication key printed above to your GitHub account [here](https://github.com/settings/ssh/new).  Then create an "A" record on your domains DNS settings pointing to your production server's IP before continuing:
 
 ````bash
 # create SSL keys for https and clone the site from github:

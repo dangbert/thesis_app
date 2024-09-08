@@ -10,7 +10,7 @@ RUN echo "available locales:" && locale -a && echo "current locale:" && locale
 WORKDIR /backend
 
 
-FROM common as dev
+FROM common AS dev
 RUN apt install -y vim
 RUN poetry install --with dev
 
@@ -27,7 +27,7 @@ RUN poetry install --with dev
 
 
 
-FROM common as prod
+FROM common AS prod
 RUN poetry export --format requirements.txt --output requirements_prod.txt --without-hashes --without=dev
 RUN pip install --no-cache-dir --upgrade -r requirements_prod.txt
 RUN apt remove -y gcc && apt autoremove -y && pip uninstall -y poetry && rm -f requirements_prod.txt
