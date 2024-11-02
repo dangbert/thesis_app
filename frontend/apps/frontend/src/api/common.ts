@@ -32,6 +32,7 @@ export const jsonOrError = async (
         result.data = await res.text();
       } else {
         result.data = await res.json();
+        if (!res.ok && result.data.error) result.error = result.data.error;
       }
     } catch (parsingError) {
       if (res.status === 413) {
