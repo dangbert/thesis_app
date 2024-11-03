@@ -45,7 +45,7 @@ def db_exists(await_conn: bool = True) -> bool:
                 return False
             # an OperationalError with any other message is a real problem (e.g. db is not online yet)
             if n >= maxTries - 1:
-                logger.erorr(
+                logger.error(
                     f"Giving up after {n+1} tries to connect to DB {settings.db_uri_print_safe}"
                 )
                 raise err

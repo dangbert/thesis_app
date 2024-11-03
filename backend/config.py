@@ -3,7 +3,7 @@ import logging
 from typing import Optional
 
 
-def get_logger(name: str, level: Optional[str] = None):
+def get_logger(name: str, level: Optional[str] = None) -> logging.Logger:
     formatter = logging.Formatter(
         "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s"
     )
