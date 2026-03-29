@@ -1,9 +1,9 @@
 terraform {
   backend "s3" {
-    bucket         = "dangbert-tf-backend"
-    dynamodb_table = "dangbert-tf-backend-lock"
-    region         = "us-west-2"
-    key            = "thesis/DEV/terraform.tfstate"
+    bucket       = "dangbert-tf-backend"
+    region       = "us-west-2"
+    key          = "thesis/DEV/terraform.tfstate"
+    use_lockfile = true
   }
 
   required_providers {
@@ -43,10 +43,10 @@ locals {
 data "terraform_remote_state" "common" {
   backend = "s3"
   config = {
-    bucket         = "dangbert-tf-backend"
-    dynamodb_table = "dangbert-tf-backend-lock"
-    region         = "us-west-2"
-    key            = "thesis/common/terraform.tfstate"
+    bucket       = "dangbert-tf-backend"
+    region       = "us-west-2"
+    key          = "thesis/common/terraform.tfstate"
+    use_lockfile = true
   }
 }
 
